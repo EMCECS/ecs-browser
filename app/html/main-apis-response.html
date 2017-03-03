@@ -1,0 +1,26 @@
+<div class="panel panel-primary"  ng-if="menu.startsWith('requests-') && main.apis.response['code'] > 0">
+  <div class="panel-heading">Response</div>
+  <div class="modal-body">
+    <h2>Response code</h2>
+    <h3>
+      <span class="label label-default" ng-bind-html="main.apis.response['code']"></span>
+    </h3>
+    <h2>Response headers</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(key, value) in main.apis.response['response_headers']">
+          <td>{{ key }}</td>
+          <td>{{ value[0] }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Response body</h2>
+    <div class="wordbreak" ng-bind-html="main.apis.response['body']"></div>
+  </div>
+</div>

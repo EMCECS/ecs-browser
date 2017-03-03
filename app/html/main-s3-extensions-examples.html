@@ -1,0 +1,80 @@
+<div class="panel panel-primary" ng-if="main.buckets.length >= 0 && menu=='s3-extensions'">
+  <div class="panel-heading">Examples</div>
+  <div class="panel-body">
+    <div class="panel-group" id="s3extension_examples_accordion" role="tablist">
+      <div class="panel panel-default" ng-repeat="s3extension in main.examples['s3_extensions']">
+        <div class="panel-heading" role="tab" id="s3extension_examples_heading_{{ $index }}">
+          <h4 class="panel-title">
+            <a role="button" data-toggle="collapse" data-parent="#s3extension_examples_accordion" href="#s3extension_examples_collapse_{{ $index }}" aria-expanded="true" aria-controls="s3extension_examples_collapse_{{ $index }}">
+              {{ s3extension["name"] }}
+            </a>
+          </h4>
+        </div>
+        <div id="s3extension_examples_collapse_{{ $index }}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="s3extension_examples_heading_{{ $index }}">
+          <div class="panel-body">
+            <ul class="list-group">
+              <li ng-repeat="step in s3extension['steps']" class="list-group-item">
+                <h3>Step {{ $index + 1 }}</h3>
+                <p>{{ step['description'] }}</p>
+                <div class="field">
+                  <div class="input-group">
+                    <span class="input-group-addon">Expected Response Code</span>
+                    <input class="form-control" type="text" id="s3extension_examples_expected_response_code_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_expected_response_code_{{ $parent.$index }}_{{ $index }}" value="{{ step['expected_response_code'] }}" />
+                  </div>
+                </div>
+                <br />
+                <div class="field">
+                  <div class="input-group">
+                    <span class="input-group-addon">Path</span>
+                    <input class="form-control" type="text" id="s3extension_examples_path_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_path_{{ $parent.$index }}_{{ $index }}" value="{{ step['path'] }}" />
+                  </div>
+                </div>
+                <br />
+                <div class="field">
+                  <div class="input-group">
+                    <span class="input-group-addon">Range</span>
+                    <input class="form-control" type="text" id="s3extension_examples_range_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_range_{{ $parent.$index }}_{{ $index }}" value="{{ step['range'] }}" />
+                  </div>
+                </div>
+                <br />
+                <div class="field">
+                  <div class="input-group">
+                    <span class="input-group-addon">Data</span>
+                    <input class="form-control" type="text" id="s3extension_examples_data_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_data_{{ $parent.$index }}_{{ $index }}" value="{{ step['data'] }}" />
+                  </div>
+                </div>
+                <br />
+                <div class="field">
+                  <div class="input-group">
+                    <span class="input-group-addon">Method</span>
+                    <input class="form-control" type="text" id="s3extension_examples_method_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_method_{{ $parent.$index }}_{{ $index }}" value="{{ step['method'] }}" />
+                  </div>
+                </div>
+                <br />
+                <div ng-repeat="(key, value) in step['headers']" class="field">
+                  <div class="input-group">
+                    <span class="input-group-addon">{{ key }}</span>
+                    <input class="form-control" type="hidden" id="s3extension_examples_header_key_{{ $parent.$parent.$index }}_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_header_key_{{ $parent.$parent.$index }}_{{ $parent.$index }}_{{ $index }}" value="{{ key }}" />
+                    <input class="form-control" type="text" id="s3extension_examples_header_value_{{ $parent.$parent.$index }}_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_header_value_{{ $parent.$parent.$index }}_{{ $parent.$index }}_{{ $index }}" value="{{ value }}" />
+                  </div>
+                  <br />
+                </div>
+                <div class="field space">
+                  <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}" ng-click="s3ExtensionsCtrl.executeStep($parent.$index,$index)">
+                    <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+                    Execute
+                  </button>
+                </div>
+                <div class="field">
+                  <button class="btn" id="s3extension_examples_response_code_{{ $parent.$index }}_{{ $index }}" name="s3extension_examples_response_code_{{ $parent.$index }}_{{ $index }}">
+                    -
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

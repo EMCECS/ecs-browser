@@ -1,0 +1,28 @@
+build:
+  box: google/golang
+  steps:
+    - script:
+        name: go get
+        code: |
+          go get "github.com/cloudfoundry-community/go-cfenv"
+          go get "github.com/codegangsta/negroni"
+          go get "github.com/gorilla/mux"
+          go get "github.com/gorilla/sessions"
+          go get "github.com/unrolled/render"
+    - script:
+        name: go build
+        code: CGO_ENABLED=0 go build -a -ldflags '-s' -installsuffix cgo -o ecsui .
+    - script:
+        name: copy binary
+        code: cp -r ecsui config.json app "$WERCKER_OUTPUT_DIR"
+deploy:
+    box: google/golang
+    steps:
+    - internal/docker-scratch-push:
+        username: $DOCKER_HUB_USERNAME
+        password: $DOCKER_HUB_PASSWORD
+        cmd: ./ecsui
+        tag: latest
+        ports: "80"
+        repository: djannot/ecsui
+        registry: https://hub.docker.com

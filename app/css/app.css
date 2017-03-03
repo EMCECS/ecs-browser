@@ -1,0 +1,137 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.spinner {
+  display: inline-block;
+  opacity: 0;
+  width: 0;
+
+  -webkit-transition: opacity 0.25s, width 0.25s;
+  -moz-transition: opacity 0.25s, width 0.25s;
+  -o-transition: opacity 0.25s, width 0.25s;
+  transition: opacity 0.25s, width 0.25s;
+}
+
+.has-spinner.active {
+  cursor:progress;
+}
+
+.has-spinner.active .spinner {
+  opacity: 1;
+  width: auto; /* This doesn't work, just fix for unkown width elements */
+}
+
+.has-spinner.btn-mini.active .spinner {
+    width: 10px;
+}
+
+.has-spinner.btn-small.active .spinner {
+    width: 13px;
+}
+
+.has-spinner.btn.active .spinner {
+    width: 16px;
+}
+
+.has-spinner.btn-large.active .spinner {
+    width: 19px;
+}
+
+.right {
+  text-align: right;
+}
+
+.picture img {
+  max-width: 90%;
+  max-height: 90%;
+  display:block;
+  margin:auto;
+}
+
+.picture p {
+  text-align: center;
+}
+
+.row-eq-height {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display:         flex;
+}
+
+.center {
+  text-align: center;
+}
+
+h1.logo {
+  text-align: center;
+	font-size: 3em;
+	font-family: Verdana;
+	color: #3B84C3;
+	text-shadow:0 1px 0 #ccc, 0 2px 0 #c9c9c9,0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25), 0 10px 10px rgba(0,0,0,.2), 0 20px 20px rgba(0,0,0,.15);
+  margin-bottom: 40px;
+}
+
+.topright {
+  position: fixed;
+  margin: 20px;
+  top: 0px;
+  right: 0px;
+}
+
+.introjs-helperNumberLayer {
+  width:  30px;
+  height: 30px;
+}
+
+/*
+div.alert {
+  margin-left: 25%;
+  margin-right: 25%;
+}
+*/
+
+.introjs-helperNumberLayer {
+  width:  30px;
+  height: 30px;
+}
+
+div.fullsize {
+  height: 100%;
+}
+
+#modal-body-map {
+  width: 600px;
+  height: 400px;
+}
+
+#map {
+  height: 100%;
+}
+
+#bigmap {
+  height: 100%;
+}
+
+img.thumbnail {
+  height: 100px;
+}
+
+div.space {
+  float: left;
+  margin-right: 5px;
+}
+
+.label-right {
+  float: right;
+}
+
+.panel > .subpanel-heading {
+  background-image: none;
+  background-color: white;
+  color: black;
+}

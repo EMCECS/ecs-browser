@@ -1,0 +1,72 @@
+<div class="panel panel-primary" ng-if="main.buckets.length > 0 && menu=='metadata-search'">
+  <div class="panel-heading">Metadata search</div>
+  <div class="panel-body">
+    <form accept-charset="UTF-8" ng-submit="metadataSearchCtrl.search()">
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Bucket Name</span>
+          <select ng-model="metadataSearchCtrl.search_bucket" class="form-control" id="search_bucket" name="search_bucket" ng-change="metadataSearchCtrl.getMetadata()">
+            <option ng-repeat="bucket in main.buckets" value="{{ bucket }}">{{ bucket }}</option>
+          </select>
+        </div>
+      </div>
+      <br />
+      <div ng-if="main.searchmetadata['MetadataSearchEnabled']==true">
+        <ul class="list-group">
+          <li ng-repeat="metadata in main.searchmetadata['IndexableKeys']" ng-click="metadataSearchCtrl.search_query = metadataSearchCtrl.search_query + metadata['Name']" onclick="$('#search_query').focus()" class="list-group-item">{{ metadata["Name"] }} <span class="label label-default label-right">{{ metadata["Datatype"] }}</span></li>
+        </ul>
+      </div>
+      <div ng-if="main.searchmetadata['MetadataSearchEnabled']==false" class="alert alert-warning">
+        Metadata search is not enabled for this bucket
+      </div>
+      <div class="field" ng-if="main.searchmetadata['MetadataSearchEnabled']==true">
+        <div class="input-group">
+          <span class="input-group-addon">Query</span>
+          <input ng-model="metadataSearchCtrl.search_query" ng-required="true" class="form-control" id="search_query" name="search_query" type="text" placeholder="ex: Size>0 and x-amz-meta-custom1<100" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="main.searchmetadata['MetadataSearchEnabled']==true">
+        <div class="input-group">
+          <span class="input-group-addon">Max keys</span>
+          <input ng-model="metadataSearchCtrl.search_max_keys" class="form-control" id="search_max_keys" name="search_max_keys" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="main.searchmetadata['MetadataSearchEnabled']==true">
+        <div class="input-group">
+          <span class="input-group-addon">Sorted by</span>
+          <input ng-model="metadataSearchCtrl.search_sorted_by" class="form-control" id="search_sorted_by" name="search_sorted_by" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Returns all the object metadata" readonly="readonly">
+          <span class="input-group-addon">
+            <input ng-model="metadataSearchCtrl.search_return_all_metadata" id="search_return_all_metadata" name="search_return_all_metadata" type="checkbox" />
+          </span>
+        </div>
+        <br />
+      </div>
+      <div class="actions space" ng-if="main.searchmetadata['MetadataSearchEnabled']==true">
+        <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
+          <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+          Search
+        </button>
+      </div>
+    </form>
+    <div ng-if="main.metadata.markers.length > 0 && main.searchmetadata['MetadataSearchEnabled']==true" class="space">
+      <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}" ng-click="main.metadata.markers.pop(); marker = main.metadata.markers.pop(); metadataSearchCtrl.search(marker)">
+        <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+        Previous records
+      </button>
+    </div>
+    <div ng-if="main.metadata.result['NextMarker'].length > 0 && main.metadata.result['NextMarker'] != 'NO MORE PAGES' && main.searchmetadata['MetadataSearchEnabled']==true" class="space">
+      <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}" ng-click="metadataSearchCtrl.search(main.metadata.result['NextMarker'])">
+        <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+        Next records
+      </button>
+    </div>
+  </div>
+</div>

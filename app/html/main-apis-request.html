@@ -1,0 +1,28 @@
+<div id="apis_request" name="apis_request" class="panel panel-primary"  ng-if="menu.startsWith('requests-') && main.apis.response['path'].length > 0">
+  <div class="panel-heading">Request</div>
+  <div class="modal-body">
+    <h2>Method</h2>
+    <ul class="list-group">
+      <li class="list-group-item" ng-bind-html="main.apis.response['method']"></li>
+    </ul>
+    <h2>Path</h2>
+    <ul class="list-group">
+      <li class="list-group-item" ng-bind-html="main.apis.response['path']"></li>
+    </ul>
+    <h2>Request headers</h2>
+    <table class="table" ng-if="main.apis.response['request_headers']">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(key, value) in main.apis.response['request_headers']">
+          <td>{{ key }}</td>
+          <td>{{ value[0] }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

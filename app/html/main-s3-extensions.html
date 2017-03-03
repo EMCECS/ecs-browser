@@ -1,0 +1,81 @@
+<div class="panel panel-primary" ng-if="main.buckets.length > 0 && menu=='s3-extensions'">
+  <div class="panel-heading">S3 Extensions</div>
+  <div class="panel-body">
+    <form accept-charset="UTF-8" ng-submit="s3ExtensionsCtrl.execute()">
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Bucket Name</span>
+          <select ng-model="s3ExtensionsCtrl.s3_extensions_bucket" class="form-control" id="s3_extensions_bucket" name="s3_extensions_bucket">
+            <option ng-repeat="bucket in main.buckets" value="{{ bucket }}">{{ bucket }}</option>
+          </select>
+        </div>
+      </div>
+      <br />
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Key</span>
+          <input ng-model="s3ExtensionsCtrl.s3_extensions_key" ng-required="true" class="form-control" id="s3_extensions_key" name="s3_extensions_key" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Range</span>
+          <input ng-model="s3ExtensionsCtrl.s3_extensions_range" class="form-control" id="s3_extensions_range" name="s3_extensions_range" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Data</span>
+          <input ng-model="s3ExtensionsCtrl.s3_extensions_data" class="form-control" id="s3_extensions_data" name="s3_extensions_data" type="text" />
+        </div>
+        <br />
+      </div>
+      <div ng-repeat="(key, value) in main.s3extensions.headers" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">{{ key }}</span>
+          <input class="form-control" id="s3_extensions_header_{{ key }}" name="s3_extensions_header_{{ key }}" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Method</span>
+          <select ng-model="s3ExtensionsCtrl.s3_extensions_method" class="form-control" id="s3_extensions_method" name="s3_extensions_method">
+            <option value="GET">GET</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </div>
+        <br />
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
+          <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+          Execute Request
+        </button>
+      </div>
+    </form>
+    <br />
+    <div class="field">
+      <div class="input-group">
+        <span class="input-group-addon">Custom Header</span>
+        <input ng-model="s3ExtensionsCtrl.s3_extensions_custom_header" class="form-control" id="s3_extensions_custom_header" name="s3_extensions_custom_header" type="text" />
+      </div>
+      <br />
+    </div>
+    <div class="field space">
+      <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}" ng-click="s3ExtensionsCtrl.addHeader()">
+        <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+        Add Header
+      </button>
+    </div>
+    <div class="field">
+      <button class="btn btn-danger has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}" ng-click="s3ExtensionsCtrl.removeHeader()">
+        <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+        Remove Header
+      </button>
+    </div>
+  </div>
+</div>

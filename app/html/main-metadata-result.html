@@ -1,0 +1,15 @@
+<div class="panel panel-primary"  ng-if="main.metadata.result['EntryLists'].length > 0 && menu=='metadata-search'">
+  <div class="panel-heading">Result</div>
+  <div class="panel-body table-responsive">
+    <table class="table table-hover">
+      <tr>
+        <th>ObjectName</th>
+        <th ng-repeat="metadata in main.metadata.result['EntryLists'][0]['Metadatas']">{{ metadata["Key"] }}</th>
+      </tr>
+      <tr ng-repeat="entry in main.metadata.result['EntryLists']">
+        <td><a href="{{ entry['Url'] }}">{{ entry["ObjectName"] }}</a></td>
+        <td ng-repeat="metadata in entry['Metadatas']">{{ metadata["Value"] }}</td>
+      </tr>
+    </table>
+  </div>
+</div>

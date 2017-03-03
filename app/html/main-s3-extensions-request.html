@@ -1,0 +1,24 @@
+<div id="s3_extensions_request" name="s3_extensions_request" class="panel panel-primary"  ng-if="menu=='s3-extensions' && main.s3extensions.response['path'].length > 0">
+  <div class="panel-heading">Request</div>
+  <div class="modal-body">
+    <h2>Path</h2>
+    <ul class="list-group">
+      <li class="list-group-item" ng-bind-html="main.s3extensions.response['path']"></li>
+    </ul>
+    <h2>Request headers</h2>
+    <table class="table" ng-if="main.s3extensions.response['request_headers']">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(key, value) in main.s3extensions.response['request_headers']">
+          <td>{{ key }}</td>
+          <td>{{ value[0] }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

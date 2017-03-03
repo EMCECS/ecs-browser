@@ -1,0 +1,143 @@
+<div class="panel panel-primary" ng-if="menu.startsWith('requests-')">
+  <div class="panel-heading">Request</div>
+  <div class="panel-body">
+    <form accept-charset="UTF-8" ng-submit="apisCtrl.execute(menu.split('-')[1])">
+      <div class="field" ng-if="menu=='requests-swift'">
+        <div class="input-group">
+          <span class="input-group-addon">Swift Endpoint</span>
+          <input ng-model="main.swiftendpoint" ng-required="true" class="form-control" id="apis_endpoint" name="apis_endpoint" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='requests-atmos'">
+        <div class="input-group">
+          <span class="input-group-addon">Atmos Endpoint</span>
+          <input ng-model="main.atmosendpoint" ng-required="true" class="form-control" id="apis_endpoint" name="apis_endpoint" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="(menu=='requests-swift')">
+        <div class="input-group">
+          <span class="input-group-addon">Swift Password</span>
+          <input ng-model="apisCtrl.apis_password" ng-required="true" class="form-control" id="apis_password" name="apis_password" type="password" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='requests-s3'">
+        <div class="input-group">
+          <span class="input-group-addon">Bucket Name</span>
+          <select ng-model="apisCtrl.apis_bucket" class="form-control" id="apis_bucket" name="apis_bucket">
+            <option value=""></option>
+            <option ng-repeat="bucket in main.buckets" value="{{ bucket }}">{{ bucket }}</option>
+          </select>
+        </div>
+        <br />
+      </div>
+      <div ng-if="(menu=='requests-swift' && main.swiftcontainers.length == 0)" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Container</span>
+          <input ng-model="apisCtrl.apis_container" class="form-control" id="apis_container" name="apis_container" type="text" />
+        </div>
+        <br />
+      </div>
+      <div ng-if="(menu=='requests-swift' && main.swiftcontainers.length > 0)" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Container</span>
+          <select ng-model="apisCtrl.apis_container" class="form-control" id="apis_container" name="apis_container">
+            <option value=""></option>
+            <option ng-repeat="swiftcontainer in main.swiftcontainers | orderBy: 'swiftcontainer'" value="{{ swiftcontainer }}">{{ swiftcontainer }}</option>
+          </select>
+        </div>
+        <br />
+      </div>
+      <!--<div ng-if="(menu=='requests-atmos' && main.atmossubtenants.length == 0)" class="field">-->
+      <div ng-if="menu=='requests-atmos'" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Subtenant</span>
+          <input ng-model="apisCtrl.apis_subtenant" class="form-control" id="apis_subtenant" name="apis_subtenant" type="text" />
+        </div>
+        <br />
+      </div>
+      <!--
+      <div ng-if="(menu=='requests-atmos' && main.atmossubtenants.length > 0)" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Subtenant</span>
+          <select ng-model="apisCtrl.apis_subtenant" class="form-control" id="apis_subtenant" name="apis_subtenant">
+            <option value=""></option>
+            <option ng-repeat="atmossubtenant in main.atmossubtenants | orderBy: 'atmossubtenant'" value="{{ atmossubtenant }}">{{ atmossubtenant }}</option>
+          </select>
+        </div>
+        <br />
+      </div>
+      -->
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Path</span>
+          <input ng-model="apisCtrl.apis_path" ng-required="true" class="form-control" id="apis_path" name="apis_path" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Range</span>
+          <input ng-model="apisCtrl.apis_range" class="form-control" id="apis_range" name="apis_range" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Data</span>
+          <textarea ng-model="apisCtrl.apis_data" class="form-control" id="apis_data" name="apis_data"></textarea>
+        </div>
+        <br />
+      </div>
+      <div ng-repeat="(key, value) in main.apis.headers" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">{{ key }}</span>
+          <input class="form-control" id="apis_header_{{ key }}" name="apis_header_{{ key }}" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Method</span>
+          <select ng-model="apisCtrl.apis_method" class="form-control" id="apis_method" name="apis_method">
+            <option value="GET">GET</option>
+            <option value="HEAD">HEAD</option>
+            <option value="PUT">PUT</option>
+            <option value="POST">POST</option>
+            <option value="DELETE">DELETE</option>
+            <option value="OPTIONS">OPTIONS</option>
+          </select>
+        </div>
+        <br />
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
+          <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+          Execute Request
+        </button>
+      </div>
+    </form>
+    <br />
+    <div class="field">
+      <div class="input-group">
+        <span class="input-group-addon">Custom Header</span>
+        <input ng-model="apisCtrl.apis_custom_header" class="form-control" id="apis_custom_header" name="apis_custom_header" type="text" />
+      </div>
+      <br />
+    </div>
+    <div class="field space">
+      <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}" ng-click="apisCtrl.addHeader()">
+        <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+        Add Header
+      </button>
+    </div>
+    <div class="field">
+      <button class="btn btn-danger has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}" ng-click="apisCtrl.removeHeader()">
+        <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+        Remove Header
+      </button>
+    </div>
+  </div>
+</div>

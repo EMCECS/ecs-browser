@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="ECSUI">
+<head>
+  <title>ECS API User Interface</title>
+  <link rel="stylesheet" type="text/css" href="/app/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/app/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" type="text/css" href="/app/css/font-awesome.css">
+  <link rel="stylesheet" type="text/css" href="/app/css/app.css" />
+
+  <script type="text/javascript" src="/app/javascript/jquery-2.1.4.min.js"></script>
+  <script type="text/javascript" src="/app/javascript/bootstrap.min.js"></script>
+  <!--<script type="text/javascript" src="/app/javascript/angular.min.js"></script>-->
+  <script type="text/javascript" src="/app/javascript/angular.js"></script>
+  <script type="text/javascript" src="/app/javascript/angular-sanitize.min.js"></script>
+  <script type="text/javascript" src="/app/javascript/angular-animate.min.js"></script>
+  <script type="text/javascript" src="/app/javascript/app.js"></script>
+</head>
+<body ng-controller="MainController as main">
+  <input type="hidden" id="s3login" value="{{ .s3login }}" />
+  <main-message></main-message>
+
+  <div id="content" class="main container-fluid fullsize">
+    <div class="row">
+        <h1 class="logo col-md-12">ECS API User Interface</h1>
+    </div>
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+        <main-menu></main-menu>
+      </div>
+      <div class="col-md-8 col-md-offset-2">
+        <main-credentials></main-credentials>
+      </div>
+      <div class="col-md-8 col-md-offset-2">
+        <main-bucket></main-bucket>
+      </div>
+    </div>
+    <div ng-show="menu=='html5browser'" class="row row-eq-height fullsize">
+      <div class="col-md-12 embed-responsive embed-responsive-16by9">
+        <main-html5browser></main-html5browser>
+      </div>
+    </div>
+    <div class="row row-eq-height fullsize">
+      <div class="col-md-4">
+        <div class="row">
+          <div class="col-md-12">
+            <main-metadata-search></main-metadata-search>
+          </div>
+          <div class="col-md-12">
+            <main-apis></main-apis>
+          </div>
+          <div class="col-md-12">
+            <main-ecs-billing></main-ecs-billing>
+          </div>
+          <div class="col-md-12">
+            <main-apis-examples></main-apis-examples>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8 fullsize">
+        <div class="row fullsize">
+          <div class="col-md-12">
+            <main-metadata-result></main-metadata-result>
+          </div>
+          <div class="col-md-12">
+            <main-ecs-billing-result></main-ecs-billing-result>
+          </div>
+          <div class="col-md-12">
+            <main-apis-request></main-apis-request>
+          </div>
+          <div class="col-md-12">
+            <main-apis-response></main-apis-response>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

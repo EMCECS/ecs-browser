@@ -1,0 +1,130 @@
+<div class="panel panel-primary" ng-if="menu.startsWith('create-')">
+  <div class="panel-heading">Create bucket/container/subtenant</div>
+  <div class="panel-body">
+    <form accept-charset="UTF-8" ng-submit="bucketCtrl.create(menu.split('-')[1])">
+      <div class="field" ng-if="menu=='create-swift'">
+        <div class="input-group">
+          <span class="input-group-addon">Swift Endpoint</span>
+          <input ng-model="main.swiftendpoint" ng-required="true" class="form-control" id="bucket_endpoint" name="bucket_endpoint" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='create-atmos'">
+        <div class="input-group">
+          <span class="input-group-addon">Atmos Endpoint</span>
+          <input ng-model="main.atmosendpoint" ng-required="true" class="form-control" id="bucket_endpoint" name="bucket_endpoint" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='create-swift'">
+        <div class="input-group">
+          <span class="input-group-addon">Swift Password</span>
+          <input ng-model="bucketCtrl.bucket_password" ng-required="true" class="form-control" id="bucket_password" name="bucket_password" type="password" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="(menu=='create-s3' || menu=='create-swift')">
+        <div class="input-group">
+          <span class="input-group-addon">Bucket/Container name</span>
+          <input ng-model="bucketCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
+        </div>
+        <br />
+      </div>
+      <div ng-if="main.replicationgroups.length == 0" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Replication Group</span>
+          <input ng-model="bucketCtrl.bucket_replication_group" class="form-control" id="bucket_replication_group" name="bucket_replication_group" type="text" />
+        </div>
+        <br />
+      </div>
+      <div ng-if="main.replicationgroups.length > 0" class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Replication Group</span>
+          <select ng-model="bucketCtrl.bucket_replication_group" class="form-control" id="bucket_replication_group" name="bucket_replication_group">
+            <option ng-repeat="replicationgroup in main.replicationgroups | orderBy: 'replicationgroup'" value="{{ replicationgroup }}">{{ replicationgroup }}</option>
+          </select>
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='create-s3'">
+        <div class="input-group">
+          <span class="input-group-addon">Metadata search</span>
+          <input ng-model="bucketCtrl.bucket_metadata_search" class="form-control" id="bucket_metadata_search" name="bucket_metadata_search" type="text" placeholder="ex: Size,CreateTime,LastModified,x-amz-meta-custom1;String,x-amz-meta-custom2;Integer" />
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Enable Access During Outage" readonly="readonly">
+          <span class="input-group-addon">
+            <input ng-model="bucketCtrl.bucket_enable_ado" id="bucket_enable_ado" name="bucket_enable_ado" type="checkbox" />
+          </span>
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Enable FS" readonly="readonly">
+          <span class="input-group-addon">
+            <input ng-model="bucketCtrl.bucket_enable_fs" id="bucket_enable_fs" name="bucket_enable_fs" type="checkbox" />
+          </span>
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='create-s3'">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Enable compliance" readonly="readonly">
+          <span class="input-group-addon">
+            <input ng-model="bucketCtrl.bucket_enable_compliance" id="bucket_enable_compliance" name="bucket_enable_compliance" type="checkbox" />
+          </span>
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Enable encryption" readonly="readonly">
+          <span class="input-group-addon">
+            <input ng-model="bucketCtrl.bucket_enable_encryption" id="bucket_enable_encryption" name="bucket_enable_encryption" type="checkbox" />
+          </span>
+        </div>
+        <br />
+      </div>
+      <div class="field">
+        <div class="input-group">
+          <span class="input-group-addon">Retention (days)</span>
+          <input ng-model="bucketCtrl.bucket_retention" class="form-control" placeholder="0 means no retention" id="bucket_retention" name="bucket_retention" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="(menu=='create-s3' && (!bucketCtrl.bucket_retention || bucketCtrl.bucket_retention == 0))">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Enable versioning" readonly="readonly">
+          <span class="input-group-addon">
+            <input ng-model="bucketCtrl.bucket_enable_versioning" id="bucket_enable_versioning" name="bucket_enable_versioning" type="checkbox" />
+          </span>
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='create-s3'">
+        <div class="input-group">
+          <span class="input-group-addon">Expiration of current versions (days)</span>
+          <input ng-model="bucketCtrl.bucket_expiration_current_versions" class="form-control" placeholder="0 means no expiration and must be higher than or equal to retention" id="bucket_expiration_current_versions" name="bucket_expiration_current_versions" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="(menu=='create-s3' && bucketCtrl.bucket_enable_versioning && (!bucketCtrl.bucket_retention || bucketCtrl.bucket_retention == 0))">
+        <div class="input-group">
+          <span class="input-group-addon">Expiration of non current versions (days)</span>
+          <input ng-model="bucketCtrl.bucket_expiration_non_current_versions" class="form-control" placeholder="0 means no expiration" id="bucket_expiration_non_current_versions" name="bucket_expiration_non_current_versions" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
+          <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+          Create
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
