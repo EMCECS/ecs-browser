@@ -59,7 +59,7 @@ function formatXml(xml) {
 }
 
 (function() {
-  var app = angular.module('ECSUI', ['ngAnimate', 'ngSanitize']);
+  var app = angular.module('ECS-BROWSER', ['ngAnimate', 'ngSanitize']);
 
   app.value('loadingService', {
     loadingCount: 0,

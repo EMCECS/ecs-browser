@@ -11,18 +11,18 @@ build:
           go get "github.com/unrolled/render"
     - script:
         name: go build
-        code: CGO_ENABLED=0 go build -a -ldflags '-s' -installsuffix cgo -o ecsui .
+        code: CGO_ENABLED=0 go build -a -ldflags '-s' -installsuffix cgo -o ecs-browser .
     - script:
         name: copy binary
-        code: cp -r ecsui config.json app "$WERCKER_OUTPUT_DIR"
+        code: cp -r ecs-browser config.json app "$WERCKER_OUTPUT_DIR"
 deploy:
     box: google/golang
     steps:
     - internal/docker-scratch-push:
         username: $DOCKER_HUB_USERNAME
         password: $DOCKER_HUB_PASSWORD
-        cmd: ./ecsui
+        cmd: ./ecs-browser
         tag: latest
         ports: "80"
-        repository: djannot/ecsui
+        repository: djannot/ecs-browser
         registry: https://hub.docker.com

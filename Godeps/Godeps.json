@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/djannot/ecsui",
+	"ImportPath": "github.com/EMCECS/ecs-browser",
 	"GoVersion": "go1.6",
 	"GodepVersion": "v74",
 	"Deps": [
