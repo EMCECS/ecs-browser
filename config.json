@@ -1,0 +1,1890 @@
+{
+  "examples":[
+    {
+      "name":"Appending data to an object",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"FIRST",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Append data to an object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"bytes=-1-",
+          "data":"SECOND",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the data has been appended",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Updating a byte range within an object",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"CREATED",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Update a byte range within an object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"bytes=0-2",
+          "data":"UPD",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the data has been updated",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Reading multiple byte ranges within an object",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"IT IS NOT A SUNNY DAY",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Get 2 different ranges in a single call",
+          "expected_response_code":"206",
+          "path":"/testbucket1/key1",
+          "range":"bytes=0-4,10-20",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Apply a retention to an object",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object with a retention of 60 seconds",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"ORIGINAL DATA",
+          "method":"PUT",
+          "headers":{
+            "x-emc-retention-period":"60"
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be modified",
+          "expected_response_code":"409",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"NEW DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be deleted",
+          "expected_response_code":"409",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the object can be deleted after 60 seconds",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Apply a retention to a bucket",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket with a retention of 60 seconds",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+            "x-emc-retention-period":"60"
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"ORIGINAL DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be modified",
+          "expected_response_code":"409",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"NEW DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be deleted",
+          "expected_response_code":"409",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the object can be deleted after 60 seconds",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Apply an expiration to a bucket",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket3",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Apply an expiration to the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket3?lifecycle",
+          "range":"",
+          "data":"<LifecycleConfiguration><Rule><ID>expires in a day</ID><Prefix></Prefix><Status>Enabled</Status><Expiration><Days>1</Days></Expiration></Rule></LifecycleConfiguration>",
+          "method":"PUT",
+          "headers":{
+            "Content-Type":"application/xml"
+          }
+        },
+        {
+          "description":"Check the lifecyle policy of to the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket3?lifecycle",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"200",
+          "path":"/testbucket2/key1",
+          "range":"",
+          "data":"DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket3/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"2 days later, check that the object doesn't exist anymore",
+          "expected_response_code":"404",
+          "path":"/testbucket3/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket3",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"S3 versioning",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Activate the versioning for the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1?versioning",
+          "range":"",
+          "data":"<?xml version='1.0' encoding='UTF-8' standalone='yes'?><VersioningConfiguration xmlns='http://s3.amazonaws.com/doc/2006-03-01/'><Status>Enabled</Status></VersioningConfiguration>",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the versioning has been activated for the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1?versioning",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"VERSION 1",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Update the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"VERSION 2",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"List the different versions",
+          "expected_response_code":"200",
+          "path":"/testbucket1?versions",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Get a version",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1?versionId=XXXVersion IdXXX",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          },
+          "inputs":[
+            "Version Id"
+          ]
+        },
+        {
+          "description":"Recover a deleted object (by deleting the delete marker)",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1?versionId=XXXVersion IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Version Id"
+          ]
+        },
+        {
+          "description":"Check the content of the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"List the different versions",
+          "expected_response_code":"200",
+          "path":"/testbucket1?versions",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the first version",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1?versionId=XXXVersion IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Version Id"
+          ]
+        },
+        {
+          "description":"Delete the second version",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1?versionId=XXXVersion IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Version Id"
+          ]
+        },
+        {
+          "description":"Check the content of the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"S3 versioning with expiration of old versions",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket4",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Activate the versioning for the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket4?versioning",
+          "range":"",
+          "data":"<?xml version='1.0' encoding='UTF-8' standalone='yes'?><VersioningConfiguration xmlns='http://s3.amazonaws.com/doc/2006-03-01/'><Status>Enabled</Status></VersioningConfiguration>",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the versioning has been activated for the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket4?versioning",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Apply an expiration of old versions to the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket4?lifecycle",
+          "range":"",
+          "data":"<LifecycleConfiguration><Rule><ID>expires in a day</ID><Prefix></Prefix><Status>Enabled</Status><NoncurrentVersionExpiration><NoncurrentDays>1</NoncurrentDays></NoncurrentVersionExpiration></Rule></LifecycleConfiguration>",
+          "method":"PUT",
+          "headers":{
+            "Content-Type":"application/xml"
+          }
+        },
+        {
+          "description":"Check the lifecyle policy of to the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket4?lifecycle",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"200",
+          "path":"/testbucket4/key1",
+          "range":"",
+          "data":"VERSION 1",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket4/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testbucket4/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket4",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that there's a delete marker",
+          "expected_response_code":"200",
+          "path":"/testbucket4?versions",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"2 days later, check that there's no delete marker remaining",
+          "expected_response_code":"200",
+          "path":"/testbucket4?versions",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket4",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Metadata search",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a bucket with metadata search",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+            "x-emc-metadata-search":"Size,CreateTime,LastModified,x-amz-meta-username;String,x-amz-meta-age;Integer"
+          }
+        },
+        {
+          "description":"Check that metadata search has been activated for the bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1?searchmetadata",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create a small object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"SMALL OBJECT",
+          "method":"PUT",
+          "headers":{
+            "x-amz-meta-age":"18"
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create a larger  object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key2",
+          "range":"",
+          "data":"THIS OBJECT IS A LITTLE BIT LARGER",
+          "method":"PUT",
+          "headers":{
+            "x-amz-meta-age":"25"
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key2",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Run a query for objects larger than 25B",
+          "expected_response_code":"200",
+          "path":"/testbucket1?query=Size>25",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Run a query for objects when age is higher than 20 and returns all the metadata",
+          "expected_response_code":"200",
+          "path":"/testbucket1?query=x-amz-meta-age>20&attributes=ALL",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the first object",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the second object",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key2",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"S3 copy",
+      "api":"s3",
+      "steps":[
+        {
+          "description":"Create a first bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create a second bucket with FS enabled",
+          "expected_response_code":"200",
+          "path":"/testbucket2",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+            "x-emc-file-system-access-enabled":"true"
+          }
+        },
+        {
+          "description":"Create an object on the first bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create a copy of the object in the first bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key2",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+            "x-amz-copy-source":"/testbucket1/key1",
+            "x-amz-metadata-directive":"COPY"
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket1/key2",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create a copy of the object in the second bucket",
+          "expected_response_code":"200",
+          "path":"/testbucket2/key1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+            "x-amz-copy-source":"/testbucket1/key1",
+            "x-amz-metadata-directive":"COPY"
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testbucket2/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object in the first bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the copy of the object in the first bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1/key2",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the copy of the object in the second bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket2/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the first bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the second bucket",
+          "expected_response_code":"204",
+          "path":"/testbucket2",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Appending data to an object",
+      "api":"swift",
+      "steps":[
+        {
+          "description":"Create a container",
+          "expected_response_code":"201",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"FIRST",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Append data to an object",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"bytes=-1-",
+          "data":"SECOND",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the data has been appended",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the container",
+          "expected_response_code":"204",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Updating a byte range within an object",
+      "api":"swift",
+      "steps":[
+        {
+          "description":"Create a container",
+          "expected_response_code":"201",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"CREATED",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Update a byte range within an object",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"bytes=0-2",
+          "data":"UPD",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the data has been appended",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the container",
+          "expected_response_code":"204",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Reading multiple byte ranges within an object",
+      "api":"swift",
+      "steps":[
+        {
+          "description":"Create a container",
+          "expected_response_code":"201",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"IT IS NOT A SUNNY DAY",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Get 2 different ranges in a single call",
+          "expected_response_code":"206",
+          "path":"/testcontainer1/key1",
+          "range":"bytes=0-4,10-20",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the container",
+          "expected_response_code":"204",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Apply a retention to an object",
+      "api":"swift",
+      "steps":[
+        {
+          "description":"Create a container",
+          "expected_response_code":"201",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object with a retention of 60 seconds",
+          "expected_response_code":"201",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"ORIGINAL DATA",
+          "method":"PUT",
+          "headers":{
+            "x-emc-retention-period":"60"
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be modified",
+          "expected_response_code":"409",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"NEW DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be deleted",
+          "expected_response_code":"409",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the object can be deleted after 60 seconds",
+          "expected_response_code":"204",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the container",
+          "expected_response_code":"204",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Apply a retention to a container",
+      "api":"swift",
+      "steps":[
+        {
+          "description":"Create a container with a retention of 60 seconds",
+          "expected_response_code":"201",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+            "x-emc-retention-period":"60"
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"ORIGINAL DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be modified",
+          "expected_response_code":"409",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"NEW DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be deleted",
+          "expected_response_code":"409",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the object can be deleted after 60 seconds",
+          "expected_response_code":"204",
+          "path":"/testcontainer1/key1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the container",
+          "expected_response_code":"204",
+          "path":"/testcontainer1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        }
+      ]
+    },
+    {
+      "name":"Secret Key Self-Service",
+      "api":"ecs",
+      "steps":[
+        {
+          "description":"Get the secret keys of the user",
+          "expected_response_code":"200",
+          "path":"/object/secret-keys",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create a secret key for the user",
+          "expected_response_code":"200",
+          "path":"/object/secret-keys",
+          "range":"",
+          "data":"<secret_key_create_param></secret_key_create_param>",
+          "method":"POST",
+          "headers":{
+            "Content-Type":"application/xml"
+          }
+        }
+      ]
+    },
+    {
+      "name":"Appending data to an object",
+      "api":"atmos",
+      "steps":[
+        {
+          "description":"Create an Atmos subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenant",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"FIRST",
+          "method":"POST",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Append data to an object",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"bytes=-1-",
+          "data":"SECOND",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the data has been appended",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenants/XXXSubtenant IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Subtenant Id"
+          ]
+        }
+      ]
+    },
+    {
+      "name":"Updating a byte range within an object",
+      "api":"atmos",
+      "steps":[
+        {
+          "description":"Create an Atmos subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenant",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"CREATED",
+          "method":"POST",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Update a byte range within an object",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"bytes=0-2",
+          "data":"UPD",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the data has been updated",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenants/XXXSubtenant IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Subtenant Id"
+          ]
+        }
+      ]
+    },
+    {
+      "name":"Apply a retention to an object",
+      "api":"atmos",
+      "steps":[
+        {
+          "description":"Create an Atmos subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenant",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object with a retention of 60 seconds",
+          "expected_response_code":"201",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"ORIGINAL DATA",
+          "method":"POST",
+          "headers":{
+            "x-emc-retention-period":"60"
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be modified",
+          "expected_response_code":"409",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"NEW DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be deleted",
+          "expected_response_code":"409",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the object can be deleted after 60 seconds",
+          "expected_response_code":"204",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenants/XXXSubtenant IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Subtenant Id"
+          ]
+        }
+      ]
+    },
+    {
+      "name":"Apply a retention to a bucket",
+      "api":"atmos",
+      "steps":[
+        {
+          "description":"Create an Atmos subtenant with a retention of 60 secondst",
+          "expected_response_code":"204",
+          "path":"/rest/subtenant",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+            "x-emc-retention-period":"60"
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"ORIGINAL DATA",
+          "method":"POST",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check the content of the object",
+          "expected_response_code":"200",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be modified",
+          "expected_response_code":"409",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"NEW DATA",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that object can't be deleted",
+          "expected_response_code":"409",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Check that the object can be deleted after 60 seconds",
+          "expected_response_code":"204",
+          "path":"/rest/namespace/object1",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenants/XXXSubtenant IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Subtenant Id"
+          ]
+        }
+      ]
+    },
+    {
+      "name":"Simple objectspace test",
+      "api":"atmos",
+      "steps":[
+        {
+          "description":"Create an Atmos subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenant",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object",
+          "expected_response_code":"201",
+          "path":"/rest/objects",
+          "range":"",
+          "data":"TEST",
+          "method":"POST",
+          "headers":{
+          }
+        },
+        {
+          "description":"Read the object",
+          "expected_response_code":"200",
+          "path":"/rest/objects/XXXObject IdXXX",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          },
+          "inputs":[
+            "Object Id"
+          ]
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/rest/objects/XXXObject IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Object Id"
+          ]
+        },
+        {
+          "description":"Delete the subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenants/XXXSubtenant IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Subtenant Id"
+          ]
+        }
+      ]
+    },
+    {
+      "name":"Create an object with a specific object Id",
+      "api":"atmos",
+      "steps":[
+        {
+          "description":"Create an Atmos subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenant",
+          "range":"",
+          "data":"",
+          "method":"PUT",
+          "headers":{
+          }
+        },
+        {
+          "description":"Create an object with a specific object Id",
+          "expected_response_code":"201",
+          "path":"/rest/objects",
+          "range":"",
+          "data":"TEST",
+          "method":"POST",
+          "headers":{
+            "x-emc-object-id":"01234567890123456789012345678901234567890123"
+          }
+        },
+        {
+          "description":"Read the object",
+          "expected_response_code":"200",
+          "path":"/rest/objects/01234567890123456789012345678901234567890123",
+          "range":"",
+          "data":"",
+          "method":"GET",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the object",
+          "expected_response_code":"204",
+          "path":"/rest/objects/01234567890123456789012345678901234567890123",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          }
+        },
+        {
+          "description":"Delete the subtenant",
+          "expected_response_code":"204",
+          "path":"/rest/subtenants/XXXSubtenant IdXXX",
+          "range":"",
+          "data":"",
+          "method":"DELETE",
+          "headers":{
+          },
+          "inputs":[
+            "Subtenant Id"
+          ]
+        }
+      ]
+    }
+  ]
+}
