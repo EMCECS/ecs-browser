@@ -18,10 +18,11 @@ import (
   "github.com/unrolled/render"
 )
 
-var rendering *render.Render
 var store = sessions.NewCookieStore([]byte("session-key"))
+var rendering *render.Render
 var config Config
 var ecs Ecs
+var router = mux.NewRouter()
 
 type Ecs struct {
   User string
@@ -107,20 +108,20 @@ func main() {
   // See http://godoc.org/github.com/unrolled/render
   rendering = render.New(render.Options{Directory: "app/templates"})
   // See http://www.gorillatoolkit.org/pkg/mux
-  router := mux.NewRouter()
   router.HandleFunc("/", Index)
-  router.Handle("/api/v1/credentials", appHandler(Credentials)).Methods("GET")
-  router.Handle("/api/v1/ecs/info", appHandler(GetEcsInfo)).Methods("GET")
-  router.Handle("/api/v1/buckets", appHandler(ListBuckets)).Methods("GET")
-  router.Handle("/api/v1/examples", appHandler(GetExamples)).Methods("GET")
-  router.Handle("/api/v1/bucket", appHandler(CreateBucket)).Methods("POST")
-  router.Handle("/api/v1/metadatasearch", appHandler(MetadataSearch)).Methods("POST")
-  router.Handle("/api/v1/searchmetadata", appHandler(SearchMetadata)).Methods("POST")
-  router.Handle("/api/v1/apis", appHandler(Apis)).Methods("POST")
-  router.Handle("/api/v1/billing/namespaces", appHandler(BillingGetNamespaces)).Methods("GET")
-  router.Handle("/api/v1/billing/users/{namespace}", appHandler(BillingGetUsers)).Methods("GET")
-  router.Handle("/api/v1/billing/buckets/{namespace}", appHandler(BillingGetBuckets)).Methods("GET")
-  router.Handle("/api/v1/billing/info/{namespace}", appHandler(BillingGetCurrentUsage)).Methods("POST")
+  apiHandle("credentials", appHandler(Credentials), "GET")
+  apiHandle("ecs/info", appHandler(GetEcsInfo), "GET")
+  apiHandle("buckets", appHandler(ListBuckets), "GET")
+  apiHandle("examples", appHandler(GetExamples), "GET")
+  apiHandle("s3/{bucket}/", appHandler(S3ObjectGet), "GET")
+  apiHandle("bucket", appHandler(CreateBucket), "POST")
+  apiHandle("metadatasearch", appHandler(MetadataSearch), "POST")
+  apiHandle("searchmetadata", appHandler(SearchMetadata), "POST")
+  apiHandle("apis", appHandler(Apis), "POST")
+  apiHandle("billing/namespaces", appHandler(BillingGetNamespaces), "GET")
+  apiHandle("billing/users/{namespace}", appHandler(BillingGetUsers), "GET")
+  apiHandle("billing/buckets/{namespace}", appHandler(BillingGetBuckets), "GET")
+  apiHandle("billing/info/{namespace}", appHandler(BillingGetCurrentUsage), "POST")
   router.HandleFunc("/login", Login)
   router.HandleFunc("/logout", Logout)
   router.PathPrefix("/app/").Handler(http.StripPrefix("/app/", http.FileServer(http.Dir("app"))))
@@ -128,6 +129,13 @@ func main() {
 	n.UseHandler(RecoverHandler(LoginMiddleware(router)))
 	n.Run(":" + port)
 	log.Printf("Listening on port " + port)
+}
+
+var apiBase = "/api/v1/"
+
+func apiHandle(path string, handler http.Handler, methodName string) {
+    log.Printf(path)
+	router.Handle(apiBase + path, handler).Methods(methodName)
 }
 
 // Main page
@@ -143,21 +151,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
   rendering.HTML(w, http.StatusOK, "index",  map[string]interface{}{
     "s3login": s3Login,
   })
-}
-
-// Returned an S3 struct to be used to execute S3 requests
-func getS3(r *http.Request) (S3, error) {
-  session, err := store.Get(r, "session-name")
-  if err != nil {
-    return S3{}, err
-  }
-  s3 := S3{
-    EndPointString: session.Values["Endpoint"].(string),
-    AccessKey: session.Values["AccessKey"].(string),
-    SecretKey: session.Values["SecretKey"].(string),
-    Namespace: "",
-  }
-  return s3, nil
 }
 
 // Retrieve the examples loaded from the config.json file
@@ -200,7 +193,7 @@ func GetEcsInfo(w http.ResponseWriter, r *http.Request) *appError {
   if ecs.Endpoint == "" || ecs.User == "" || ecs.Password == "" {
     return nil
   }
-  s3, err := getS3(r)
+  s3, err := GetS3(r)
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
   }
@@ -310,7 +303,7 @@ type Query struct {
 
 // Execute the metadata search
 func MetadataSearch(w http.ResponseWriter, r *http.Request) *appError {
-  s3, err := getS3(r)
+  s3, err := GetS3(r)
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
   }
@@ -363,7 +356,7 @@ func MetadataSearch(w http.ResponseWriter, r *http.Request) *appError {
 
 // Retrieve information about metadata indexed for a bucket
 func SearchMetadata(w http.ResponseWriter, r *http.Request) *appError {
-  s3, err := getS3(r)
+  s3, err := GetS3(r)
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
   }
@@ -425,7 +418,7 @@ func Apis(w http.ResponseWriter, r *http.Request) *appError {
   }
   var response Response
   if apisQuery.Api == "s3" {
-    s3, err := getS3(r)
+    s3, err := GetS3(r)
     if err != nil {
       return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
     }
@@ -434,7 +427,7 @@ func Apis(w http.ResponseWriter, r *http.Request) *appError {
       return &appError{err: err, status: http.StatusInternalServerError, json: err.Error()}
     }
   } else if apisQuery.Api == "swift" {
-    s3, err := getS3(r)
+    s3, err := GetS3(r)
     if err != nil {
       return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
     }
@@ -443,7 +436,7 @@ func Apis(w http.ResponseWriter, r *http.Request) *appError {
       return &appError{err: err, status: http.StatusInternalServerError, json: err.Error()}
     }
   } else if apisQuery.Api == "atmos" {
-    s3, err := getS3(r)
+    s3, err := GetS3(r)
     if err != nil {
       return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
     }

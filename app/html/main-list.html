@@ -1,0 +1,79 @@
+<div class="panel panel-primary" ng-if="menu.startsWith('list-')">
+  <div class="panel-heading">List bucket/container/subtenant</div>
+  <div class="panel-body">
+    <form accept-charset="UTF-8" ng-submit="listCtrl.create(menu.split('-')[1])">
+      <div class="field" ng-if="menu=='list-swift'">
+        <div class="input-group">
+          <span class="input-group-addon">Swift Endpoint</span>
+          <input ng-model="main.swiftendpoint" ng-required="true" class="form-control" id="bucket_endpoint" name="bucket_endpoint" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='list-atmos'">
+        <div class="input-group">
+          <span class="input-group-addon">Atmos Endpoint</span>
+          <input ng-model="main.atmosendpoint" ng-required="true" class="form-control" id="bucket_endpoint" name="bucket_endpoint" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='list-swift'">
+        <div class="input-group">
+          <span class="input-group-addon">Swift Password</span>
+          <input ng-model="listCtrl.bucket_password" ng-required="true" class="form-control" id="bucket_password" name="bucket_password" type="password" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="(menu=='list-s3' || menu=='list-swift')">
+        <div class="input-group">
+          <span class="input-group-addon">Bucket/Container name</span>
+          <input ng-model="listCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="field" ng-if="menu=='list-s3'">
+        <div class="input-group">
+          <span class="input-group-addon">First object to return</span>
+          <input ng-model="listCtrl.key-marker" class="form-control" id="key-marker" name="key-marker" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Maximum number returned</span>
+          <input ng-model="listCtrl.max-keys" class="form-control" id="max-keys" name="max-keys" type="number" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Object prefix</span>
+          <input ng-model="listCtrl.prefix" class="form-control" id="prefix" name="prefix" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">First object version to return</span>
+          <input ng-model="listCtrl.version-id-marker" class="form-control" id="version-id-marker" name="version-id-marker" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Metadata search</span>
+          <input ng-model="listCtrl.object_metadata_search" class="form-control" id="object_metadata_search" name="object_metadata_search" type="text" placeholder="ex: Size,CreateTime,LastModified,x-amz-meta-custom1;String,x-amz-meta-custom2;Integer" />
+        </div>
+        <br />
+        <div class="input-group">
+          <input type="text" class="form-control" value="Return all versions" readonly="readonly">
+          <span class="input-group-addon">
+            <input ng-model="listCtrl.object_all_versions" id="object_all_versions" name="object_all_versions" type="checkbox" />
+          </span>
+        </div>
+        <br />
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
+          <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+          List
+        </button>
+      </div>
+    </form>
+    <table ng-if="menu=='list-s3'" style="width: 100%; padding: 3pt" class="table table-hover">
+      <tr style="width: 100%; padding: 3pt"><th>Key</th><th>Storage Class</th><th>Size</th><th>Last Modified</th><th>ETag</th></tr>
+      <tr ng-repeat="item in main.listing['Contents']" style="width: 100%; padding: 3pt"><td>{{item['Key']}}</td><td>{{item['StorageClass']}}</td><td>{{item['Size']}}</td><td>{{item['LastModified']}}</td><td>{{item['ETag']}}</td></tr>
+    </table>
+  </div>
+</div>

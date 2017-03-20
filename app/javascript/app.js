@@ -98,6 +98,7 @@ function formatXml(xml) {
     $scope.main.defaultreplicationgroup = "";
     $scope.main.atmossubtenants = [];
     $scope.main.swiftcontainers = [];
+    $scope.main.listing = {};
     $scope.main.buckets = [];
     $scope.main.examples = {};
     $scope.main.credentials = {};
@@ -274,6 +275,43 @@ function formatXml(xml) {
         };
       }],
       controllerAs: "bucketCtrl"
+    };
+  });
+
+  app.directive("mainList", function() {
+    return {
+      restrict: 'E',
+      templateUrl: "app/html/main-list.html",
+      controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
+        this.create = function(api) {
+            bucket_name = this.bucket_name;
+            var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/';
+            $http.get(apiUrl).
+              success(function(data, status, headers, config) {
+                $scope.main.messagetitle = "Success";
+                $scope.main.listing = data;
+                if(api == "s3") {
+                  $scope.main.messagebody = "Bucket " + bucket_name + " listing";
+                }
+                if(api == "atmos") {
+                  $scope.main.messagebody = "Subtenant " + data + " listing";
+                  $scope.main.atmossubtenants.push(data);
+                }
+                if(api == "swift") {
+                  $scope.main.messagebody = "Container " + bucket_name + " listing";
+                  $scope.main.swiftcontainers.push(bucket_name);
+                }
+                $('#message').modal({show: true});
+              }).
+              error(function(data, status, headers, config) {
+                $scope.main.result = [];
+                $scope.main.messagetitle = "Error";
+                $scope.main.messagebody = data;
+                $('#message').modal({show: true});
+              });
+        };
+      }],
+      controllerAs: "listCtrl"
     };
   });
 

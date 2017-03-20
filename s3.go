@@ -14,6 +14,8 @@ import (
   "strconv"
   "time"
   "bytes"
+  "github.com/gorilla/mux"
+  "github.com/gorilla/sessions"
 )
 
 var b64 = base64.StdEncoding
@@ -130,6 +132,53 @@ type EndPoint struct {
 type PreparedS3Request struct {
   Url string
   Params map[string][]string
+}
+
+var s3store = sessions.NewCookieStore([]byte("session-key"))
+
+// list objects in a bucket
+func S3ObjectGet(w http.ResponseWriter, r *http.Request) *appError {
+  vars := mux.Vars(r)
+//  var listResponse Response
+  var bucketName = vars["bucket"]
+  log.Print("In S3ObjectGet for bucket " + bucketName)
+  s3, err := GetS3(r)
+  if err != nil {
+    return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
+  }
+  var listResponse Response
+  headers := make(map[string][]string)
+  listResponse, err = s3Request(s3, bucketName, "GET", "/", headers, "")
+  if err != nil {
+    return &appError{err: err, status: http.StatusInternalServerError, json: err.Error()}
+  }
+  if listResponse.Code != 200 {
+    return &appError{err: err, status: http.StatusInternalServerError, xml: listResponse.Body}
+  }
+  log.Print(listResponse.Body)
+  body := &ListResp{}
+  err = xml.Unmarshal([]byte(listResponse.Body), body)
+  if err != nil {
+    return &appError{err: err, status: http.StatusInternalServerError, json: err.Error()}
+  }
+  log.Print(body)
+  rendering.JSON(w, http.StatusOK, body)
+  return nil
+}
+
+// Returned an S3 struct to be used to execute S3 requests
+func GetS3(r *http.Request) (S3, error) {
+  session, err := s3store.Get(r, "session-name")
+  if err != nil {
+    return S3{}, err
+  }
+  s3 := S3{
+    EndPointString: session.Values["Endpoint"].(string),
+    AccessKey: session.Values["AccessKey"].(string),
+    SecretKey: session.Values["SecretKey"].(string),
+    Namespace: "",
+  }
+  return s3, nil
 }
 
 func prepareS3Request(s3 S3, bucket string, method string, pathWithParams string, headers map[string][]string, namespaceInHost bool) (PreparedS3Request, error) {

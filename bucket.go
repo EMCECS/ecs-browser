@@ -90,7 +90,7 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) *appError {
   }
   var bucketCreateResponse Response
   if ecsBucket.Api == "s3" {
-    s3, err := getS3(r)
+    s3, err := GetS3(r)
     if err != nil {
       return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
     }
@@ -168,7 +168,7 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) *appError {
       return &appError{err: err, status: http.StatusInternalServerError, xml: bucketCreateResponse.Body}
     }
   } else if ecsBucket.Api == "swift" {
-    s3, err := getS3(r)
+    s3, err := GetS3(r)
     if err != nil {
       return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
     }
@@ -182,7 +182,7 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) *appError {
       return &appError{err: err, status: http.StatusInternalServerError, xml: bucketCreateResponse.Body}
     }
   } else if ecsBucket.Api == "atmos" {
-    s3, err := getS3(r)
+    s3, err := GetS3(r)
     if err != nil {
       return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
     }
@@ -202,7 +202,7 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) *appError {
 
 // Retrieve the list of buckets owned by this object user
 func ListBuckets(w http.ResponseWriter, r *http.Request) *appError {
-  s3, err := getS3(r)
+  s3, err := GetS3(r)
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
   }
