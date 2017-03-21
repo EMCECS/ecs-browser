@@ -148,7 +148,11 @@ func S3ObjectGet(w http.ResponseWriter, r *http.Request) *appError {
   }
   var listResponse Response
   headers := make(map[string][]string)
-  listResponse, err = s3Request(s3, bucketName, "GET", "/", headers, "")
+  path := "/"
+  log.Print("query: " + r.URL.RawQuery)
+  path = path + "?" + r.URL.RawQuery
+  log.Print("path: " + path)
+  listResponse, err = s3Request(s3, bucketName, "GET", path, headers, "")
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: err.Error()}
   }
@@ -263,6 +267,7 @@ func s3Request(s3 S3, bucket string, method string, path string, headers map[str
   u, _ := url.Parse(preparedS3Request.Url)
   parameters, _ := url.ParseQuery(u.RawQuery)
   u.RawQuery = parameters.Encode()
+  log.Print("encoded query: " + u.RawQuery)
   if err != nil {
     return Response{}, err
   }

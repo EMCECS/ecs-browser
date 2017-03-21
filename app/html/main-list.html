@@ -32,37 +32,52 @@
       </div>
       <div class="field" ng-if="menu=='list-s3'">
         <div class="input-group">
-          <span class="input-group-addon">First object to return</span>
-          <input ng-model="listCtrl.key-marker" class="form-control" id="key-marker" name="key-marker" type="text" />
+          <span class="input-group-addon">Delimiter</span>
+          <input ng-model="listCtrl.delimiter" class="form-control" id="delimiter" name="delimiter" type="text" />
         </div>
         <br />
         <div class="input-group">
-          <span class="input-group-addon">Maximum number returned</span>
-          <input ng-model="listCtrl.max-keys" class="form-control" id="max-keys" name="max-keys" type="number" />
+          <span class="input-group-addon">Encoding type</span>
+          <input ng-model="listCtrl.encodingType" class="form-control" id="encodingType" name="encodingType" type="text" />
         </div>
         <br />
         <div class="input-group">
-          <span class="input-group-addon">Object prefix</span>
+          <span class="input-group-addon">Maximum number to return</span>
+          <input ng-model="listCtrl.maxKeys" class="form-control" id="maxKeys" name="maxKeys" type="number" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Prefix</span>
           <input ng-model="listCtrl.prefix" class="form-control" id="prefix" name="prefix" type="text" />
         </div>
         <br />
         <div class="input-group">
-          <span class="input-group-addon">First object version to return</span>
-          <input ng-model="listCtrl.version-id-marker" class="form-control" id="version-id-marker" name="version-id-marker" type="text" />
+          <span class="input-group-addon">Return objects after key</span>
+          <input ng-model="listCtrl.startAfter" class="form-control" id="startAfter" name="startAfter" type="text" />
         </div>
         <br />
         <div class="input-group">
-          <span class="input-group-addon">Metadata search</span>
-          <input ng-model="listCtrl.object_metadata_search" class="form-control" id="object_metadata_search" name="object_metadata_search" type="text" placeholder="ex: Size,CreateTime,LastModified,x-amz-meta-custom1;String,x-amz-meta-custom2;Integer" />
-        </div>
-        <br />
-        <div class="input-group">
-          <input type="text" class="form-control" value="Return all versions" readonly="readonly">
+          <input type="text" class="form-control" value="List API version" readonly="readonly">
           <span class="input-group-addon">
-            <input ng-model="listCtrl.object_all_versions" id="object_all_versions" name="object_all_versions" type="checkbox" />
+            <select ng-model="listCtrl.listType" id="listType" name="listType" type="select" required >
+              <option>1</option>
+              <option default>2</option>
+            </select>
           </span>
         </div>
         <br />
+        <div ng-if="listCtrl.listType=='2'">
+          <div class="input-group">
+            <span class="input-group-addon">Continuation token</span>
+            <input ng-model="listCtrl.continuationToken" class="form-control" id="continuationToken" name="continuationToken" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">Return owner information</span>
+            <input ng-model="listCtrl.fetchOwner" class="form-control" id="fetchOwner" name="fetchOwner" type="text" />
+          </div>
+          <br />
+        </div>
       </div>
       <div class="actions">
         <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
@@ -71,7 +86,18 @@
         </button>
       </div>
     </form>
-    <table ng-if="menu=='list-s3'" style="width: 100%; padding: 3pt" class="table table-hover">
+    <dl ng-if="menu=='list-s3'" style="width: 100%; padding: 3pt" >
+      <dt>Is truncated</dt>
+      <dd>{{main.listing['IsTruncated']}}</dd>
+      <dt>Marker</dt>
+      <dd>{{main.listing['Marker']}}</dd>
+      <dt>Next Marker</dt>
+      <dd>{{main.listing['NextMarker']}}</dd>
+      <dt ng-if="main.listing['CommonPrefixes']">Common Prefixes</dt>
+      <dd ng-repeat="prefix in main.listing['CommonPrefixes']" >{{prefix}}</dd>
+    </dl>
+    <table ng-if="menu=='list-s3'" style="width: 100%; padding: 3pt" class="table table-hover" >
+      <caption>Objects</caption>
       <tr style="width: 100%; padding: 3pt"><th>Key</th><th>Storage Class</th><th>Size</th><th>Last Modified</th><th>ETag</th></tr>
       <tr ng-repeat="item in main.listing['Contents']" style="width: 100%; padding: 3pt"><td>{{item['Key']}}</td><td>{{item['StorageClass']}}</td><td>{{item['Size']}}</td><td>{{item['LastModified']}}</td><td>{{item['ETag']}}</td></tr>
     </table>

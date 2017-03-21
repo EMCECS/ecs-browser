@@ -3,7 +3,13 @@ $(document).ready(function() {
   $('[data-toggle="popover"]').popover();
 });
 
+var encodingTypeNames = {"1":"encodingtype", "2":"encoding-type"};
+var startAfterNames = {"1":"marker", "2":"start-after"};
 
+function isNonEmptyString(theString) {
+  return (theString && theString.trim() && (theString != ""));
+}
+    
 if (!String.prototype.encodeHTML) {
   String.prototype.encodeHTML = function () {
     return this.replace(/&/g, '&amp;')
@@ -286,6 +292,44 @@ function formatXml(xml) {
         this.create = function(api) {
             bucket_name = this.bucket_name;
             var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/';
+            var separator = '?'
+            if(api == "s3") {
+              if (isNonEmptyString(this.delimiter)) {
+                apiUrl = apiUrl + separator + 'delimiter=' + this.delimiter;
+                separator = '&';
+              }
+              if (isNonEmptyString(this.encodingType)) {
+                apiUrl = apiUrl + separator + encodingTypeNames[this.listType] + '=' + this.encodingType;
+                separator = '&';
+                if (this.listType == '2') {
+	                apiUrl = apiUrl + separator + encodingTypeNames['1'] + '=' + this.encodingType;
+                }
+              }
+              if (this.maxKeys && (this.maxKeys > 0)) {
+                apiUrl = apiUrl + separator + 'max-keys=' + this.maxKeys;
+                separator = '&';
+              }
+              if (isNonEmptyString(this.prefix)) {
+                apiUrl = apiUrl + separator + 'prefix=' + this.prefix;
+                separator = '&';
+              }
+              if (isNonEmptyString(this.startAfter)) {
+                apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.startAfter;
+                separator = '&';
+                if (this.listType == '2') {
+	                apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.startAfter;
+                }
+              }
+              if (this.listType != '1') {
+                apiUrl = apiUrl + separator + 'list-type=2';
+                if (isNonEmptyString(this.continuationToken)) {
+                  apiUrl = apiUrl + '&continuation-token=' + this.continuationToken;
+                }
+                if (isNonEmptyString(this.fetchOwner)) {
+                  apiUrl = apiUrl + '&fetch-owner=' + this.fetchOwner;
+                }
+              }
+            }
             $http.get(apiUrl).
               success(function(data, status, headers, config) {
                 $scope.main.messagetitle = "Success";
