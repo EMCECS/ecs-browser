@@ -82,6 +82,22 @@ type ListResp struct {
   CommonPrefixes []string `xml:">Prefix"`
 }
 
+type VersionListResp struct {
+  Name string
+  Prefix string
+  Delimiter string
+  Marker string
+  NextMarker string
+  MaxKeys int
+  // IsTruncated is true if the results have been truncated because
+  // there are more keys and prefixes than can fit in MaxKeys.
+  // N.B. this is the opposite sense to that documented (incorrectly) in
+  // http://goo.gl/YjQTc
+  IsTruncated bool
+  Contents []Key
+  CommonPrefixes []string `xml:">Prefix"`
+}
+
 type EntryList struct {
   ObjectName string `xml:"objectName"`
   Url string
@@ -146,27 +162,21 @@ func S3ObjectGet(w http.ResponseWriter, r *http.Request) *appError {
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
   }
-  var listResponse Response
+  var response Response
   headers := make(map[string][]string)
   path := "/"
   log.Print("query: " + r.URL.RawQuery)
   path = path + "?" + r.URL.RawQuery
   log.Print("path: " + path)
-  listResponse, err = s3Request(s3, bucketName, "GET", path, headers, "")
-  if err != nil {
-    return &appError{err: err, status: http.StatusInternalServerError, json: err.Error()}
-  }
-  if listResponse.Code != 200 {
-    return &appError{err: err, status: http.StatusInternalServerError, xml: listResponse.Body}
-  }
-  log.Print(listResponse.Body)
-  body := &ListResp{}
-  err = xml.Unmarshal([]byte(listResponse.Body), body)
-  if err != nil {
-    return &appError{err: err, status: http.StatusInternalServerError, json: err.Error()}
-  }
-  log.Print(body)
-  rendering.JSON(w, http.StatusOK, body)
+  response, err = s3Request(s3, bucketName, "GET", path, headers, "")
+  var httpResponse HttpResponse
+//  httpResponse.Method = apisQuery.Method
+//  httpResponse.Path = apisQuery.Path
+  httpResponse.Code = response.Code
+  httpResponse.RequestHeaders = response.RequestHeaders
+  httpResponse.ResponseHeaders = response.ResponseHeaders
+  httpResponse.Body = response.Body
+  rendering.JSON(w, http.StatusOK, httpResponse)
   return nil
 }
 

@@ -9,7 +9,7 @@ var startAfterNames = {"1":"marker", "2":"start-after"};
 function isNonEmptyString(theString) {
   return (theString && theString.trim() && (theString != ""));
 }
-    
+
 if (!String.prototype.encodeHTML) {
   String.prototype.encodeHTML = function () {
     return this.replace(/&/g, '&amp;')
@@ -64,6 +64,11 @@ function formatXml(xml) {
     return formatted;
 }
 
+function processXmlData(data) {
+  data["body"] = "<pre><code>" + formatXml(data["body"]).encodeHTML() + "</code></pre>";
+  return data;
+}
+
 (function() {
   var app = angular.module('ECS-BROWSER', ['ngAnimate', 'ngSanitize']);
 
@@ -104,7 +109,7 @@ function formatXml(xml) {
     $scope.main.defaultreplicationgroup = "";
     $scope.main.atmossubtenants = [];
     $scope.main.swiftcontainers = [];
-    $scope.main.listing = {};
+    $scope.main.response = {};
     $scope.main.buckets = [];
     $scope.main.examples = {};
     $scope.main.credentials = {};
@@ -330,22 +335,10 @@ function formatXml(xml) {
                 }
               }
             }
+            $scope.main.response = {};
             $http.get(apiUrl).
               success(function(data, status, headers, config) {
-                $scope.main.messagetitle = "Success";
-                $scope.main.listing = data;
-                if(api == "s3") {
-                  $scope.main.messagebody = "Bucket " + bucket_name + " listing";
-                }
-                if(api == "atmos") {
-                  $scope.main.messagebody = "Subtenant " + data + " listing";
-                  $scope.main.atmossubtenants.push(data);
-                }
-                if(api == "swift") {
-                  $scope.main.messagebody = "Container " + bucket_name + " listing";
-                  $scope.main.swiftcontainers.push(bucket_name);
-                }
-                $('#message').modal({show: true});
+                $scope.main.response = processXmlData(data);
               }).
               error(function(data, status, headers, config) {
                 $scope.main.result = [];
@@ -356,6 +349,51 @@ function formatXml(xml) {
         };
       }],
       controllerAs: "listCtrl"
+    };
+  });
+
+  app.directive("mainVersionlist", function() {
+    return {
+      restrict: 'E',
+      templateUrl: "app/html/main-versionlist.html",
+      controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
+        this.create = function(api) {
+            bucket_name = this.bucket_name;
+            var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/?versions';
+            if(api == "s3") {
+              if (isNonEmptyString(this.delimiter)) {
+                apiUrl = apiUrl + '&delimiter=' + this.delimiter;
+              }
+              if (isNonEmptyString(this.encodingType)) {
+                apiUrl = apiUrl + '&encoding-type=' + this.encodingType;
+              }
+              if (isNonEmptyString(this.keyMarker)) {
+                apiUrl = apiUrl + '&key-marker=' + this.keyMarker;
+              }
+              if (this.maxKeys && (this.maxKeys > 0)) {
+                apiUrl = apiUrl + '&max-keys=' + this.maxKeys;
+              }
+              if (isNonEmptyString(this.prefix)) {
+                apiUrl = apiUrl + '&prefix=' + this.prefix;
+              }
+              if (isNonEmptyString(this.versionIdMarker)) {
+                apiUrl = apiUrl + '&version-id-marker=' + this.versionIdMarker;
+              }
+            }
+            $scope.main.response = {};
+            $http.get(apiUrl).
+              success(function(data, status, headers, config) {
+                $scope.main.response = processXmlData(data);
+              }).
+              error(function(data, status, headers, config) {
+                $scope.main.result = [];
+                $scope.main.messagetitle = "Error";
+                $scope.main.messagebody = data;
+                $('#message').modal({show: true});
+              });
+        };
+      }],
+      controllerAs: "versionlistCtrl"
     };
   });
 
@@ -523,8 +561,7 @@ function formatXml(xml) {
             apis_headers: customHeaders
           }).
             success(function(data, status, headers, config) {
-              $scope.main.apis.response = data;
-              $scope.main.apis.response["body"] = "<pre><code>" + formatXml($scope.main.apis.response["body"]).encodeHTML() + "</code></pre>";
+              $scope.main.apis.response = processXmlData(data);
             }).
             error(function(data, status, headers, config) {
               $scope.main.messagetitle = "Error";
@@ -599,9 +636,8 @@ function formatXml(xml) {
               apis_headers: customHeaders
             }).
               success(function(data, status, headers, config) {
-                $scope.main.apis.response = data;
                 $scope.main.examples.response[api][i][j] = data;
-                $scope.main.apis.response["body"] = "<pre><code>" + formatXml($scope.main.apis.response["body"]).encodeHTML() + "</code></pre>";
+                $scope.main.apis.response = processXmlData(data);
                 if($scope.main.apis.response["code"] == expectedResponseCode) {
                   responseCodeButton.addClass("btn-success");
                 } else {

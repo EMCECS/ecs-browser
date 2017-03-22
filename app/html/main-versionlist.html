@@ -1,0 +1,52 @@
+<div class="panel panel-primary" ng-if="menu.startsWith('versionlist-')">
+  <div class="panel-heading">List bucket/container/subtenant versions</div>
+  <div class="panel-body">
+    <form accept-charset="UTF-8" ng-submit="versionlistCtrl.create(menu.split('-')[1])">
+      <div class="field" ng-if="menu=='versionlist-s3'">
+        <div class="input-group">
+          <span class="input-group-addon">Bucket/Container name</span>
+          <input ng-model="versionlistCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Delimiter</span>
+          <input ng-model="versionlistCtrl.delimiter" class="form-control" id="delimiter" name="delimiter" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Encoding type</span>
+          <input ng-model="versionlistCtrl.encodingType" class="form-control" id="encodingType" name="encodingType" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Return objects after key</span>
+          <input ng-model="versionlistCtrl.keyMarker" class="form-control" id="keyMarker" name="keyMarker" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Maximum number to return</span>
+          <input ng-model="versionlistCtrl.maxKeys" class="form-control" id="maxKeys" name="maxKeys" type="number" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Prefix</span>
+          <input ng-model="versionlistCtrl.prefix" class="form-control" id="prefix" name="prefix" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Return versions after id</span>
+          <input ng-model="versionlistCtrl.versionIdMarker" class="form-control" id="versionIdMarker" name="versionIdMarker" type="text" />
+        </div>
+        <br />
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
+          <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+          List versions
+        </button>
+      </div>
+    </form>
+    <h2>Response body</h2>
+    <div class="wordbreak" ng-bind-html="main.response['body']"></div>
+  </div>
+</div>

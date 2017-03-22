@@ -86,20 +86,7 @@
         </button>
       </div>
     </form>
-    <dl ng-if="menu=='list-s3'" style="width: 100%; padding: 3pt" >
-      <dt>Is truncated</dt>
-      <dd>{{main.listing['IsTruncated']}}</dd>
-      <dt>Marker</dt>
-      <dd>{{main.listing['Marker']}}</dd>
-      <dt>Next Marker</dt>
-      <dd>{{main.listing['NextMarker']}}</dd>
-      <dt ng-if="main.listing['CommonPrefixes']">Common Prefixes</dt>
-      <dd ng-repeat="prefix in main.listing['CommonPrefixes']" >{{prefix}}</dd>
-    </dl>
-    <table ng-if="menu=='list-s3'" style="width: 100%; padding: 3pt" class="table table-hover" >
-      <caption>Objects</caption>
-      <tr style="width: 100%; padding: 3pt"><th>Key</th><th>Storage Class</th><th>Size</th><th>Last Modified</th><th>ETag</th></tr>
-      <tr ng-repeat="item in main.listing['Contents']" style="width: 100%; padding: 3pt"><td>{{item['Key']}}</td><td>{{item['StorageClass']}}</td><td>{{item['Size']}}</td><td>{{item['LastModified']}}</td><td>{{item['ETag']}}</td></tr>
-    </table>
+    <h2>Response body</h2>
+    <div class="wordbreak" ng-bind-html="main.response['body']"></div>
   </div>
 </div>
