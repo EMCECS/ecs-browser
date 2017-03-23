@@ -1,10 +1,10 @@
 <div class="panel panel-primary" ng-if="menu.startsWith('versionlist-')">
-  <div class="panel-heading">List bucket/container/subtenant versions</div>
+  <div class="panel-heading">List bucket versions</div>
   <div class="panel-body">
     <form accept-charset="UTF-8" ng-submit="versionlistCtrl.create(menu.split('-')[1])">
       <div class="field" ng-if="menu=='versionlist-s3'">
         <div class="input-group">
-          <span class="input-group-addon">Bucket/Container name</span>
+          <span class="input-group-addon">Bucket name</span>
           <input ng-model="versionlistCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
         </div>
         <br />
@@ -46,7 +46,26 @@
         </button>
       </div>
     </form>
-    <h2>Response body</h2>
+    <h2>Response code</h2>
+    <h3>
+      <span class="label label-default" ng-bind-html="main.response['code']"></span>
+    </h3>
+    <h2>Headers</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(key, value) in main.response['response_headers']">
+          <td>{{ key }}</td>
+          <td>{{ value }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Body</h2>
     <div class="wordbreak" ng-bind-html="main.response['body']"></div>
   </div>
 </div>

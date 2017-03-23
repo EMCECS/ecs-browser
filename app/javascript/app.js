@@ -64,9 +64,27 @@ function formatXml(xml) {
     return formatted;
 }
 
+function processXmlBody(body) {
+  return "<pre><code>" + formatXml(body).encodeHTML() + "</code></pre>";
+}
+
 function processXmlData(data) {
-  data["body"] = "<pre><code>" + formatXml(data["body"]).encodeHTML() + "</code></pre>";
+  data["body"] = processXmlBody(data["body"]);
   return data;
+}
+
+function processFullResponse(data, status, headers) {
+  var fullResponse = {
+    "code": status,
+    "response_headers": {},
+    "body": processXmlBody(data)
+  };
+  Object.getOwnPropertyNames(headers()).forEach(
+    function(propertyName, index, array) {
+      fullResponse.response_headers[propertyName] = headers()[propertyName];
+    }
+  );
+  return fullResponse;
 }
 
 (function() {
@@ -338,7 +356,7 @@ function processXmlData(data) {
             $scope.main.response = {};
             $http.get(apiUrl).
               success(function(data, status, headers, config) {
-                $scope.main.response = processXmlData(data);
+                $scope.main.response = processFullResponse(data, status, headers);
               }).
               error(function(data, status, headers, config) {
                 $scope.main.result = [];
@@ -383,7 +401,7 @@ function processXmlData(data) {
             $scope.main.response = {};
             $http.get(apiUrl).
               success(function(data, status, headers, config) {
-                $scope.main.response = processXmlData(data);
+                $scope.main.response = processFullResponse(data, status, headers);
               }).
               error(function(data, status, headers, config) {
                 $scope.main.result = [];
@@ -394,6 +412,50 @@ function processXmlData(data) {
         };
       }],
       controllerAs: "versionlistCtrl"
+    };
+  });
+
+  app.directive("mainObjectget", function() {
+    return {
+      restrict: 'E',
+      templateUrl: "app/html/main-objectget.html",
+      controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
+        this.submit = function(api) {
+            bucket_name = this.bucket_name;
+            object_name = this.object_name;
+            var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/' + object_name;
+            var requestHeaders = {}
+            if(api == "s3") {
+              if (isNonEmptyString(this.versionId)) {
+                apiUrl = apiUrl + '?versionId=' + this.versionId;
+              }
+              if (isNonEmptyString(this.range)) {
+                requestHeaders["Range"] = this.range;
+              }
+              if (isNonEmptyString(this.ifModifiedSince)) {
+                requestHeaders["If-Modified-Since"] = this.ifModifiedSince;
+              }
+              if (isNonEmptyString(this.ifUnmodifiedSince)) {
+                requestHeaders["If-Unmodified-Since"] = this.ifUnmodifiedSince;
+              }
+              if (isNonEmptyString(this.ifMatch)) {
+                requestHeaders["If-Match"] = this.ifMatch;
+              }
+              if (isNonEmptyString(this.ifNoneMatch)) {
+                requestHeaders["If-None-Match"] = this.ifNoneMatch;
+              }
+            }
+            $scope.main.response = {};
+            $http({ method: this.operation, url: apiUrl, headers: requestHeaders }).
+              success(function(data, status, headers) {
+                $scope.main.response = processFullResponse(data, status, headers);
+              }).
+              error(function(data, status, headers, config) {
+                $scope.main.response = processFullResponse(data, status, headers);
+              });
+        };
+      }],
+      controllerAs: "getCtrl"
     };
   });
 

@@ -152,12 +152,38 @@ type PreparedS3Request struct {
 
 var s3store = sessions.NewCookieStore([]byte("session-key"))
 
-// list objects in a bucket
-func S3ObjectGet(w http.ResponseWriter, r *http.Request) *appError {
+// make an object request
+func S3ObjectPassthrough(w http.ResponseWriter, r *http.Request) *appError {
   vars := mux.Vars(r)
-//  var listResponse Response
+  var bucket = vars["bucket"]
+  var object = vars["object"]
+  s3, err := GetS3(r)
+  if err != nil {
+    return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
+  }
+  headers := make(map[string][]string)
+  for key, value := range r.Header {
+    headers[key] = value
+  }
+  path := "/" + object
+  path = path + "?" + r.URL.RawQuery
+  log.Print("path: " + path)
+  var response Response
+  response, err = s3Request(s3, bucket, r.Method, path, headers, "")
+  w.WriteHeader(response.Code)
+  w.Write([]byte(response.Body))
+  for key, values := range response.ResponseHeaders {
+    for _, value := range values {
+      w.Header().Add(key, value);
+    }
+  }
+  return nil
+}
+
+// make a bucket request
+func S3BucketGet(w http.ResponseWriter, r *http.Request) *appError {
+  vars := mux.Vars(r)
   var bucketName = vars["bucket"]
-  log.Print("In S3ObjectGet for bucket " + bucketName)
   s3, err := GetS3(r)
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
@@ -165,18 +191,16 @@ func S3ObjectGet(w http.ResponseWriter, r *http.Request) *appError {
   var response Response
   headers := make(map[string][]string)
   path := "/"
-  log.Print("query: " + r.URL.RawQuery)
   path = path + "?" + r.URL.RawQuery
   log.Print("path: " + path)
   response, err = s3Request(s3, bucketName, "GET", path, headers, "")
-  var httpResponse HttpResponse
-//  httpResponse.Method = apisQuery.Method
-//  httpResponse.Path = apisQuery.Path
-  httpResponse.Code = response.Code
-  httpResponse.RequestHeaders = response.RequestHeaders
-  httpResponse.ResponseHeaders = response.ResponseHeaders
-  httpResponse.Body = response.Body
-  rendering.JSON(w, http.StatusOK, httpResponse)
+  w.WriteHeader(response.Code)
+  w.Write([]byte(response.Body))
+  for key, values := range response.ResponseHeaders {
+    for _, value := range values {
+      w.Header().Add(key, value);
+    }
+  }
   return nil
 }
 
@@ -277,7 +301,6 @@ func s3Request(s3 S3, bucket string, method string, path string, headers map[str
   u, _ := url.Parse(preparedS3Request.Url)
   parameters, _ := url.ParseQuery(u.RawQuery)
   u.RawQuery = parameters.Encode()
-  log.Print("encoded query: " + u.RawQuery)
   if err != nil {
     return Response{}, err
   }
@@ -297,6 +320,8 @@ func s3Request(s3 S3, bucket string, method string, path string, headers map[str
   buf := new(bytes.Buffer)
   buf.ReadFrom(resp.Body)
   data := buf.String()
+  log.Print("Data: " + data)
+  log.Print("Headers: ", resp.Header)
   response := Response{
     Code: resp.StatusCode,
     Body: data,
