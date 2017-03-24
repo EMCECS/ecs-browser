@@ -1,0 +1,106 @@
+<div class="panel panel-primary" ng-if="menu.startsWith('object-')">
+  <div class="panel-heading">Object Operations</div>
+  <div class="panel-body">
+    <form accept-charset="UTF-8" ng-submit="objectCtrl.submit(menu.split('-')[1])">
+      <div class="field" ng-if="menu=='object-s3'">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Operation" readonly="readonly">
+          <span class="input-group-addon">
+            <select ng-model="objectCtrl.operation" id="operation" name="operation" type="select" required >
+              <option selected >HEAD</option>
+              <option>GET</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+            </select>
+          </span>
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Bucket name</span>
+          <input ng-model="objectCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
+        </div>
+        <br />
+        <div class="input-group">
+          <span class="input-group-addon">Object name</span>
+          <input ng-model="objectCtrl.object_name" ng-required="true" class="form-control" id="object_name" name="object_name" type="text" />
+        </div>
+        <br />
+        <div ng-if="(objectCtrl.operation == 'PUT')" >
+          <div class="input-group">
+            <span class="input-group-addon">File to upload</span>
+            <input class="form-control" id="file" name="file" type="file" />
+          </div>
+          <br />
+        </div>
+        <div ng-if="(objectCtrl.operation != 'PUT')" >
+          <div class="input-group">
+            <span class="input-group-addon">Version id</span>
+            <input ng-model="objectCtrl.versionId" class="form-control" id="versionId" name="versionId" type="text" />
+          </div>
+          <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'GET') || (objectCtrl.operation == 'HEAD')" >
+          <div class="input-group">
+            <span class="input-group-addon">Range</span>
+            <input ng-model="objectCtrl.range" class="form-control" id="range" name="range" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">If Modified Since</span>
+            <input ng-model="objectCtrl.ifModifiedSince" class="form-control" id="ifModifiedSince" name="ifModifiedSince" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">If Unmodified Since</span>
+            <input ng-model="objectCtrl.ifUnmodifiedSince" class="form-control" id="ifUnmodifiedSince" name="ifUnmodifiedSince" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">If Match</span>
+            <input ng-model="objectCtrl.ifMatch" class="form-control" id="ifMatch" name="ifMatch" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">If None Match</span>
+            <input ng-model="objectCtrl.ifNoneMatch" class="form-control" id="ifNoneMatch" name="ifNoneMatch" type="text" />
+          </div>
+          <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'DELETE')" >
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-mfa</span>
+            <input ng-model="objectCtrl.xAmzMfa" class="form-control" id="xAmzMfa" name="xAmzMfa" type="text" />
+          </div>
+          <br />
+        </div
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
+          <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
+          Submit
+        </button>
+      </div>
+    </form>
+    <h2>Response code</h2>
+    <h3>
+      <span class="label label-default" ng-bind-html="main.response['code']"></span>
+    </h3>
+    <h2>Headers</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(key, value) in main.response['response_headers']">
+          <td>{{ key }}</td>
+          <td>{{ value }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Body</h2>
+    <div class="wordbreak" ng-bind-html="main.response['body']"></div>
+  </div>
+</div>

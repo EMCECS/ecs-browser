@@ -73,20 +73,6 @@ function processXmlData(data) {
   return data;
 }
 
-function processFullResponse(data, status, headers) {
-  var fullResponse = {
-    "code": status,
-    "response_headers": {},
-    "body": processXmlBody(data)
-  };
-  Object.getOwnPropertyNames(headers()).forEach(
-    function(propertyName, index, array) {
-      fullResponse.response_headers[propertyName] = headers()[propertyName];
-    }
-  );
-  return fullResponse;
-}
-
 (function() {
   var app = angular.module('ECS-BROWSER', ['ngAnimate', 'ngSanitize']);
 
@@ -354,16 +340,21 @@ function processFullResponse(data, status, headers) {
               }
             }
             $scope.main.response = {};
-            $http.get(apiUrl).
-              success(function(data, status, headers, config) {
-                $scope.main.response = processFullResponse(data, status, headers);
-              }).
-              error(function(data, status, headers, config) {
-                $scope.main.result = [];
-                $scope.main.messagetitle = "Error";
-                $scope.main.messagebody = data;
-                $('#message').modal({show: true});
-              });
+            $http({
+                method: "POST", 
+                url: apiUrl, 
+                headers: { "X-Passthrough-Method": "GET" }
+            }).then(
+                function successCallback(response) {
+                    $scope.main.response = processXmlData(response.data);
+                },
+                function errorCallback(response) {
+                    $scope.main.result = [];
+                    $scope.main.messagetitle = "Error";
+                    $scope.main.messagebody = response.data;
+                    $('#message').modal({show: true});
+                }
+            );
         };
       }],
       controllerAs: "listCtrl"
@@ -399,63 +390,112 @@ function processFullResponse(data, status, headers) {
               }
             }
             $scope.main.response = {};
-            $http.get(apiUrl).
-              success(function(data, status, headers, config) {
-                $scope.main.response = processFullResponse(data, status, headers);
-              }).
-              error(function(data, status, headers, config) {
-                $scope.main.result = [];
-                $scope.main.messagetitle = "Error";
-                $scope.main.messagebody = data;
-                $('#message').modal({show: true});
-              });
+            $http({
+                method: "POST", 
+                url: apiUrl, 
+                headers: { "X-Passthrough-Method": "GET" }
+            }).then(
+                function successCallback(response) {
+                    $scope.main.response = processXmlData(response.data);
+                },
+                function errorCallback(response) {
+                    $scope.main.result = [];
+                    $scope.main.messagetitle = "Error";
+                    $scope.main.messagebody = response.data;
+                    $('#message').modal({show: true});
+                }
+            );
         };
       }],
       controllerAs: "versionlistCtrl"
     };
   });
 
-  app.directive("mainObjectget", function() {
+  app.directive("mainObject", function() {
     return {
       restrict: 'E',
-      templateUrl: "app/html/main-objectget.html",
+      templateUrl: "app/html/main-object.html",
       controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
         this.submit = function(api) {
             bucket_name = this.bucket_name;
             object_name = this.object_name;
             var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/' + object_name;
             var requestHeaders = {}
+            requestHeaders["X-Passthrough-Method"] = this.operation;
+
             if(api == "s3") {
-              if (isNonEmptyString(this.versionId)) {
-                apiUrl = apiUrl + '?versionId=' + this.versionId;
+              if (this.operation != 'PUT') {
+                if (isNonEmptyString(this.versionId)) {
+                  apiUrl = apiUrl + '?versionId=' + this.versionId;
+                }
+              } else {
+                var file = document.getElementById('file').files[0];
+                if (!file) {
+                  alert("You must select a file to upload.");
+                  return;
+                }
+                var fd = new FormData();
+                fd.append('file', file);
+                $http.post(apiUrl, fd, {
+                  transformRequest: angular.identity,
+                  headers: { 'Content-Type': undefined, 'X-Passthrough-Method': this.operation }
+                }).then(
+                  function successCallback(response) {
+                    $scope.main.response = processXmlData(response.data);
+                  },
+                  function errorCallback(response) {
+                    $scope.main.result = [];
+                    $scope.main.messagetitle = "Error";
+                    $scope.main.messagebody = response.data;
+                    $('#message').modal({show: true});
+                  }
+                );
+                return;
               }
-              if (isNonEmptyString(this.range)) {
-                requestHeaders["Range"] = this.range;
+
+              if ((this.operation == 'GET') || (this.operation == 'HEAD')) {
+                if (isNonEmptyString(this.range)) {
+                  requestHeaders["Range"] = this.range;
+                }
+                if (isNonEmptyString(this.ifModifiedSince)) {
+                  requestHeaders["If-Modified-Since"] = this.ifModifiedSince;
+                }
+                if (isNonEmptyString(this.ifUnmodifiedSince)) {
+                  requestHeaders["If-Unmodified-Since"] = this.ifUnmodifiedSince;
+                }
+                if (isNonEmptyString(this.ifMatch)) {
+                  requestHeaders["If-Match"] = this.ifMatch;
+                }
+                if (isNonEmptyString(this.ifNoneMatch)) {
+                  requestHeaders["If-None-Match"] = this.ifNoneMatch;
+                }
               }
-              if (isNonEmptyString(this.ifModifiedSince)) {
-                requestHeaders["If-Modified-Since"] = this.ifModifiedSince;
-              }
-              if (isNonEmptyString(this.ifUnmodifiedSince)) {
-                requestHeaders["If-Unmodified-Since"] = this.ifUnmodifiedSince;
-              }
-              if (isNonEmptyString(this.ifMatch)) {
-                requestHeaders["If-Match"] = this.ifMatch;
-              }
-              if (isNonEmptyString(this.ifNoneMatch)) {
-                requestHeaders["If-None-Match"] = this.ifNoneMatch;
+
+              if (this.operation == 'DELETE') {
+                if (isNonEmptyString(this.xAmzMfa)) {
+                  requestHeaders["X-amz-mfa"] = this.xAmzMfa;
+                }
               }
             }
             $scope.main.response = {};
-            $http({ method: this.operation, url: apiUrl, headers: requestHeaders }).
-              success(function(data, status, headers) {
-                $scope.main.response = processFullResponse(data, status, headers);
-              }).
-              error(function(data, status, headers, config) {
-                $scope.main.response = processFullResponse(data, status, headers);
-              });
+            $http({
+                method: "POST", 
+                url: apiUrl, 
+                headers: requestHeaders
+            }).then(
+                function successCallback(response) {
+                    $scope.main.response = processXmlData(response.data);
+                },
+                function errorCallback(response) {
+                    $scope.main.result = [];
+                    $scope.main.messagetitle = "Error";
+                    $scope.main.messagebody = response.data;
+                    $('#message').modal({show: true});
+                }
+            );
         };
       }],
-      controllerAs: "getCtrl"
+      controllerAs: "objectCtrl"
     };
   });
 

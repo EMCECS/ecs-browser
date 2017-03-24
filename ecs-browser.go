@@ -113,11 +113,8 @@ func main() {
   apiHandle("ecs/info", appHandler(GetEcsInfo), "GET")
   apiHandle("buckets", appHandler(ListBuckets), "GET")
   apiHandle("examples", appHandler(GetExamples), "GET")
-  apiHandle("s3/{bucket}/{object}", appHandler(S3ObjectPassthrough), "DELETE")
-  apiHandle("s3/{bucket}/{object}", appHandler(S3ObjectPassthrough), "GET")
-  apiHandle("s3/{bucket}/{object}", appHandler(S3ObjectPassthrough), "HEAD")
-  apiHandle("s3/{bucket}/{object}", appHandler(S3ObjectPassthrough), "PUT")
-  apiHandle("s3/{bucket}/", appHandler(S3BucketGet), "GET")
+  apiHandle("s3/{bucket}/{object}", appHandler(S3Passthrough), "POST")
+  apiHandle("s3/{bucket}/", appHandler(S3Passthrough), "POST")
   apiHandle("bucket", appHandler(CreateBucket), "POST")
   apiHandle("metadatasearch", appHandler(MetadataSearch), "POST")
   apiHandle("searchmetadata", appHandler(SearchMetadata), "POST")
@@ -402,6 +399,12 @@ type HttpResponse struct {
   Code int `json:"code"`
   RequestHeaders map[string][]string `json:"request_headers"`
   ResponseHeaders map[string][]string `json:"response_headers"`
+  Body string `json:"body"`
+}
+
+type PassthroughResponse struct {
+  Code int `json:"code"`
+  ResponseHeaders map[string]string `json:"response_headers"`
   Body string `json:"body"`
 }
 

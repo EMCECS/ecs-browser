@@ -16,6 +16,7 @@ import (
   "bytes"
   "github.com/gorilla/mux"
   "github.com/gorilla/sessions"
+  "io"
 )
 
 var b64 = base64.StdEncoding
@@ -152,55 +153,58 @@ type PreparedS3Request struct {
 
 var s3store = sessions.NewCookieStore([]byte("session-key"))
 
-// make an object request
-func S3ObjectPassthrough(w http.ResponseWriter, r *http.Request) *appError {
+// make a generic S3 request
+func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
+  s3, err := GetS3(r)
+  if err != nil {
+    return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
+  }
+  var passthroughMethod string
+  headers := make(map[string][]string)
+  for key, value := range r.Header {
+  	if (key == "X-Passthrough-Method") {
+  	  passthroughMethod = value[0]
+  	} else {
+      headers[key] = value
+  	}
+  }
   vars := mux.Vars(r)
   var bucket = vars["bucket"]
   var object = vars["object"]
-  s3, err := GetS3(r)
-  if err != nil {
-    return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
-  }
-  headers := make(map[string][]string)
-  for key, value := range r.Header {
-    headers[key] = value
-  }
-  path := "/" + object
-  path = path + "?" + r.URL.RawQuery
-  log.Print("path: " + path)
-  var response Response
-  response, err = s3Request(s3, bucket, r.Method, path, headers, "")
-  w.WriteHeader(response.Code)
-  w.Write([]byte(response.Body))
-  for key, values := range response.ResponseHeaders {
-    for _, value := range values {
-      w.Header().Add(key, value);
-    }
-  }
-  return nil
-}
-
-// make a bucket request
-func S3BucketGet(w http.ResponseWriter, r *http.Request) *appError {
-  vars := mux.Vars(r)
-  var bucketName = vars["bucket"]
-  s3, err := GetS3(r)
-  if err != nil {
-    return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
-  }
-  var response Response
-  headers := make(map[string][]string)
   path := "/"
+  if (len(strings.TrimSpace(object)) > 0) {
+    path = path + object
+  }
   path = path + "?" + r.URL.RawQuery
-  log.Print("path: " + path)
-  response, err = s3Request(s3, bucketName, "GET", path, headers, "")
-  w.WriteHeader(response.Code)
-  w.Write([]byte(response.Body))
-  for key, values := range response.ResponseHeaders {
-    for _, value := range values {
-      w.Header().Add(key, value);
+  var data = ""
+  var response Response
+  if (passthroughMethod == "PUT") {
+    file, _, err := r.FormFile("file")
+    if err == nil {
+      var Buf bytes.Buffer
+      defer file.Close()
+      // name := strings.Split(header.Filename, ".")
+      // Copy the file data to my buffer
+      io.Copy(&Buf, file)
+      data = string(Buf.Bytes())
+      Buf.Reset()
     }
   }
+  response, err = s3Request(s3, bucket, passthroughMethod, path, headers, data)
+  var passthroughResponse PassthroughResponse
+  passthroughResponse.Code = response.Code
+  passthroughResponse.Body = response.Body
+  passthroughResponse.ResponseHeaders = make(map[string]string)
+  for key, values := range response.ResponseHeaders {
+  	fullValue := ""
+  	separator := ""
+    for _, value := range values {
+      fullValue = fullValue + separator + value
+      separator = ", "
+    }
+    passthroughResponse.ResponseHeaders[key] = fullValue
+  }
+  rendering.JSON(w, http.StatusOK, passthroughResponse)
   return nil
 }
 
@@ -312,16 +316,20 @@ func s3Request(s3 S3, bucket string, method string, path string, headers map[str
   if err != nil {
     return Response{}, err
   }
-  req.Header = headers
+
+  for key, values := range headers {
+    for _, value := range values {
+      req.Header.Add(key, value);
+    }
+  }
   resp, err := httpClient.Do(req)
   if err != nil {
     return Response{}, err
   }
+
   buf := new(bytes.Buffer)
   buf.ReadFrom(resp.Body)
   data := buf.String()
-  log.Print("Data: " + data)
-  log.Print("Headers: ", resp.Header)
   response := Response{
     Code: resp.StatusCode,
     Body: data,
