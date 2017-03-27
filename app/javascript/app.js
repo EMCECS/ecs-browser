@@ -420,25 +420,63 @@ function processXmlData(data) {
             bucket_name = this.bucket_name;
             object_name = this.object_name;
             var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/' + object_name;
-            var requestHeaders = {}
+            var separator = '?';
+            var body = '';
+            var requestHeaders = {};
             requestHeaders["X-Passthrough-Method"] = this.operation;
 
-            if(api == "s3") {
-              if (this.operation != 'PUT') {
-                if (isNonEmptyString(this.versionId)) {
-                  apiUrl = apiUrl + '?versionId=' + this.versionId;
+            if (api == "s3") {
+              if (((this.operation == 'PUT') || (this.operation == 'GET')) && (this.scope == 'ACL')) {
+                apiUrl = apiUrl + '?acl';
+                separator = '&';
+
+                if (isNonEmptyString(this.xAmzAcl)) {
+                  requestHeaders["X-amz-acl"] = this.xAmzAcl;
                 }
+                if (isNonEmptyString(this.xAmzGrantRead)) {
+                  requestHeaders["X-amz-grant-read"] = this.xAmzGrantRead;
+                }
+                if (isNonEmptyString(this.xAmzGrantReadAcp)) {
+                  requestHeaders["X-amz-grant-read-acp"] = this.xAmzGrantReadAcp;
+                }
+                if (isNonEmptyString(this.xAmzGrantWriteAcp)) {
+                  requestHeaders["X-amz-grant-write-acp"] = this.xAmzGrantWriteAcp;
+                }
+                if (isNonEmptyString(this.xAmzGrantFullControl)) {
+                  requestHeaders["X-amz-grant-full-control"] = this.xAmzGrantFullControl;
+                }
+              }
+              if ((this.operation != 'PUT') || (this.scope != 'Object')) {
+                if (isNonEmptyString(this.versionId)) {
+                  apiUrl = apiUrl + separator + 'versionId=' + this.versionId;
+                }
+              } else if (this.scope == 'ACL') {
+                body = this.acl
               } else {
                 var file = document.getElementById('file').files[0];
                 if (!file) {
                   alert("You must select a file to upload.");
                   return;
                 }
+                requestHeaders["Content-Type"] = undefined;
+                if (isNonEmptyString(this.content)) {
+                  requestHeaders["Content"] = this.content;
+                }
+                if (isNonEmptyString(this.range)) {
+                  requestHeaders["Range"] = this.range;
+                }
+                if (isNonEmptyString(this.retentionPeriod)) {
+                  requestHeaders["X-retention-period"] = this.retentionPeriod;
+                }
+                if (isNonEmptyString(this.retentionPolicy)) {
+                  requestHeaders["X-retention-policy"] = this.retentionPolicy;
+                }
+
                 var fd = new FormData();
                 fd.append('file', file);
                 $http.post(apiUrl, fd, {
                   transformRequest: angular.identity,
-                  headers: { 'Content-Type': undefined, 'X-Passthrough-Method': this.operation }
+                  headers: requestHeaders
                 }).then(
                   function successCallback(response) {
                     $scope.main.response = processXmlData(response.data);
@@ -453,7 +491,7 @@ function processXmlData(data) {
                 return;
               }
 
-              if ((this.operation == 'GET') || (this.operation == 'HEAD')) {
+              if ((this.operation == 'HEAD') || ((this.operation == 'GET') && (this.scope == 'Object'))) {
                 if (isNonEmptyString(this.range)) {
                   requestHeaders["Range"] = this.range;
                 }
@@ -481,7 +519,8 @@ function processXmlData(data) {
             $http({
                 method: "POST", 
                 url: apiUrl, 
-                headers: requestHeaders
+                headers: requestHeaders,
+                data: body
             }).then(
                 function successCallback(response) {
                     $scope.main.response = processXmlData(response.data);

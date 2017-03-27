@@ -25,13 +25,6 @@
           <input ng-model="objectCtrl.object_name" ng-required="true" class="form-control" id="object_name" name="object_name" type="text" />
         </div>
         <br />
-        <div ng-if="(objectCtrl.operation == 'PUT')" >
-          <div class="input-group">
-            <span class="input-group-addon">File to upload</span>
-            <input class="form-control" id="file" name="file" type="file" />
-          </div>
-          <br />
-        </div>
         <div ng-if="(objectCtrl.operation != 'PUT')" >
           <div class="input-group">
             <span class="input-group-addon">Version id</span>
@@ -39,12 +32,47 @@
           </div>
           <br />
         </div>
-        <div ng-if="(objectCtrl.operation == 'GET') || (objectCtrl.operation == 'HEAD')" >
+        <div ng-if="(objectCtrl.operation == 'GET') || (objectCtrl.operation == 'PUT')" >
+          <div class="input-group">
+            <input type="text" class="form-control" value="Object or ACL?" readonly="readonly">
+            <span class="input-group-addon">
+              <select ng-model="objectCtrl.scope" id="scope" name="scope" type="select" required >
+                <option selected >Object</option>
+                <option>ACL</option>
+              </select>
+            </span>
+          </div>
+          <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'PUT')" >
+          <div ng-if="(objectCtrl.scope == 'ACL')" >
+            <div class="input-group">
+              <span class="input-group-addon">Body</span>
+              <textarea ng-model="objectCtrl.acl" class="form-control" id="acl" name="acl" rows="10" />
+            </div>
+            <br />
+          </div>
+          <div ng-if="(objectCtrl.scope == 'Object')" >
+            <div class="input-group">
+              <span class="input-group-addon">File to upload</span>
+              <input class="form-control" id="file" name="file" type="file" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">Content</span>
+              <input ng-model="objectCtrl.content" class="form-control" id="content" name="content" type="number" />
+            </div>
+            <br />
+          </div>
+        </div>
+        <div ng-if="(objectCtrl.operation == 'HEAD') || (((objectCtrl.operation == 'GET') || (objectCtrl.operation == 'PUT')) && (objectCtrl.scope == 'Object'))" >
           <div class="input-group">
             <span class="input-group-addon">Range</span>
             <input ng-model="objectCtrl.range" class="form-control" id="range" name="range" type="text" />
           </div>
           <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'HEAD') || ((objectCtrl.operation == 'GET') && (objectCtrl.scope == 'Object'))" >
           <div class="input-group">
             <span class="input-group-addon">If Modified Since</span>
             <input ng-model="objectCtrl.ifModifiedSince" class="form-control" id="ifModifiedSince" name="ifModifiedSince" type="text" />
@@ -72,7 +100,46 @@
             <input ng-model="objectCtrl.xAmzMfa" class="form-control" id="xAmzMfa" name="xAmzMfa" type="text" />
           </div>
           <br />
-        </div
+        </div>
+        <div ng-if="(objectCtrl.operation == 'PUT')" >
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-acl</span>
+            <input ng-model="objectCtrl.xAmzAcl" class="form-control" id="xAmzAcl" name="xAmzAcl" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-read</span>
+            <input ng-model="objectCtrl.xAmzGrantRead" class="form-control" id="xAmzGrantRead" name="xAmzGrantRead" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-read-acp</span>
+            <input ng-model="objectCtrl.xAmzGrantReadAcp" class="form-control" id="xAmzGrantReadAcp" name="xAmzGrantReadAcp" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-write-acp</span>
+            <input ng-model="objectCtrl.xAmzGrantWriteAcp" class="form-control" id="xAmzGrantWriteAcp" name="xAmzGrantWriteAcp" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-full-control</span>
+            <input ng-model="objectCtrl.xAmzGrantFullControl" class="form-control" id="xAmzGrantFullControl" name="xAmzGrantFullControl" type="text" />
+          </div>
+          <br />
+          <div ng-if="(objectCtrl.scope == 'Object')" >
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-retention-period</span>
+              <input ng-model="objectCtrl.xAmzRetentionPeriod" class="form-control" id="xAmzRetentionPeriod" name="xAmzRetentionPeriod" type="number" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-retention-policy</span>
+              <input ng-model="objectCtrl.xAmzRetentionPolicy" class="form-control" id="xAmzRetentionPolicy" name="xAmzRetentionPolicy" type="text" />
+            </div>
+            <br />
+          </div>
+        </div>
       </div>
       <div class="actions">
         <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
