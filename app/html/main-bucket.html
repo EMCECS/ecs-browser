@@ -1,130 +1,217 @@
-<div class="panel panel-primary" ng-if="menu.startsWith('create-')">
-  <div class="panel-heading">Create bucket/container/subtenant</div>
+<div class="panel panel-primary" ng-if="menu.startsWith('bucket-')">
+  <div class="panel-heading">Bucket Operations</div>
   <div class="panel-body">
-    <form accept-charset="UTF-8" ng-submit="bucketCtrl.create(menu.split('-')[1])">
-      <div class="field" ng-if="menu=='create-swift'">
+    <form accept-charset="UTF-8" ng-submit="bucketCtrl.submit(menu.split('-')[1])">
+      <div class="field" ng-if="menu=='bucket-s3'">
         <div class="input-group">
-          <span class="input-group-addon">Swift Endpoint</span>
-          <input ng-model="main.swiftendpoint" ng-required="true" class="form-control" id="bucket_endpoint" name="bucket_endpoint" type="text" />
+          <input type="text" class="form-control" value="Operation" readonly="readonly">
+          <span class="input-group-addon">
+            <select ng-model="bucketCtrl.operation" id="operation" name="operation" type="select" required >
+              <option selected >HEAD</option>
+              <option>GET</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+            </select>
+          </span>
         </div>
         <br />
-      </div>
-      <div class="field" ng-if="menu=='create-atmos'">
         <div class="input-group">
-          <span class="input-group-addon">Atmos Endpoint</span>
-          <input ng-model="main.atmosendpoint" ng-required="true" class="form-control" id="bucket_endpoint" name="bucket_endpoint" type="text" />
+          <span class="input-group-addon">Namespace</span>
+          <input ng-model="bucketCtrl.xEmcNamespace" class="form-control" id="xEmcNamespace" name="xEmcNamespace" type="text" />
         </div>
         <br />
-      </div>
-      <div class="field" ng-if="menu=='create-swift'">
         <div class="input-group">
-          <span class="input-group-addon">Swift Password</span>
-          <input ng-model="bucketCtrl.bucket_password" ng-required="true" class="form-control" id="bucket_password" name="bucket_password" type="password" />
-        </div>
-        <br />
-      </div>
-      <div class="field" ng-if="(menu=='create-s3' || menu=='create-swift')">
-        <div class="input-group">
-          <span class="input-group-addon">Bucket/Container name</span>
+          <span class="input-group-addon">Bucket name</span>
           <input ng-model="bucketCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
         </div>
         <br />
-      </div>
-      <div ng-if="main.replicationgroups.length == 0" class="field">
-        <div class="input-group">
-          <span class="input-group-addon">Replication Group</span>
-          <input ng-model="bucketCtrl.bucket_replication_group" class="form-control" id="bucket_replication_group" name="bucket_replication_group" type="text" />
+        <div ng-if="(bucketCtrl.operation != 'PUT')" >
+          <div class="input-group">
+            <span class="input-group-addon">Version id</span>
+            <input ng-model="bucketCtrl.versionId" class="form-control" id="versionId" name="versionId" type="text" />
+          </div>
+          <br />
         </div>
-        <br />
-      </div>
-      <div ng-if="main.replicationgroups.length > 0" class="field">
-        <div class="input-group">
-          <span class="input-group-addon">Replication Group</span>
-          <select ng-model="bucketCtrl.bucket_replication_group" class="form-control" id="bucket_replication_group" name="bucket_replication_group">
-            <option ng-repeat="replicationgroup in main.replicationgroups | orderBy: 'replicationgroup'" value="{{ replicationgroup }}">{{ replicationgroup }}</option>
-          </select>
+        <div ng-if="(bucketCtrl.operation == 'GET') || (bucketCtrl.operation == 'PUT')" >
+          <div class="input-group">
+            <input type="text" class="form-control" value="Scope" readonly="readonly">
+            <span class="input-group-addon">
+              <select ng-model="bucketCtrl.scope" id="scope" name="scope" type="select" required >
+                <option selected >Bucket</option>
+<!--
+                <option>Versioning</option>
+                <option>ACL</option>
+               -->
+              </select>
+            </span>
+          </div>
+          <br />
         </div>
-        <br />
-      </div>
-      <div class="field" ng-if="menu=='create-s3'">
-        <div class="input-group">
-          <span class="input-group-addon">Metadata search</span>
-          <input ng-model="bucketCtrl.bucket_metadata_search" class="form-control" id="bucket_metadata_search" name="bucket_metadata_search" type="text" placeholder="ex: Size,CreateTime,LastModified,x-amz-meta-custom1;String,x-amz-meta-custom2;Integer" />
+        <div ng-if="(bucketCtrl.operation == 'PUT')" >
+          <div ng-if="(bucketCtrl.scope == 'ACL')" >
+            <div class="input-group">
+              <span class="input-group-addon">Body</span>
+              <textarea ng-model="bucketCtrl.acl" class="form-control" id="acl" name="acl" rows="10" />
+            </div>
+            <br />
+          </div>
         </div>
-        <br />
-      </div>
-      <div class="field">
-        <div class="input-group">
-          <input type="text" class="form-control" value="Enable Access During Outage" readonly="readonly">
-          <span class="input-group-addon">
-            <input ng-model="bucketCtrl.bucket_enable_ado" id="bucket_enable_ado" name="bucket_enable_ado" type="checkbox" />
-          </span>
+        <div class="field" ng-if="((bucketCtrl.operation == 'GET') || (bucketCtrl.operation == 'HEAD'))">
+          <div class="input-group">
+            <span class="input-group-addon">Delimiter</span>
+            <input ng-model="bucketCtrl.delimiter" class="form-control" id="delimiter" name="delimiter" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">Encoding type</span>
+            <input ng-model="bucketCtrl.encodingType" class="form-control" id="encodingType" name="encodingType" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">Maximum number to return</span>
+            <input ng-model="bucketCtrl.maxKeys" class="form-control" id="maxKeys" name="maxKeys" type="number" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">Prefix</span>
+            <input ng-model="bucketCtrl.prefix" class="form-control" id="prefix" name="prefix" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">Return objects after key</span>
+            <input ng-model="bucketCtrl.startAfter" class="form-control" id="startAfter" name="startAfter" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <input type="text" class="form-control" value="List API version" readonly="readonly">
+            <span class="input-group-addon">
+              <select ng-model="bucketCtrl.listType" id="listType" name="listType" type="select" required >
+                <option selected >1</option>
+                <option>2</option>
+              </select>
+            </span>
+          </div>
+          <br />
+          <div ng-if="bucketCtrl.listType=='2'">
+            <div class="input-group">
+              <span class="input-group-addon">Continuation token</span>
+              <input ng-model="bucketCtrl.continuationToken" class="form-control" id="continuationToken" name="continuationToken" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">Return owner information</span>
+              <input ng-model="bucketCtrl.fetchOwner" class="form-control" id="fetchOwner" name="fetchOwner" type="checkbox" />
+            </div>
+            <br />
+          </div>
         </div>
-        <br />
-      </div>
-      <div class="field">
-        <div class="input-group">
-          <input type="text" class="form-control" value="Enable FS" readonly="readonly">
-          <span class="input-group-addon">
-            <input ng-model="bucketCtrl.bucket_enable_fs" id="bucket_enable_fs" name="bucket_enable_fs" type="checkbox" />
-          </span>
+        <div ng-if="(bucketCtrl.operation == 'PUT')" >
+          <div class="input-group">
+            <span class="input-group-addon">Replication Group</span>
+            <input ng-model="bucketCtrl.xEmcVpool" class="form-control" id="xEmcVpool" name="xEmcVpool" list="vpools" type="text" />
+            <datalist id="vpools">
+              <option  ng-repeat="replicationGroup in main.replicationgroups | orderBy: 'replicationGroup'" name="{{replicationGroup}}" value="{{replicationGroup}}" />
+            </datalist>
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-acl</span>
+            <input ng-model="bucketCtrl.xAmzAcl" class="form-control" id="xAmzAcl" name="xAmzAcl" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-read</span>
+            <input ng-model="bucketCtrl.xAmzGrantRead" class="form-control" id="xAmzGrantRead" name="xAmzGrantRead" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-write</span>
+            <input ng-model="bucketCtrl.xAmzGrantWrite" class="form-control" id="xAmzGrantWrite" name="xAmzGrantWrite" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-read-acp</span>
+            <input ng-model="bucketCtrl.xAmzGrantReadAcp" class="form-control" id="xAmzGrantReadAcp" name="xAmzGrantReadAcp" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-write-acp</span>
+            <input ng-model="bucketCtrl.xAmzGrantWriteAcp" class="form-control" id="xAmzGrantWriteAcp" name="xAmzGrantWriteAcp" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-full-control</span>
+            <input ng-model="bucketCtrl.xAmzGrantFullControl" class="form-control" id="xAmzGrantFullControl" name="xAmzGrantFullControl" type="text" />
+          </div>
+          <br />
+          <div ng-if="(bucketCtrl.scope == 'Bucket')" >
+            <div class="input-group">
+              <span class="input-group-addon">x-emc-retention-period</span>
+              <input ng-model="bucketCtrl.xEmcRetentionPeriod" class="form-control" id="xEmcRetentionPeriod" name="xEmcRetentionPeriod" type="number" />
+            </div>
+            <br />
+          </div>
+          <div class="input-group">
+            <input type="text" class="form-control" value="Enable FS" readonly="readonly">
+            <span class="input-group-addon">
+              <input ng-model="bucketCtrl.xEmcFileSystemAccessEnabled" id="xEmcFileSystemAccessEnabled" name="xEmcFileSystemAccessEnabled" type="checkbox" />
+            </span>
+          </div>
+          <div class="input-group">
+            <input type="text" class="form-control" value="Enable Access During Outage" readonly="readonly">
+            <span class="input-group-addon">
+              <input ng-model="bucketCtrl.xEmcIsStaleAllowed" id="xEmcIsStaleAllowed" name="xEmcIsStaleAllowed" type="checkbox" />
+            </span>
+          </div>
+          <br />
+          <div class="input-group">
+            <input type="text" class="form-control" value="Enable compliance" readonly="readonly">
+            <span class="input-group-addon">
+              <input ng-model="bucketCtrl.xEmcComplianceEnabled" id="xEmcComplianceEnabled" name="xEmcComplianceEnabled" type="checkbox" />
+            </span>
+          </div>
+          <br />
+          <div class="input-group">
+            <input type="text" class="form-control" value="Enable server-side encryption" readonly="readonly">
+            <span class="input-group-addon">
+              <input ng-model="bucketCtrl.xEmcServerSideEncryptionEnabled" id="xEmcServerSideEncryptionEnabled" name="xEmcServerSideEncryptionEnabled" type="checkbox" />
+            </span>
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">Metadata search fields</span>
+            <input ng-model="bucketCtrl.xEmcMetadataSearch" class="form-control" id="xEmcMetadataSearch" name="xEmcMetadataSearch" type="text" placeholder="ex: Size,CreateTime,LastModified,x-amz-meta-custom1;String,x-amz-meta-custom2;Integer" />
+          </div>
+          <br />
         </div>
-        <br />
-      </div>
-      <div class="field" ng-if="menu=='create-s3'">
-        <div class="input-group">
-          <input type="text" class="form-control" value="Enable compliance" readonly="readonly">
-          <span class="input-group-addon">
-            <input ng-model="bucketCtrl.bucket_enable_compliance" id="bucket_enable_compliance" name="bucket_enable_compliance" type="checkbox" />
-          </span>
-        </div>
-        <br />
-      </div>
-      <div class="field">
-        <div class="input-group">
-          <input type="text" class="form-control" value="Enable encryption" readonly="readonly">
-          <span class="input-group-addon">
-            <input ng-model="bucketCtrl.bucket_enable_encryption" id="bucket_enable_encryption" name="bucket_enable_encryption" type="checkbox" />
-          </span>
-        </div>
-        <br />
-      </div>
-      <div class="field">
-        <div class="input-group">
-          <span class="input-group-addon">Retention (days)</span>
-          <input ng-model="bucketCtrl.bucket_retention" class="form-control" placeholder="0 means no retention" id="bucket_retention" name="bucket_retention" type="text" />
-        </div>
-        <br />
-      </div>
-      <div class="field" ng-if="(menu=='create-s3' && (!bucketCtrl.bucket_retention || bucketCtrl.bucket_retention == 0))">
-        <div class="input-group">
-          <input type="text" class="form-control" value="Enable versioning" readonly="readonly">
-          <span class="input-group-addon">
-            <input ng-model="bucketCtrl.bucket_enable_versioning" id="bucket_enable_versioning" name="bucket_enable_versioning" type="checkbox" />
-          </span>
-        </div>
-        <br />
-      </div>
-      <div class="field" ng-if="menu=='create-s3'">
-        <div class="input-group">
-          <span class="input-group-addon">Expiration of current versions (days)</span>
-          <input ng-model="bucketCtrl.bucket_expiration_current_versions" class="form-control" placeholder="0 means no expiration and must be higher than or equal to retention" id="bucket_expiration_current_versions" name="bucket_expiration_current_versions" type="text" />
-        </div>
-        <br />
-      </div>
-      <div class="field" ng-if="(menu=='create-s3' && bucketCtrl.bucket_enable_versioning && (!bucketCtrl.bucket_retention || bucketCtrl.bucket_retention == 0))">
-        <div class="input-group">
-          <span class="input-group-addon">Expiration of non current versions (days)</span>
-          <input ng-model="bucketCtrl.bucket_expiration_non_current_versions" class="form-control" placeholder="0 means no expiration" id="bucket_expiration_non_current_versions" name="bucket_expiration_non_current_versions" type="text" />
-        </div>
-        <br />
       </div>
       <div class="actions">
         <button class="btn btn-primary has-spinner" ng-disabled="loadingService.isLoading()" ng-class="{'active': loadingService.isLoading()}">
           <span class="spinner"><i class="fa fa-refresh fa-spin"></i></span>
-          Create
+          Submit
         </button>
       </div>
     </form>
+    <h2>Response code</h2>
+    <h3>
+      <span class="label label-default" ng-bind-html="main.response['code']"></span>
+    </h3>
+    <h2>Headers</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(key, value) in main.response['response_headers']">
+          <td>{{ key }}</td>
+          <td>{{ value }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Body</h2>
+    <div class="wordbreak" ng-bind-html="main.response['body']"></div>
   </div>
 </div>

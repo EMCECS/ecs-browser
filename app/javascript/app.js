@@ -180,7 +180,7 @@ function processXmlData(data) {
           $scope.main.replicationgroups = data["user-allowed-replication-groups"];
           $scope.main.defaultreplicationgroup = data["default-replication-group"];
           $timeout(function(){
-            $scope.bucketCtrl.bucket_replication_group = $scope.main.defaultreplicationgroup ;
+            $scope.bucketCreateCtrl.bucket_replication_group = $scope.main.defaultreplicationgroup ;
           });
           if(data["atmos-subtenants"]) {
             $scope.main.atmossubtenants = data["atmos-subtenants"];
@@ -226,10 +226,10 @@ function processXmlData(data) {
     };
   });
 
-  app.directive("mainBucket", function() {
+  app.directive("mainBucketcreate", function() {
     return {
       restrict: 'E',
-      templateUrl: "app/html/main-bucket.html",
+      templateUrl: "app/html/main-bucketcreate.html",
       controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
         this.bucket_retention = 0;
         this.bucket_expiration_current_versions = 0;
@@ -289,7 +289,7 @@ function processXmlData(data) {
           }
         };
       }],
-      controllerAs: "bucketCtrl"
+      controllerAs: "bucketCreateCtrl"
     };
   });
 
@@ -429,7 +429,9 @@ function processXmlData(data) {
               if (((this.operation == 'PUT') || (this.operation == 'GET')) && (this.scope == 'ACL')) {
                 apiUrl = apiUrl + '?acl';
                 separator = '&';
+              }
 
+              if (this.operation == 'PUT') {
                 if (isNonEmptyString(this.xAmzAcl)) {
                   requestHeaders["X-amz-acl"] = this.xAmzAcl;
                 }
@@ -535,6 +537,129 @@ function processXmlData(data) {
         };
       }],
       controllerAs: "objectCtrl"
+    };
+  });
+
+  app.directive("mainBucket", function() {
+    return {
+      restrict: 'E',
+      templateUrl: "app/html/main-bucket.html",
+      controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
+        this.submit = function(api) {
+            bucket_name = this.bucket_name;
+            var apiUrl = '/api/v1/' + api + '/' + bucket_name;
+            var separator = '?';
+            var body = '';
+            var requestHeaders = {};
+            requestHeaders["X-Passthrough-Method"] = this.operation;
+            if ((this.operation != 'PUT') && isNonEmptyString(this.xEmcNamespace)) {
+              requestHeaders["X-Passthrough-Namespace"] = this.xEmcNamespace;
+            }
+
+            if (api == "s3") {
+              if ((this.operation == 'GET') || (this.operation == 'HEAD')) {
+                if (isNonEmptyString(this.delimiter)) {
+                  apiUrl = apiUrl + separator + 'delimiter=' + this.delimiter;
+                  separator = '&';
+                }
+                if (isNonEmptyString(this.encodingType)) {
+                  apiUrl = apiUrl + separator + encodingTypeNames[this.listType] + '=' + this.encodingType;
+                  separator = '&';
+                  if (this.listType == '2') {
+	                  apiUrl = apiUrl + separator + encodingTypeNames['1'] + '=' + this.encodingType;
+                  }
+                }
+                if (this.maxKeys && (this.maxKeys > 0)) {
+                  apiUrl = apiUrl + separator + 'max-keys=' + this.maxKeys;
+                  separator = '&';
+                }
+                if (isNonEmptyString(this.prefix)) {
+                  apiUrl = apiUrl + separator + 'prefix=' + this.prefix;
+                  separator = '&';
+                }
+                if (isNonEmptyString(this.startAfter)) {
+                  apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.startAfter;
+                  separator = '&';
+                  if (this.listType == '2') {
+	                apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.startAfter;
+                  }
+                }
+                if (this.listType != '1') {
+                  apiUrl = apiUrl + separator + 'list-type=2';
+                  if (isNonEmptyString(this.continuationToken)) {
+                    apiUrl = apiUrl + '&continuation-token=' + this.continuationToken;
+                  }
+                  if (isNonEmptyString(this.fetchOwner)) {
+                    apiUrl = apiUrl + '&fetch-owner=' + this.fetchOwner;
+                  }
+                }
+              }
+
+              if (this.operation == 'PUT') {
+                if (isNonEmptyString(this.xEmcNamespace)) {
+                  requestHeaders["X-emc-namespace"] = this.xEmcNamespace;
+                }
+                if (isNonEmptyString(this.xEmcVpool)) {
+                  requestHeaders["X-emc-vpool"] = this.xEmcVpool;
+                }
+                if (isNonEmptyString(this.xAmzAcl)) {
+                  requestHeaders["X-amz-acl"] = this.xAmzAcl;
+                }
+                if (isNonEmptyString(this.xAmzGrantRead)) {
+                  requestHeaders["X-amz-grant-read"] = this.xAmzGrantRead;
+                }
+                if (isNonEmptyString(this.xAmzGrantWrite)) {
+                  requestHeaders["X-amz-grant-write"] = this.xAmzGrantWrite;
+                }
+                if (isNonEmptyString(this.xAmzGrantReadAcp)) {
+                  requestHeaders["X-amz-grant-read-acp"] = this.xAmzGrantReadAcp;
+                }
+                if (isNonEmptyString(this.xAmzGrantWriteAcp)) {
+                  requestHeaders["X-amz-grant-write-acp"] = this.xAmzGrantWriteAcp;
+                }
+                if (isNonEmptyString(this.xAmzGrantFullControl)) {
+                  requestHeaders["X-amz-grant-full-control"] = this.xAmzGrantFullControl;
+                }
+                if (isNonEmptyString(this.xEmcRetentionPeriod)) {
+                  requestHeaders["X-emc-retention-period"] = this.xEmcRetentionPeriod;
+                }
+                if (isNonEmptyString(this.xEmcFileSystemAccessEnabled)) {
+                  requestHeaders["X-emc-file-system-access-enabled"] = this.xEmcFileSystemAccessEnabled;
+                }
+                if (isNonEmptyString(this.xEmcIsStaleAllowed)) {
+                  requestHeaders["X-emc-is-stale-allowed"] = this.xEmcIsStaleAllowed;
+                }
+                if (isNonEmptyString(this.xEmcComplianceEnabled)) {
+                  requestHeaders["X-emc-compliance-enabled"] = this.xEmcComplianceEnabled;
+                }
+                if (isNonEmptyString(this.xEmcServerSideEncryptionEnabled)) {
+                  requestHeaders["X-emc-server-side-encryption-enabled"] = this.xEmcServerSideEncryptionEnabled;
+                }
+                if (isNonEmptyString(this.xEmcMetadataSearch)) {
+                  requestHeaders["X-emc-metadata-search"] = this.xEmcMetadataSearch;
+                }
+              }
+            }
+            $scope.main.response = {};
+            $http({
+                method: "POST", 
+                url: apiUrl, 
+                headers: requestHeaders,
+                data: body
+            }).then(
+                function successCallback(response) {
+                    $scope.main.response = processXmlData(response.data);
+                },
+                function errorCallback(response) {
+                    $scope.main.result = [];
+                    $scope.main.messagetitle = "Error";
+                    $scope.main.messagebody = response.data;
+                    $('#message').modal({show: true});
+                }
+            );
+        };
+      }],
+      controllerAs: "bucketCtrl"
     };
   });
 

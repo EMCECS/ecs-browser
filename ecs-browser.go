@@ -115,6 +115,7 @@ func main() {
   apiHandle("examples", appHandler(GetExamples), "GET")
   apiHandle("s3/{bucket}/{object}", appHandler(S3Passthrough), "POST")
   apiHandle("s3/{bucket}/", appHandler(S3Passthrough), "POST")
+  apiHandle("s3/{bucket}", appHandler(S3Passthrough), "POST")
   apiHandle("bucket", appHandler(CreateBucket), "POST")
   apiHandle("metadatasearch", appHandler(MetadataSearch), "POST")
   apiHandle("searchmetadata", appHandler(SearchMetadata), "POST")

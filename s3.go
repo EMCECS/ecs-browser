@@ -214,11 +214,12 @@ func GetS3(r *http.Request) (S3, error) {
   if err != nil {
     return S3{}, err
   }
+  var namespace = r.Header.Get("X-Passthrough-Namespace")
   s3 := S3{
     EndPointString: session.Values["Endpoint"].(string),
     AccessKey: session.Values["AccessKey"].(string),
     SecretKey: session.Values["SecretKey"].(string),
-    Namespace: "",
+    Namespace: namespace,
   }
   return s3, nil
 }
