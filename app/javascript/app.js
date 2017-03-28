@@ -416,6 +416,8 @@ function processXmlData(data) {
       restrict: 'E',
       templateUrl: "app/html/main-object.html",
       controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
+        this.operation = 'GET';
+        this.scope = 'Object';
         this.submit = function(api) {
             bucket_name = this.bucket_name;
             object_name = this.object_name;
@@ -545,6 +547,9 @@ function processXmlData(data) {
       restrict: 'E',
       templateUrl: "app/html/main-bucket.html",
       controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
+        this.operation = 'GET';
+        this.scope = 'Bucket';
+        this.listType = '1';
         this.submit = function(api) {
             bucket_name = this.bucket_name;
             var apiUrl = '/api/v1/' + api + '/' + bucket_name;
