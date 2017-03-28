@@ -565,8 +565,14 @@ function processXmlData(data) {
               if (((this.operation == 'GET') || (this.operation == 'HEAD')) && (this.scope == 'Versions')) {
                   apiUrl = apiUrl + separator + 'versions';
                   separator = '&';
-                }
-              if ((this.operation == 'GET') || (this.operation == 'HEAD')) {
+              }
+              if (((this.operation == 'PUT') || (this.operation == 'GET')) && (this.scope == 'ACL')) {
+                apiUrl = apiUrl + separator + 'acl';
+                separator = '&';
+                body = this.acl;
+                requestHeaders["Accept"] = 'application/xml';
+              }
+              if (((this.operation == 'GET') || (this.operation == 'HEAD')) && ((this.scope == 'Bucket') || (this.scope == 'Versions'))) {
                 if (isNonEmptyString(this.delimiter)) {
                   apiUrl = apiUrl + separator + 'delimiter=' + this.delimiter;
                   separator = '&';
@@ -615,47 +621,51 @@ function processXmlData(data) {
               }
 
               if (this.operation == 'PUT') {
-                if (isNonEmptyString(this.xEmcNamespace)) {
-                  requestHeaders["X-emc-namespace"] = this.xEmcNamespace;
+                if ((this.scope == 'Bucket') || (this.scope == 'ACL')) {
+                  if (isNonEmptyString(this.xAmzAcl)) {
+                    requestHeaders["X-amz-acl"] = this.xAmzAcl;
+                  }
+                  if (isNonEmptyString(this.xAmzGrantRead)) {
+                    requestHeaders["X-amz-grant-read"] = this.xAmzGrantRead;
+                  }
+                  if (isNonEmptyString(this.xAmzGrantWrite)) {
+                    requestHeaders["X-amz-grant-write"] = this.xAmzGrantWrite;
+                  }
+                  if (isNonEmptyString(this.xAmzGrantReadAcp)) {
+                    requestHeaders["X-amz-grant-read-acp"] = this.xAmzGrantReadAcp;
+                  }
+                  if (isNonEmptyString(this.xAmzGrantWriteAcp)) {
+                    requestHeaders["X-amz-grant-write-acp"] = this.xAmzGrantWriteAcp;
+                  }
+                  if (isNonEmptyString(this.xAmzGrantFullControl)) {
+                    requestHeaders["X-amz-grant-full-control"] = this.xAmzGrantFullControl;
+                  }
                 }
-                if (isNonEmptyString(this.xEmcVpool)) {
-                  requestHeaders["X-emc-vpool"] = this.xEmcVpool;
-                }
-                if (isNonEmptyString(this.xAmzAcl)) {
-                  requestHeaders["X-amz-acl"] = this.xAmzAcl;
-                }
-                if (isNonEmptyString(this.xAmzGrantRead)) {
-                  requestHeaders["X-amz-grant-read"] = this.xAmzGrantRead;
-                }
-                if (isNonEmptyString(this.xAmzGrantWrite)) {
-                  requestHeaders["X-amz-grant-write"] = this.xAmzGrantWrite;
-                }
-                if (isNonEmptyString(this.xAmzGrantReadAcp)) {
-                  requestHeaders["X-amz-grant-read-acp"] = this.xAmzGrantReadAcp;
-                }
-                if (isNonEmptyString(this.xAmzGrantWriteAcp)) {
-                  requestHeaders["X-amz-grant-write-acp"] = this.xAmzGrantWriteAcp;
-                }
-                if (isNonEmptyString(this.xAmzGrantFullControl)) {
-                  requestHeaders["X-amz-grant-full-control"] = this.xAmzGrantFullControl;
-                }
-                if (isNonEmptyString(this.xEmcRetentionPeriod)) {
-                  requestHeaders["X-emc-retention-period"] = this.xEmcRetentionPeriod;
-                }
-                if (isNonEmptyString(this.xEmcFileSystemAccessEnabled)) {
-                  requestHeaders["X-emc-file-system-access-enabled"] = this.xEmcFileSystemAccessEnabled;
-                }
-                if (isNonEmptyString(this.xEmcIsStaleAllowed)) {
-                  requestHeaders["X-emc-is-stale-allowed"] = this.xEmcIsStaleAllowed;
-                }
-                if (isNonEmptyString(this.xEmcComplianceEnabled)) {
-                  requestHeaders["X-emc-compliance-enabled"] = this.xEmcComplianceEnabled;
-                }
-                if (isNonEmptyString(this.xEmcServerSideEncryptionEnabled)) {
-                  requestHeaders["X-emc-server-side-encryption-enabled"] = this.xEmcServerSideEncryptionEnabled;
-                }
-                if (isNonEmptyString(this.xEmcMetadataSearch)) {
-                  requestHeaders["X-emc-metadata-search"] = this.xEmcMetadataSearch;
+                if (this.scope == 'Bucket') {
+                  if (isNonEmptyString(this.xEmcNamespace)) {
+                    requestHeaders["X-emc-namespace"] = this.xEmcNamespace;
+                  }
+                  if (isNonEmptyString(this.xEmcVpool)) {
+                    requestHeaders["X-emc-vpool"] = this.xEmcVpool;
+                  }
+                  if (isNonEmptyString(this.xEmcRetentionPeriod)) {
+                    requestHeaders["X-emc-retention-period"] = this.xEmcRetentionPeriod;
+                  }
+                  if (isNonEmptyString(this.xEmcFileSystemAccessEnabled)) {
+                    requestHeaders["X-emc-file-system-access-enabled"] = this.xEmcFileSystemAccessEnabled;
+                  }
+                  if (isNonEmptyString(this.xEmcIsStaleAllowed)) {
+                    requestHeaders["X-emc-is-stale-allowed"] = this.xEmcIsStaleAllowed;
+                  }
+                  if (isNonEmptyString(this.xEmcComplianceEnabled)) {
+                    requestHeaders["X-emc-compliance-enabled"] = this.xEmcComplianceEnabled;
+                  }
+                  if (isNonEmptyString(this.xEmcServerSideEncryptionEnabled)) {
+                    requestHeaders["X-emc-server-side-encryption-enabled"] = this.xEmcServerSideEncryptionEnabled;
+                  }
+                  if (isNonEmptyString(this.xEmcMetadataSearch)) {
+                    requestHeaders["X-emc-metadata-search"] = this.xEmcMetadataSearch;
+                  }
                 }
               }
             }
