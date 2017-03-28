@@ -25,19 +25,13 @@
           <input ng-model="bucketCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
         </div>
         <br />
-        <div ng-if="(bucketCtrl.operation != 'PUT')" >
-          <div class="input-group">
-            <span class="input-group-addon">Version id</span>
-            <input ng-model="bucketCtrl.versionId" class="form-control" id="versionId" name="versionId" type="text" />
-          </div>
-          <br />
-        </div>
         <div ng-if="(bucketCtrl.operation == 'GET') || (bucketCtrl.operation == 'PUT')" >
           <div class="input-group">
             <input type="text" class="form-control" value="Scope" readonly="readonly">
             <span class="input-group-addon">
               <select ng-model="bucketCtrl.scope" id="scope" name="scope" type="select" required >
                 <option selected >Bucket</option>
+                <option>Versions</option>
 <!--
                 <option>Versioning</option>
                 <option>ACL</option>
@@ -68,6 +62,12 @@
           </div>
           <br />
           <div class="input-group">
+            <span class="input-group-addon" ng-if="(bucketCtrl.scope == 'Bucket')">Return objects after key</span>
+            <span class="input-group-addon" ng-if="(bucketCtrl.scope == 'Versions')">Return objects starting with key</span>
+            <input ng-model="bucketCtrl.keyMarker" class="form-control" id="keyMarker" name="keyMarker" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
             <span class="input-group-addon">Maximum number to return</span>
             <input ng-model="bucketCtrl.maxKeys" class="form-control" id="maxKeys" name="maxKeys" type="number" />
           </div>
@@ -77,30 +77,34 @@
             <input ng-model="bucketCtrl.prefix" class="form-control" id="prefix" name="prefix" type="text" />
           </div>
           <br />
-          <div class="input-group">
-            <span class="input-group-addon">Return objects after key</span>
-            <input ng-model="bucketCtrl.startAfter" class="form-control" id="startAfter" name="startAfter" type="text" />
-          </div>
-          <br />
-          <div class="input-group">
-            <input type="text" class="form-control" value="List API version" readonly="readonly">
-            <span class="input-group-addon">
-              <select ng-model="bucketCtrl.listType" id="listType" name="listType" type="select" required >
-                <option selected >1</option>
-                <option>2</option>
-              </select>
-            </span>
-          </div>
-          <br />
-          <div ng-if="bucketCtrl.listType=='2'">
+          <div ng-if="(bucketCtrl.scope == 'Bucket')">
             <div class="input-group">
-              <span class="input-group-addon">Continuation token</span>
-              <input ng-model="bucketCtrl.continuationToken" class="form-control" id="continuationToken" name="continuationToken" type="text" />
+              <input type="text" class="form-control" value="List API version" readonly="readonly">
+              <span class="input-group-addon">
+                <select ng-model="bucketCtrl.listType" id="listType" name="listType" type="select" required >
+                  <option selected >1</option>
+                  <option>2</option>
+                </select>
+              </span>
             </div>
             <br />
+            <div ng-if="bucketCtrl.listType=='2'">
+              <div class="input-group">
+                <span class="input-group-addon">Continuation token</span>
+                <input ng-model="bucketCtrl.continuationToken" class="form-control" id="continuationToken" name="continuationToken" type="text" />
+              </div>
+              <br />
+              <div class="input-group">
+                <span class="input-group-addon">Return owner information</span>
+                <input ng-model="bucketCtrl.fetchOwner" class="form-control" id="fetchOwner" name="fetchOwner" type="checkbox" />
+              </div>
+              <br />
+            </div>
+          </div>
+          <div ng-if="(bucketCtrl.scope == 'Versions')">
             <div class="input-group">
-              <span class="input-group-addon">Return owner information</span>
-              <input ng-model="bucketCtrl.fetchOwner" class="form-control" id="fetchOwner" name="fetchOwner" type="checkbox" />
+              <span class="input-group-addon">Return versions starting with id</span>
+              <input ng-model="bucketCtrl.versionIdMarker" class="form-control" id="versionIdMarker" name="versionIdMarker" type="text" />
             </div>
             <br />
           </div>
@@ -157,6 +161,7 @@
               <input ng-model="bucketCtrl.xEmcFileSystemAccessEnabled" id="xEmcFileSystemAccessEnabled" name="xEmcFileSystemAccessEnabled" type="checkbox" />
             </span>
           </div>
+          <br />
           <div class="input-group">
             <input type="text" class="form-control" value="Enable Access During Outage" readonly="readonly">
             <span class="input-group-addon">

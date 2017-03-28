@@ -557,6 +557,10 @@ function processXmlData(data) {
             }
 
             if (api == "s3") {
+              if (((this.operation == 'GET') || (this.operation == 'HEAD')) && (this.scope == 'Versions')) {
+                  apiUrl = apiUrl + separator + 'versions';
+                  separator = '&';
+                }
               if ((this.operation == 'GET') || (this.operation == 'HEAD')) {
                 if (isNonEmptyString(this.delimiter)) {
                   apiUrl = apiUrl + separator + 'delimiter=' + this.delimiter;
@@ -577,14 +581,24 @@ function processXmlData(data) {
                   apiUrl = apiUrl + separator + 'prefix=' + this.prefix;
                   separator = '&';
                 }
-                if (isNonEmptyString(this.startAfter)) {
-                  apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.startAfter;
-                  separator = '&';
-                  if (this.listType == '2') {
-	                apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.startAfter;
+                if (isNonEmptyString(this.keyMarker)) {
+                  if (this.scope == 'Versions') {
+                    apiUrl = apiUrl + separator + 'key-marker=' + this.keyMarker;
+                    separator = '&';
+                  } else if (this.scope == 'Bucket') {
+                    apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.keyMarker;
+                    separator = '&';
+                    if (this.listType == '2') {
+	                  apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.keyMarker;
+                    }
                   }
                 }
-                if (this.listType != '1') {
+                if (this.scope == 'Versions') {
+                  if (isNonEmptyString(this.versionIdMarker)) {
+                      apiUrl = apiUrl + separator + 'version-id-marker=' + this.versionIdMarker;
+                      separator = '&';
+                  }
+                } else if (this.listType != '1') {
                   apiUrl = apiUrl + separator + 'list-type=2';
                   if (isNonEmptyString(this.continuationToken)) {
                     apiUrl = apiUrl + '&continuation-token=' + this.continuationToken;
