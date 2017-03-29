@@ -87,9 +87,12 @@
               <input ng-model="bucketCtrl.encodingType" class="form-control" id="encodingType" name="encodingType" type="text" />
             </div>
             <br />
+          </div>
+          <div class="field" ng-if="((bucketCtrl.scope == 'Bucket') || (bucketCtrl.scope == 'Versions') || ((bucketCtrl.scope == 'Metadata') && (bucketCtrl.operation == 'GET')))">
             <div class="input-group">
               <span class="input-group-addon" ng-if="(bucketCtrl.scope == 'Bucket')">Return objects after key</span>
               <span class="input-group-addon" ng-if="(bucketCtrl.scope == 'Versions')">Return objects starting with key</span>
+              <span class="input-group-addon" ng-if="(bucketCtrl.scope == 'Metadata')">Return objects after marker</span>
               <input ng-model="bucketCtrl.keyMarker" class="form-control" id="keyMarker" name="keyMarker" type="text" />
             </div>
             <br />
@@ -98,6 +101,8 @@
               <input ng-model="bucketCtrl.maxKeys" class="form-control" id="maxKeys" name="maxKeys" type="number" />
             </div>
             <br />
+          </div>
+          <div class="field" ng-if="((bucketCtrl.scope == 'Bucket') || (bucketCtrl.scope == 'Versions'))">
             <div class="input-group">
               <span class="input-group-addon">Prefix</span>
               <input ng-model="bucketCtrl.prefix" class="form-control" id="prefix" name="prefix" type="text" />

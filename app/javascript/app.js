@@ -590,8 +590,14 @@ function processXmlData(data) {
                     apiUrl = apiUrl + separator + 'sorted=' + this.sortKey;
                     separator = '&';
                   }
-//                  apiUrl = apiUrl + separator + 'include-older-versions=' + (this.includeOlderVersions ? 'true' : 'false');
+                  apiUrl = apiUrl + separator + 'include-older-versions=' + (this.includeOlderVersions ? 'true' : 'false');
                   separator = '&';
+                  if (this.maxKeys && (this.maxKeys > 0)) {
+                    apiUrl = apiUrl + separator + 'max-keys=' + this.maxKeys;
+                  }
+                  if (isNonEmptyString(this.keyMarker)) {
+                    apiUrl = apiUrl + separator + 'marker=' + this.keyMarker;
+                  }
                 }
               }
               if (((this.operation == 'GET') || (this.operation == 'HEAD')) && ((this.scope == 'Bucket') || (this.scope == 'Versions'))) {
@@ -619,7 +625,7 @@ function processXmlData(data) {
                     apiUrl = apiUrl + separator + 'key-marker=' + this.keyMarker;
                     separator = '&';
                   } else if (this.scope == 'Bucket') {
-                    apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.keyMarker;
+                    apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.maxKeys;
                     separator = '&';
                     if (this.listType == '2') {
 	                  apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.keyMarker;
