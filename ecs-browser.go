@@ -328,6 +328,7 @@ func MetadataSearch(w http.ResponseWriter, r *http.Request) *appError {
   if query.ReturnAllMetadata {
     path += "&attributes=ALL"
   }
+  log.Print("Path: " + path)
   bucketQueryResponse, err := s3Request(s3, query.Bucket, "GET", path, make(map[string][]string), "")
   if err != nil {
     return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}

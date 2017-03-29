@@ -425,6 +425,7 @@ function processXmlData(data) {
             var separator = '?';
             var body = '';
             var requestHeaders = {};
+            requestHeaders["Accept"] = 'application/xml';
             requestHeaders["X-Passthrough-Method"] = this.operation;
 
             if (api == "s3") {
@@ -556,6 +557,7 @@ function processXmlData(data) {
             var separator = '?';
             var body = '';
             var requestHeaders = {};
+            requestHeaders["Accept"] = 'application/xml';
             requestHeaders["X-Passthrough-Method"] = this.operation;
             if ((this.operation != 'PUT') && isNonEmptyString(this.xEmcNamespace)) {
               requestHeaders["X-Passthrough-Namespace"] = this.xEmcNamespace;
@@ -570,7 +572,27 @@ function processXmlData(data) {
                 apiUrl = apiUrl + separator + 'acl';
                 separator = '&';
                 body = this.acl;
-                requestHeaders["Accept"] = 'application/xml';
+              }
+              if (this.scope == 'Metadata') {
+                if ((this.operation == 'DELETE') || ((this.operation == 'GET') && this.keysOnly)) {
+                  apiUrl = apiUrl + separator + 'searchmetadata';
+                  separator = '&';
+                } else if (this.operation == 'GET') {
+                  if (isNonEmptyString(this.metadataQuery)) {
+                    apiUrl = apiUrl + separator + 'query=' + this.metadataQuery;
+                    separator = '&';
+                  }
+                  if (isNonEmptyString(this.extraMetadata)) {
+                    apiUrl = apiUrl + separator + 'attributes=' + this.extraMetadata;
+                    separator = '&';
+                  }
+                  if (isNonEmptyString(this.sortKey)) {
+                    apiUrl = apiUrl + separator + 'sorted=' + this.sortKey;
+                    separator = '&';
+                  }
+//                  apiUrl = apiUrl + separator + 'include-older-versions=' + (this.includeOlderVersions ? 'true' : 'false');
+                  separator = '&';
+                }
               }
               if (((this.operation == 'GET') || (this.operation == 'HEAD')) && ((this.scope == 'Bucket') || (this.scope == 'Versions'))) {
                 if (isNonEmptyString(this.delimiter)) {

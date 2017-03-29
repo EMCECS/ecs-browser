@@ -6,7 +6,7 @@
         <div class="input-group">
           <input type="text" class="form-control" value="Operation" readonly="readonly">
           <span class="input-group-addon">
-            <select ng-model="bucketCtrl.operation" id="operation" name="operation" type="select" required >
+            <select ng-model="bucketCtrl.operation" id="operation" name="operation" type="select" >
               <option>HEAD</option>
               <option>GET</option>
               <option>PUT</option>
@@ -28,17 +28,44 @@
         <div class="input-group">
           <input type="text" class="form-control" value="Scope" readonly="readonly">
           <span class="input-group-addon">
-            <select ng-model="bucketCtrl.scope" id="scope" name="scope" type="select" required >
+            <select ng-model="bucketCtrl.scope" id="scope" name="scope" type="select" >
               <option>Bucket</option>
               <option>Versions</option>
+              <option>Metadata</option>
               <option>ACL</option>
-<!--
-              <option>Versioning</option>
-               -->
             </select>
           </span>
         </div>
         <br />
+        <div ng-if="((bucketCtrl.scope == 'Metadata') && (bucketCtrl.operation == 'GET'))">
+          <div class="input-group">
+            <span class="input-group-addon">Return keys only</span>
+            <input ng-model="bucketCtrl.keysOnly" class="form-control" id="keysOnly" name="keysOnly" type="checkbox" />
+          </div>
+          <br />
+          <div ng-if="!bucketCtrl.keysOnly">
+            <div class="input-group">
+              <span class="input-group-addon">Query</span>
+              <input ng-model="bucketCtrl.metadataQuery" class="form-control" id="metadataQuery" name="metadataQuery" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">Extra Metada to return</span>
+              <input ng-model="bucketCtrl.extraMetadata" class="form-control" id="extraMetadata" name="extraMetadata" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">Sort key</span>
+              <input ng-model="bucketCtrl.sortKey" class="form-control" id="sortKey" name="sortKey" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">Include older versions</span>
+              <input ng-model="bucketCtrl.includeOlderVersions" class="form-control" id="includeOlderVersions" name="includeOlderVersions" type="checkbox" />
+            </div>
+            <br />
+          </div>
+        </div>
         <div ng-if="(bucketCtrl.operation == 'PUT')" >
           <div ng-if="(bucketCtrl.scope == 'ACL')" >
             <div class="input-group">
@@ -81,7 +108,7 @@
             <div class="input-group">
               <input type="text" class="form-control" value="List API version" readonly="readonly">
               <span class="input-group-addon">
-                <select ng-model="bucketCtrl.listType" id="listType" name="listType" type="select" required >
+                <select ng-model="bucketCtrl.listType" id="listType" name="listType" type="select" >
                   <option>1</option>
                   <option>2</option>
                 </select>

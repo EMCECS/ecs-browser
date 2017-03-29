@@ -175,7 +175,14 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
   if (len(strings.TrimSpace(object)) > 0) {
     path = path + object
   }
-  path = path + "?" + r.URL.RawQuery
+  separator := "?"
+  for key, values := range r.URL.Query() {
+    for _, value := range values {
+      path = path + separator + key + "=" + value
+      separator = "&"
+    }
+  }
+  log.Print("Path: " + path)
   var data = ""
   var response Response
   if (passthroughMethod == "PUT") {
@@ -313,6 +320,7 @@ func s3Request(s3 S3, bucket string, method string, path string, headers map[str
     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
   }
   httpClient := &http.Client{Transport: tr}
+  log.Print("url: " + u.String())
   req, err := http.NewRequest(method, u.String(), bytes.NewBufferString(body))
   if err != nil {
     return Response{}, err
