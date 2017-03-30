@@ -434,6 +434,12 @@ function processXmlData(data) {
                 separator = '&';
               }
 
+              if ((this.operation == 'HEAD') || (((this.operation == 'GET') || (this.operation == 'PUT')) && (this.scope == 'Object'))) {
+                if (isNonEmptyString(this.ifNoneMatch)) {
+                  requestHeaders["If-None-Match"] = this.ifNoneMatch;
+                }
+              }
+
               if (this.operation == 'PUT') {
                 if (isNonEmptyString(this.xAmzAcl)) {
                   requestHeaders["X-amz-acl"] = this.xAmzAcl;
@@ -458,12 +464,6 @@ function processXmlData(data) {
               } else if (this.scope == 'ACL') {
                 body = this.acl
               } else {
-                var file = document.getElementById('file').files[0];
-                if (!file) {
-                  alert("You must select a file to upload.");
-                  return;
-                }
-                requestHeaders["Content-Type"] = undefined;
                 if (isNonEmptyString(this.content)) {
                   requestHeaders["Content"] = this.content;
                 }
@@ -476,24 +476,37 @@ function processXmlData(data) {
                 if (isNonEmptyString(this.retentionPolicy)) {
                   requestHeaders["X-retention-policy"] = this.retentionPolicy;
                 }
-
-                var fd = new FormData();
-                fd.append('file', file);
-                $http.post(apiUrl, fd, {
-                  transformRequest: angular.identity,
-                  headers: requestHeaders
-                }).then(
-                  function successCallback(response) {
-                    $scope.main.response = processXmlData(response.data);
-                  },
-                  function errorCallback(response) {
-                    $scope.main.result = [];
-                    $scope.main.messagetitle = "Error";
-                    $scope.main.messagebody = response.data;
-                    $('#message').modal({show: true});
+                if (isNonEmptyString(this.xAmzCopySource)) {
+                  requestHeaders["X-amz-copy-source"] = this.xAmzCopySource;
+                  if (isNonEmptyString(this.xAmzMetadataDirective)) {
+                    requestHeaders["X-amz-metadata-directive"] = this.xAmzMetadataDirective;
                   }
-                );
-                return;
+                } else {
+                  var file = document.getElementById('file').files[0];
+                  if (!file) {
+                    alert("You must select either a file to upload or an object to copy.");
+                    return;
+                  }
+                  requestHeaders["Content-Type"] = undefined;
+
+                  var fd = new FormData();
+                  fd.append('file', file);
+                  $http.post(apiUrl, fd, {
+                    transformRequest: angular.identity,
+                    headers: requestHeaders
+                  }).then(
+                    function successCallback(response) {
+                      $scope.main.response = processXmlData(response.data);
+                    },
+                    function errorCallback(response) {
+                      $scope.main.result = [];
+                      $scope.main.messagetitle = "Error";
+                      $scope.main.messagebody = response.data;
+                      $('#message').modal({show: true});
+                    }
+                  );
+                  return;
+                }
               }
 
               if ((this.operation == 'HEAD') || ((this.operation == 'GET') && (this.scope == 'Object'))) {
@@ -508,9 +521,6 @@ function processXmlData(data) {
                 }
                 if (isNonEmptyString(this.ifMatch)) {
                   requestHeaders["If-Match"] = this.ifMatch;
-                }
-                if (isNonEmptyString(this.ifNoneMatch)) {
-                  requestHeaders["If-None-Match"] = this.ifNoneMatch;
                 }
               }
 

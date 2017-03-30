@@ -88,6 +88,8 @@
             <input ng-model="objectCtrl.ifMatch" class="form-control" id="ifMatch" name="ifMatch" type="text" />
           </div>
           <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'HEAD') || (((objectCtrl.operation == 'GET') || (objectCtrl.operation == 'PUT')) && (objectCtrl.scope == 'Object'))" >
           <div class="input-group">
             <span class="input-group-addon">If None Match</span>
             <input ng-model="objectCtrl.ifNoneMatch" class="form-control" id="ifNoneMatch" name="ifNoneMatch" type="text" />
@@ -136,6 +138,16 @@
             <div class="input-group">
               <span class="input-group-addon">x-amz-retention-policy</span>
               <input ng-model="objectCtrl.xAmzRetentionPolicy" class="form-control" id="xAmzRetentionPolicy" name="xAmzRetentionPolicy" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-copy-source</span>
+              <input ng-model="objectCtrl.xAmzCopySource" class="form-control" id="xAmzCopySource" name="xAmzCopySource" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-metadata-directive</span>
+              <input ng-model="objectCtrl.xAmzMetadataDirective" class="form-control" id="xAmzMetadataDirective" name="xAmzMetadataDirective" type="text" />
             </div>
             <br />
           </div>
