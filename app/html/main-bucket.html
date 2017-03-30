@@ -33,6 +33,7 @@
               <option>Versions</option>
               <option>Metadata</option>
               <option>ACL</option>
+              <option>CORS</option>
             </select>
           </span>
         </div>
@@ -67,10 +68,10 @@
           </div>
         </div>
         <div ng-if="(bucketCtrl.operation == 'PUT')" >
-          <div ng-if="(bucketCtrl.scope == 'ACL')" >
+          <div ng-if="((bucketCtrl.scope == 'ACL') || (bucketCtrl.scope == 'CORS'))" >
             <div class="input-group">
               <span class="input-group-addon">Body</span>
-              <textarea ng-model="bucketCtrl.acl" class="form-control" id="acl" name="acl" rows="10" />
+              <textarea ng-model="bucketCtrl.body" class="form-control" id="body" name="body" rows="10" />
             </div>
             <br />
           </div>

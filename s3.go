@@ -17,6 +17,7 @@ import (
   "github.com/gorilla/mux"
   "github.com/gorilla/sessions"
   "io"
+  "io/ioutil"
 )
 
 var b64 = base64.StdEncoding
@@ -182,19 +183,25 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
       separator = "&"
     }
   }
-  log.Print("Path: " + path)
   var data = ""
   var response Response
   if (passthroughMethod == "PUT") {
-    file, _, err := r.FormFile("file")
-    if err == nil {
-      var Buf bytes.Buffer
-      defer file.Close()
-      // name := strings.Split(header.Filename, ".")
-      // Copy the file data to my buffer
-      io.Copy(&Buf, file)
-      data = string(Buf.Bytes())
-      Buf.Reset()
+  	buffer, err := ioutil.ReadAll(r.Body)
+    if (err != nil) {
+      return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
+    }
+    data = string(buffer)
+    if ("" == strings.TrimSpace(data)) {
+      file, _, err := r.FormFile("file")
+      if err == nil {
+        var Buf bytes.Buffer
+        defer file.Close()
+        // name := strings.Split(header.Filename, ".")
+        // Copy the file data to my buffer
+        io.Copy(&Buf, file)
+        data = string(Buf.Bytes())
+        Buf.Reset()
+      }
     }
   }
   response, err = s3Request(s3, bucket, passthroughMethod, path, headers, data)
@@ -320,7 +327,6 @@ func s3Request(s3 S3, bucket string, method string, path string, headers map[str
     TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
   }
   httpClient := &http.Client{Transport: tr}
-  log.Print("url: " + u.String())
   req, err := http.NewRequest(method, u.String(), bytes.NewBufferString(body))
   if err != nil {
     return Response{}, err

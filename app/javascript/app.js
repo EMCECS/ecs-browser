@@ -462,7 +462,7 @@ function processXmlData(data) {
                   apiUrl = apiUrl + separator + 'versionId=' + this.versionId;
                 }
               } else if (this.scope == 'ACL') {
-                body = this.acl
+                body = this.body
               } else {
                 if (isNonEmptyString(this.content)) {
                   requestHeaders["Content"] = this.content;
@@ -581,7 +581,14 @@ function processXmlData(data) {
               if (((this.operation == 'PUT') || (this.operation == 'GET')) && (this.scope == 'ACL')) {
                 apiUrl = apiUrl + separator + 'acl';
                 separator = '&';
-                body = this.acl;
+              }
+              if (((this.operation == 'PUT') || (this.operation == 'GET') || (this.operation == 'DELETE')) && (this.scope == 'CORS')) {
+                apiUrl = apiUrl + separator + 'cors';
+                separator = '&';
+              }
+              if ((this.operation == 'PUT') && ((this.scope == 'ACL') || (this.scope == 'CORS'))) {
+                body = this.body;
+                requestHeaders["Content-type"] = 'application/xml';
               }
               if (this.scope == 'Metadata') {
                 if ((this.operation == 'DELETE') || ((this.operation == 'GET') && this.keysOnly)) {
