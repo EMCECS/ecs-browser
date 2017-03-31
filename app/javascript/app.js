@@ -427,6 +427,9 @@ function processXmlData(data) {
             var requestHeaders = {};
             requestHeaders["Accept"] = 'application/xml';
             requestHeaders["X-Passthrough-Method"] = this.operation;
+            if (isNonEmptyString(this.xEmcNamespace)) {
+              requestHeaders["X-Passthrough-Namespace"] = this.xEmcNamespace;
+            }
 
             if (api == "s3") {
               if (((this.operation == 'PUT') || (this.operation == 'GET')) && (this.scope == 'ACL')) {
@@ -567,10 +570,12 @@ function processXmlData(data) {
             var separator = '?';
             var body = '';
             var requestHeaders = {};
-            requestHeaders["Accept"] = 'application/xml';
             requestHeaders["X-Passthrough-Method"] = this.operation;
             if ((this.operation != 'PUT') && isNonEmptyString(this.xEmcNamespace)) {
               requestHeaders["X-Passthrough-Namespace"] = this.xEmcNamespace;
+            }
+            if (this.scope != 'ADO') {
+              requestHeaders["Accept"] = 'application/xml';
             }
 
             if (api == "s3") {
@@ -585,6 +590,9 @@ function processXmlData(data) {
               if (((this.operation == 'PUT') || (this.operation == 'GET') || (this.operation == 'DELETE')) && (this.scope == 'CORS')) {
                 apiUrl = apiUrl + separator + 'cors';
                 separator = '&';
+              }
+              if ((this.operation == 'PUT') && (this.scope == 'ADO')) {
+                apiUrl = apiUrl + separator + 'isstaleallowed';
               }
               if ((this.operation == 'PUT') && ((this.scope == 'ACL') || (this.scope == 'CORS'))) {
                 body = this.body;
@@ -659,9 +667,7 @@ function processXmlData(data) {
                   if (isNonEmptyString(this.continuationToken)) {
                     apiUrl = apiUrl + '&continuation-token=' + this.continuationToken;
                   }
-                  if (isNonEmptyString(this.fetchOwner)) {
-                    apiUrl = apiUrl + '&fetch-owner=' + this.fetchOwner;
-                  }
+                  apiUrl = apiUrl + '&fetch-owner=' + this.fetchOwner;
                 }
               }
 
@@ -699,15 +705,13 @@ function processXmlData(data) {
                   if (isNonEmptyString(this.xEmcFileSystemAccessEnabled)) {
                     requestHeaders["X-emc-file-system-access-enabled"] = this.xEmcFileSystemAccessEnabled;
                   }
-                  if (isNonEmptyString(this.xEmcIsStaleAllowed)) {
-                    requestHeaders["X-emc-is-stale-allowed"] = this.xEmcIsStaleAllowed;
-                  }
-                  if (isNonEmptyString(this.xEmcComplianceEnabled)) {
-                    requestHeaders["X-emc-compliance-enabled"] = this.xEmcComplianceEnabled;
-                  }
-                  if (isNonEmptyString(this.xEmcServerSideEncryptionEnabled)) {
-                    requestHeaders["X-emc-server-side-encryption-enabled"] = this.xEmcServerSideEncryptionEnabled;
-                  }
+                }
+                if ((this.scope == 'Bucket') || (this.scope == 'ADO')) {
+                  requestHeaders["X-emc-is-stale-allowed"] = this.xEmcIsStaleAllowed;
+                }
+                if (this.scope == 'Bucket') {
+                  requestHeaders["X-emc-compliance-enabled"] = this.xEmcComplianceEnabled;
+                  requestHeaders["X-emc-server-side-encryption-enabled"] = this.xEmcServerSideEncryptionEnabled;
                   if (isNonEmptyString(this.xEmcMetadataSearch)) {
                     requestHeaders["X-emc-metadata-search"] = this.xEmcMetadataSearch;
                   }

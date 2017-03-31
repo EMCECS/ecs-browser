@@ -34,6 +34,7 @@
               <option>Metadata</option>
               <option>ACL</option>
               <option>CORS</option>
+              <option>ADO</option>
             </select>
           </span>
         </div>
@@ -198,6 +199,8 @@
               </span>
             </div>
             <br />
+          </div>
+          <div ng-if="((bucketCtrl.scope == 'Bucket') || (bucketCtrl.scope == 'ADO'))">
             <div class="input-group">
               <input type="text" class="form-control" value="Enable Access During Outage" readonly="readonly">
               <span class="input-group-addon">
@@ -205,6 +208,8 @@
               </span>
             </div>
             <br />
+          </div>
+          <div ng-if="(bucketCtrl.scope == 'Bucket')">
             <div class="input-group">
               <input type="text" class="form-control" value="Enable compliance" readonly="readonly">
               <span class="input-group-addon">

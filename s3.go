@@ -48,6 +48,7 @@ var s3ParamsToSign = map[string]bool{
   "response-content-encoding": true,
   "searchmetadata": true,
   "query": true,
+  "isstaleallowed": true,
 }
 
 type Bucket struct {
@@ -186,22 +187,19 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
   var data = ""
   var response Response
   if (passthroughMethod == "PUT") {
-  	buffer, err := ioutil.ReadAll(r.Body)
-    if (err != nil) {
-      return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
-    }
-    data = string(buffer)
-    if ("" == strings.TrimSpace(data)) {
-      file, _, err := r.FormFile("file")
-      if err == nil {
-        var Buf bytes.Buffer
-        defer file.Close()
-        // name := strings.Split(header.Filename, ".")
-        // Copy the file data to my buffer
-        io.Copy(&Buf, file)
-        data = string(Buf.Bytes())
-        Buf.Reset()
+    file, _, err := r.FormFile("file")
+    if err != nil {
+      buffer, err := ioutil.ReadAll(r.Body)
+      if (err != nil) {
+        return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
       }
+      data = string(buffer)
+    } else {
+      var Buf bytes.Buffer
+      defer file.Close()
+      io.Copy(&Buf, file)
+      data = string(Buf.Bytes())
+      Buf.Reset()
     }
   }
   response, err = s3Request(s3, bucket, passthroughMethod, path, headers, data)
