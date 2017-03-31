@@ -571,11 +571,9 @@ function processXmlData(data) {
             var body = '';
             var requestHeaders = {};
             requestHeaders["X-Passthrough-Method"] = this.operation;
+            requestHeaders["Accept"] = 'application/xml';
             if ((this.operation != 'PUT') && isNonEmptyString(this.xEmcNamespace)) {
               requestHeaders["X-Passthrough-Namespace"] = this.xEmcNamespace;
-            }
-            if (this.scope != 'ADO') {
-              requestHeaders["Accept"] = 'application/xml';
             }
 
             if (api == "s3") {
@@ -593,6 +591,9 @@ function processXmlData(data) {
               }
               if ((this.operation == 'PUT') && (this.scope == 'ADO')) {
                 apiUrl = apiUrl + separator + 'isstaleallowed';
+              }
+              if ((this.operation == 'GET') && (this.scope == 'Location')) {
+                apiUrl = apiUrl + separator + 'location';
               }
               if ((this.operation == 'PUT') && ((this.scope == 'ACL') || (this.scope == 'CORS'))) {
                 body = this.body;
