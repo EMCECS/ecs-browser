@@ -1,0 +1,21 @@
+    <h2>Response code</h2>
+    <h3>
+      <span class="label label-default" ng-bind-html="main.response['code']"></span>
+    </h3>
+    <h2>Headers</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(key, value) in main.response['response_headers']">
+          <td>{{ key }}</td>
+          <td>{{ value }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>Body</h2>
+    <div class="wordbreak" ng-bind-html="main.response['body']"></div>

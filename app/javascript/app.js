@@ -293,71 +293,25 @@ function processXmlData(data) {
     };
   });
 
+/*
   app.directive("mainList", function() {
     return {
       restrict: 'E',
       templateUrl: "app/html/main-list.html",
       controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
-        this.create = function(api) {
-            bucket_name = this.bucket_name;
-            var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/';
-            var separator = '?'
-            if(api == "s3") {
-              if (isNonEmptyString(this.delimiter)) {
-                apiUrl = apiUrl + separator + 'delimiter=' + this.delimiter;
-                separator = '&';
-              }
-              if (isNonEmptyString(this.encodingType)) {
-                apiUrl = apiUrl + separator + encodingTypeNames[this.listType] + '=' + this.encodingType;
-                separator = '&';
-                if (this.listType == '2') {
-	                apiUrl = apiUrl + separator + encodingTypeNames['1'] + '=' + this.encodingType;
-                }
-              }
-              if (this.maxKeys && (this.maxKeys > 0)) {
-                apiUrl = apiUrl + separator + 'max-keys=' + this.maxKeys;
-                separator = '&';
-              }
-              if (isNonEmptyString(this.prefix)) {
-                apiUrl = apiUrl + separator + 'prefix=' + this.prefix;
-                separator = '&';
-              }
-              if (isNonEmptyString(this.startAfter)) {
-                apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.startAfter;
-                separator = '&';
-                if (this.listType == '2') {
-	                apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.startAfter;
-                }
-              }
-              if (this.listType != '1') {
-                apiUrl = apiUrl + separator + 'list-type=2';
-                if (isNonEmptyString(this.continuationToken)) {
-                  apiUrl = apiUrl + '&continuation-token=' + this.continuationToken;
-                }
-                if (isNonEmptyString(this.fetchOwner)) {
-                  apiUrl = apiUrl + '&fetch-owner=' + this.fetchOwner;
-                }
-              }
-            }
-            $scope.main.response = {};
-            $http({
-                method: "POST", 
-                url: apiUrl, 
-                headers: { "X-Passthrough-Method": "GET" }
-            }).then(
-                function successCallback(response) {
-                    $scope.main.response = processXmlData(response.data);
-                },
-                function errorCallback(response) {
-                    $scope.main.result = [];
-                    $scope.main.messagetitle = "Error";
-                    $scope.main.messagebody = response.data;
-                    $('#message').modal({show: true});
-                }
-            );
+        this.heading = 'Bucket listing';
+        this.scope = 'Bucket';
+        this.allowHead = false;
+        this.allowGet = true;
+        this.allowPut = false;
+        this.allowDelete = false;
+        this.operation = 'GET';
+        this.listType = '1';
+        this.submit = function(api) {
+            bucketSubmit(api, this, $http, $scope);
         };
       }],
-      controllerAs: "listCtrl"
+      controllerAs: "bucketCtrl"
     };
   });
 
@@ -366,48 +320,26 @@ function processXmlData(data) {
       restrict: 'E',
       templateUrl: "app/html/main-versionlist.html",
       controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
-        this.create = function(api) {
-            bucket_name = this.bucket_name;
-            var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/?versions';
-            if(api == "s3") {
-              if (isNonEmptyString(this.delimiter)) {
-                apiUrl = apiUrl + '&delimiter=' + this.delimiter;
-              }
-              if (isNonEmptyString(this.encodingType)) {
-                apiUrl = apiUrl + '&encoding-type=' + this.encodingType;
-              }
-              if (isNonEmptyString(this.keyMarker)) {
-                apiUrl = apiUrl + '&key-marker=' + this.keyMarker;
-              }
-              if (this.maxKeys && (this.maxKeys > 0)) {
-                apiUrl = apiUrl + '&max-keys=' + this.maxKeys;
-              }
-              if (isNonEmptyString(this.prefix)) {
-                apiUrl = apiUrl + '&prefix=' + this.prefix;
-              }
-              if (isNonEmptyString(this.versionIdMarker)) {
-                apiUrl = apiUrl + '&version-id-marker=' + this.versionIdMarker;
-              }
-            }
-            $scope.main.response = {};
-            $http({
-                method: "POST", 
-                url: apiUrl, 
-                headers: { "X-Passthrough-Method": "GET" }
-            }).then(
-                function successCallback(response) {
-                    $scope.main.response = processXmlData(response.data);
-                },
-                function errorCallback(response) {
-                    $scope.main.result = [];
-                    $scope.main.messagetitle = "Error";
-                    $scope.main.messagebody = response.data;
-                    $('#message').modal({show: true});
-                }
-            );
+        this.heading = 'Bucket version listing';
+        this.scope = 'Versions';
+        this.allowHead = false;
+        this.allowGet = true;
+        this.allowPut = false;
+        this.allowDelete = false;
+        this.operation = 'GET';
+        this.submit = function(api) {
+            bucketSubmit(api, this, $http, $scope);
         };
       }],
-      controllerAs: "versionlistCtrl"
+      controllerAs: "bucketCtrl"
+    };
+  });
+*/
+
+  app.directive("responsePanel", function() {
+    return {
+      restrict: 'E',
+      templateUrl: "app/html/response-panel.html",
     };
   });
 
@@ -533,23 +465,7 @@ function processXmlData(data) {
                 }
               }
             }
-            $scope.main.response = {};
-            $http({
-                method: "POST", 
-                url: apiUrl, 
-                headers: requestHeaders,
-                data: body
-            }).then(
-                function successCallback(response) {
-                    $scope.main.response = processXmlData(response.data);
-                },
-                function errorCallback(response) {
-                    $scope.main.result = [];
-                    $scope.main.messagetitle = "Error";
-                    $scope.main.messagebody = response.data;
-                    $('#message').modal({show: true});
-                }
-            );
+            doSubmit($scope, $http, apiUrl, requestHeaders, body);
         };
       }],
       controllerAs: "objectCtrl"
@@ -561,186 +477,199 @@ function processXmlData(data) {
       restrict: 'E',
       templateUrl: "app/html/main-bucket.html",
       controller: ['$http', '$scope', 'mainService', function($http, $scope, mainService) {
+        this.heading = 'Bucket Operations';
         this.operation = 'GET';
-        this.scope = 'Bucket';
         this.listType = '1';
-        this.submit = function(api) {
-            bucket_name = this.bucket_name;
-            var apiUrl = '/api/v1/' + api + '/' + bucket_name;
-            var separator = '?';
-            var body = '';
-            var requestHeaders = {};
-            requestHeaders["X-Passthrough-Method"] = this.operation;
-            requestHeaders["Accept"] = 'application/xml';
-            if ((this.operation != 'PUT') && isNonEmptyString(this.xEmcNamespace)) {
-              requestHeaders["X-Passthrough-Namespace"] = this.xEmcNamespace;
-            }
+        this.submit = function(api, subApi) {
+          if (subApi == 'ADO') {
+            this.operation = 'PUT';
+          } else if (subApi == 'Location') {
+            this.operation = 'GET';
+          }
 
-            if (api == "s3") {
-              if (((this.operation == 'GET') || (this.operation == 'HEAD')) && (this.scope == 'Versions')) {
-                  apiUrl = apiUrl + separator + 'versions';
-                  separator = '&';
-              }
-              if (((this.operation == 'PUT') || (this.operation == 'GET')) && (this.scope == 'ACL')) {
-                apiUrl = apiUrl + separator + 'acl';
+          bucket_name = this.bucket_name;
+          var apiUrl = '/api/v1/' + api + '/' + bucket_name;
+          var separator = '?';
+          var body = '';
+          var requestHeaders = {};
+          requestHeaders["X-Passthrough-Method"] = this.operation;
+          requestHeaders["Accept"] = 'application/xml';
+          if ((this.operation != 'PUT') && isNonEmptyString(this.xEmcNamespace)) {
+            requestHeaders["X-Passthrough-Namespace"] = this.xEmcNamespace;
+          }
+
+          if (api == "s3") {
+            if (((this.operation == 'GET') || (this.operation == 'HEAD')) && (subApi == 'Versions')) {
+                apiUrl = apiUrl + separator + 'versions';
                 separator = '&';
-              }
-              if (((this.operation == 'PUT') || (this.operation == 'GET') || (this.operation == 'DELETE')) && (this.scope == 'CORS')) {
-                apiUrl = apiUrl + separator + 'cors';
+            }
+            if (((this.operation == 'PUT') || (this.operation == 'GET')) && (subApi == 'ACL')) {
+              apiUrl = apiUrl + separator + 'acl';
+              separator = '&';
+            }
+            if (((this.operation == 'PUT') || (this.operation == 'GET') || (this.operation == 'DELETE')) && (subApi == 'CORS')) {
+              apiUrl = apiUrl + separator + 'cors';
+              separator = '&';
+            }
+            if ((this.operation == 'PUT') && (subApi == 'ADO')) {
+              apiUrl = apiUrl + separator + 'isstaleallowed';
+            }
+            if ((this.operation == 'GET') && (subApi == 'Location')) {
+              apiUrl = apiUrl + separator + 'location';
+            }
+            if ((this.operation == 'PUT') && ((subApi == 'ACL') || (subApi == 'CORS'))) {
+              body = this.body;
+              requestHeaders["Content-type"] = 'application/xml';
+            }
+            if (subApi == 'Metadata') {
+              if ((this.operation == 'DELETE') || ((this.operation == 'GET') && this.keysOnly)) {
+                apiUrl = apiUrl + separator + 'searchmetadata';
                 separator = '&';
-              }
-              if ((this.operation == 'PUT') && (this.scope == 'ADO')) {
-                apiUrl = apiUrl + separator + 'isstaleallowed';
-              }
-              if ((this.operation == 'GET') && (this.scope == 'Location')) {
-                apiUrl = apiUrl + separator + 'location';
-              }
-              if ((this.operation == 'PUT') && ((this.scope == 'ACL') || (this.scope == 'CORS'))) {
-                body = this.body;
-                requestHeaders["Content-type"] = 'application/xml';
-              }
-              if (this.scope == 'Metadata') {
-                if ((this.operation == 'DELETE') || ((this.operation == 'GET') && this.keysOnly)) {
-                  apiUrl = apiUrl + separator + 'searchmetadata';
-                  separator = '&';
-                } else if (this.operation == 'GET') {
-                  if (isNonEmptyString(this.metadataQuery)) {
-                    apiUrl = apiUrl + separator + 'query=' + this.metadataQuery;
-                    separator = '&';
-                  }
-                  if (isNonEmptyString(this.extraMetadata)) {
-                    apiUrl = apiUrl + separator + 'attributes=' + this.extraMetadata;
-                    separator = '&';
-                  }
-                  if (isNonEmptyString(this.sortKey)) {
-                    apiUrl = apiUrl + separator + 'sorted=' + this.sortKey;
-                    separator = '&';
-                  }
-                  apiUrl = apiUrl + separator + 'include-older-versions=' + (this.includeOlderVersions ? 'true' : 'false');
-                  separator = '&';
-                  if (this.maxKeys && (this.maxKeys > 0)) {
-                    apiUrl = apiUrl + separator + 'max-keys=' + this.maxKeys;
-                  }
-                  if (isNonEmptyString(this.keyMarker)) {
-                    apiUrl = apiUrl + separator + 'marker=' + this.keyMarker;
-                  }
-                }
-              }
-              if (((this.operation == 'GET') || (this.operation == 'HEAD')) && ((this.scope == 'Bucket') || (this.scope == 'Versions'))) {
-                if (isNonEmptyString(this.delimiter)) {
-                  apiUrl = apiUrl + separator + 'delimiter=' + this.delimiter;
+              } else if (this.operation == 'GET') {
+                if (isNonEmptyString(this.metadataQuery)) {
+                  apiUrl = apiUrl + separator + 'query=' + this.metadataQuery;
                   separator = '&';
                 }
-                if (isNonEmptyString(this.encodingType)) {
-                  apiUrl = apiUrl + separator + encodingTypeNames[this.listType] + '=' + this.encodingType;
+                if (isNonEmptyString(this.extraMetadata)) {
+                  apiUrl = apiUrl + separator + 'attributes=' + this.extraMetadata;
                   separator = '&';
-                  if (this.listType == '2') {
-	                  apiUrl = apiUrl + separator + encodingTypeNames['1'] + '=' + this.encodingType;
-                  }
                 }
+                if (isNonEmptyString(this.sortKey)) {
+                  apiUrl = apiUrl + separator + 'sorted=' + this.sortKey;
+                  separator = '&';
+                }
+                apiUrl = apiUrl + separator + 'include-older-versions=' + (this.includeOlderVersions ? 'true' : 'false');
+                separator = '&';
                 if (this.maxKeys && (this.maxKeys > 0)) {
                   apiUrl = apiUrl + separator + 'max-keys=' + this.maxKeys;
-                  separator = '&';
-                }
-                if (isNonEmptyString(this.prefix)) {
-                  apiUrl = apiUrl + separator + 'prefix=' + this.prefix;
-                  separator = '&';
                 }
                 if (isNonEmptyString(this.keyMarker)) {
-                  if (this.scope == 'Versions') {
-                    apiUrl = apiUrl + separator + 'key-marker=' + this.keyMarker;
-                    separator = '&';
-                  } else if (this.scope == 'Bucket') {
-                    apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.maxKeys;
-                    separator = '&';
-                    if (this.listType == '2') {
-	                  apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.keyMarker;
-                    }
-                  }
-                }
-                if (this.scope == 'Versions') {
-                  if (isNonEmptyString(this.versionIdMarker)) {
-                      apiUrl = apiUrl + separator + 'version-id-marker=' + this.versionIdMarker;
-                      separator = '&';
-                  }
-                } else if (this.listType != '1') {
-                  apiUrl = apiUrl + separator + 'list-type=2';
-                  if (isNonEmptyString(this.continuationToken)) {
-                    apiUrl = apiUrl + '&continuation-token=' + this.continuationToken;
-                  }
-                  apiUrl = apiUrl + '&fetch-owner=' + this.fetchOwner;
-                }
-              }
-
-              if (this.operation == 'PUT') {
-                if ((this.scope == 'Bucket') || (this.scope == 'ACL')) {
-                  if (isNonEmptyString(this.xAmzAcl)) {
-                    requestHeaders["X-amz-acl"] = this.xAmzAcl;
-                  }
-                  if (isNonEmptyString(this.xAmzGrantRead)) {
-                    requestHeaders["X-amz-grant-read"] = this.xAmzGrantRead;
-                  }
-                  if (isNonEmptyString(this.xAmzGrantWrite)) {
-                    requestHeaders["X-amz-grant-write"] = this.xAmzGrantWrite;
-                  }
-                  if (isNonEmptyString(this.xAmzGrantReadAcp)) {
-                    requestHeaders["X-amz-grant-read-acp"] = this.xAmzGrantReadAcp;
-                  }
-                  if (isNonEmptyString(this.xAmzGrantWriteAcp)) {
-                    requestHeaders["X-amz-grant-write-acp"] = this.xAmzGrantWriteAcp;
-                  }
-                  if (isNonEmptyString(this.xAmzGrantFullControl)) {
-                    requestHeaders["X-amz-grant-full-control"] = this.xAmzGrantFullControl;
-                  }
-                }
-                if (this.scope == 'Bucket') {
-                  if (isNonEmptyString(this.xEmcNamespace)) {
-                    requestHeaders["X-emc-namespace"] = this.xEmcNamespace;
-                  }
-                  if (isNonEmptyString(this.xEmcVpool)) {
-                    requestHeaders["X-emc-vpool"] = this.xEmcVpool;
-                  }
-                  if (isNonEmptyString(this.xEmcRetentionPeriod)) {
-                    requestHeaders["X-emc-retention-period"] = this.xEmcRetentionPeriod;
-                  }
-                  if (isNonEmptyString(this.xEmcFileSystemAccessEnabled)) {
-                    requestHeaders["X-emc-file-system-access-enabled"] = this.xEmcFileSystemAccessEnabled;
-                  }
-                }
-                if ((this.scope == 'Bucket') || (this.scope == 'ADO')) {
-                  requestHeaders["X-emc-is-stale-allowed"] = this.xEmcIsStaleAllowed;
-                }
-                if (this.scope == 'Bucket') {
-                  requestHeaders["X-emc-compliance-enabled"] = this.xEmcComplianceEnabled;
-                  requestHeaders["X-emc-server-side-encryption-enabled"] = this.xEmcServerSideEncryptionEnabled;
-                  if (isNonEmptyString(this.xEmcMetadataSearch)) {
-                    requestHeaders["X-emc-metadata-search"] = this.xEmcMetadataSearch;
-                  }
+                  apiUrl = apiUrl + separator + 'marker=' + this.keyMarker;
                 }
               }
             }
-            $scope.main.response = {};
-            $http({
-                method: "POST", 
-                url: apiUrl, 
-                headers: requestHeaders,
-                data: body
-            }).then(
-                function successCallback(response) {
-                    $scope.main.response = processXmlData(response.data);
-                },
-                function errorCallback(response) {
-                    $scope.main.result = [];
-                    $scope.main.messagetitle = "Error";
-                    $scope.main.messagebody = response.data;
-                    $('#message').modal({show: true});
+            if (((this.operation == 'GET') || (this.operation == 'HEAD')) && ((subApi == 'Bucket') || (subApi == 'Versions'))) {
+              if (isNonEmptyString(this.delimiter)) {
+                apiUrl = apiUrl + separator + 'delimiter=' + this.delimiter;
+                separator = '&';
+              }
+              if (isNonEmptyString(this.encodingType)) {
+                apiUrl = apiUrl + separator + encodingTypeNames[this.listType] + '=' + this.encodingType;
+                separator = '&';
+                if (this.listType == '2') {
+	                apiUrl = apiUrl + separator + encodingTypeNames['1'] + '=' + this.encodingType;
                 }
-            );
+              }
+              if (this.maxKeys && (this.maxKeys > 0)) {
+                apiUrl = apiUrl + separator + 'max-keys=' + this.maxKeys;
+                separator = '&';
+              }
+              if (isNonEmptyString(this.prefix)) {
+                apiUrl = apiUrl + separator + 'prefix=' + this.prefix;
+                separator = '&';
+              }
+              if (isNonEmptyString(this.keyMarker)) {
+                if (subApi == 'Versions') {
+                  apiUrl = apiUrl + separator + 'key-marker=' + this.keyMarker;
+                  separator = '&';
+                } else if (subApi == 'Bucket') {
+                  apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.maxKeys;
+                  separator = '&';
+                  if (this.listType == '2') {
+      	            apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.keyMarker;
+                  }
+                }
+              }
+              if (subApi == 'Versions') {
+                if (isNonEmptyString(this.versionIdMarker)) {
+                    apiUrl = apiUrl + separator + 'version-id-marker=' + this.versionIdMarker;
+                    separator = '&';
+                }
+              } else if (this.listType != '1') {
+                apiUrl = apiUrl + separator + 'list-type=2';
+                if (isNonEmptyString(this.continuationToken)) {
+                  apiUrl = apiUrl + '&continuation-token=' + this.continuationToken;
+                }
+                apiUrl = apiUrl + '&fetch-owner=' + this.fetchOwner;
+              }
+            }
+
+            if (this.operation == 'PUT') {
+              if ((subApi == 'Bucket') || (subApi == 'ACL')) {
+                if (isNonEmptyString(this.xAmzAcl)) {
+                  requestHeaders["X-amz-acl"] = this.xAmzAcl;
+                }
+                if (isNonEmptyString(this.xAmzGrantRead)) {
+                  requestHeaders["X-amz-grant-read"] = this.xAmzGrantRead;
+                }
+                if (isNonEmptyString(this.xAmzGrantWrite)) {
+                  requestHeaders["X-amz-grant-write"] = this.xAmzGrantWrite;
+                }
+                if (isNonEmptyString(this.xAmzGrantReadAcp)) {
+                  requestHeaders["X-amz-grant-read-acp"] = this.xAmzGrantReadAcp;
+                }
+                if (isNonEmptyString(this.xAmzGrantWriteAcp)) {
+                  requestHeaders["X-amz-grant-write-acp"] = this.xAmzGrantWriteAcp;
+                }
+                if (isNonEmptyString(this.xAmzGrantFullControl)) {
+                  requestHeaders["X-amz-grant-full-control"] = this.xAmzGrantFullControl;
+                }
+              }
+              if (subApi == 'Bucket') {
+                if (isNonEmptyString(this.xEmcNamespace)) {
+                  requestHeaders["X-emc-namespace"] = this.xEmcNamespace;
+                }
+                if (isNonEmptyString(this.xEmcVpool)) {
+                  requestHeaders["X-emc-vpool"] = this.xEmcVpool;
+                }
+                if (isNonEmptyString(this.xEmcRetentionPeriod)) {
+                  requestHeaders["X-emc-retention-period"] = this.xEmcRetentionPeriod;
+                }
+                if (isNonEmptyString(this.xEmcFileSystemAccessEnabled)) {
+                  requestHeaders["X-emc-file-system-access-enabled"] = this.xEmcFileSystemAccessEnabled;
+                }
+              }
+              if ((subApi == 'Bucket') || (subApi == 'ADO')) {
+                requestHeaders["X-emc-is-stale-allowed"] = this.xEmcIsStaleAllowed;
+              }
+              if (subApi == 'Bucket') {
+                requestHeaders["X-emc-compliance-enabled"] = this.xEmcComplianceEnabled;
+                requestHeaders["X-emc-server-side-encryption-enabled"] = this.xEmcServerSideEncryptionEnabled;
+                if (isNonEmptyString(this.xEmcMetadataSearch)) {
+                  requestHeaders["X-emc-metadata-search"] = this.xEmcMetadataSearch;
+                }
+              }
+            }
+          }
+
+          doSubmit($scope, $http, apiUrl, requestHeaders, body);
+          // reset to the default
+          this.operation = 'GET';
         };
       }],
       controllerAs: "bucketCtrl"
     };
   });
+
+  doSubmit = function($scope, $http, apiUrl, requestHeaders, body) {
+    $scope.main.response = {};
+    $http({
+        method: "POST", 
+        url: apiUrl, 
+        headers: requestHeaders,
+        data: body
+    }).then(
+        function successCallback(response) {
+            $scope.main.response = processXmlData(response.data);
+        },
+        function errorCallback(response) {
+            $scope.main.result = [];
+            $scope.main.messagetitle = "Error";
+            $scope.main.messagebody = response.data;
+            $('#message').modal({show: true});
+        }
+    );
+  };
 
   app.directive("mainMetadataSearch", function() {
     return {
