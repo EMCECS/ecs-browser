@@ -13,23 +13,9 @@
           <li><a href="" ng-click="menu='bucket-Bucket-s3'">Bucket Operations</a></li>
           <li><a href="" ng-click="menu='bucket-Versions-s3'">Bucket Versions Operations</a></li>
           <li><a href="" ng-click="menu='bucket-Metadata-s3'">Bucket Metadata Operations</a></li>
-          <li><a href="" ng-click="menu='object-s3'">Object operations</a></li>
-          <li><a href="" ng-click="menu='requests-s3'">Requests</a></li>
+          <li><a href="" ng-click="menu='object-ACL-s3'">Object Acl Operations</a></li>
+          <li><a href="" ng-click="menu='object-Object-s3'">Object Operations</a></li>
           <li ng-show="main.html5browser == true"><a href="" ng-click="menu='html5browser'">Browser</a></li>
-        </ul>
-      </li>
-      <li ng-show="main.s3login=='true'" class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Swift API<b class="caret"></b></a>
-        <ul class="dropdown-menu">
-          <li><a href="" ng-click="menu='create-swift'">Create container</a></li>
-          <li><a href="" ng-click="menu='requests-swift'">Requests</a></li>
-        </ul>
-      </li>
-      <li ng-show="main.s3login=='true'" class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown">Atmos API<b class="caret"></b></a>
-        <ul class="dropdown-menu">
-          <li><a href="" ng-click="menu='create-atmos'">Create subtenant</a></li>
-          <li><a href="" ng-click="menu='requests-atmos'">Requests</a></li>
         </ul>
       </li>
       <li ng-show="main.s3login=='false'" class="dropdown">
