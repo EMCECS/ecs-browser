@@ -2,6 +2,7 @@ package main
 
 import (
   "crypto/hmac"
+  "crypto/md5"
   "crypto/sha1"
   "crypto/tls"
   "encoding/base64"
@@ -186,7 +187,13 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
   }
   var data = ""
   var response Response
-  if (passthroughMethod == "PUT") {
+  if (passthroughMethod == "POST") {
+    buffer, err := ioutil.ReadAll(r.Body)
+    if (err != nil) {
+      return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
+    }
+    data = string(buffer)
+  } else if (passthroughMethod == "PUT") {
     file, _, err := r.FormFile("file")
     if err != nil {
       buffer, err := ioutil.ReadAll(r.Body)
@@ -311,7 +318,14 @@ func prepareS3Request(s3 S3, bucket string, method string, pathWithParams string
 }
 
 func s3Request(s3 S3, bucket string, method string, path string, headers map[string][]string, body string) (Response, error) {
+  if body != "" {
+    hash := md5.Sum([]byte(body))
+    headers["Content-MD5"] = []string{b64.EncodeToString(hash[:])}
+    log.Print("Hash: " + b64.EncodeToString(hash[:]))
+  }
+
   preparedS3Request, err := prepareS3Request(s3, bucket, method, path, headers, false)
+
   if body != "" {
     headers["Content-Length"] = []string{strconv.Itoa(len(body))}
   }

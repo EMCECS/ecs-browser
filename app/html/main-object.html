@@ -2,18 +2,21 @@
   <div class="panel-heading">Object Operations: {{ menu.split('-')[1] }}</div>
   <div class="panel-body">
     <form accept-charset="UTF-8" ng-submit="objectCtrl.submit(menu.split('-')[2], menu.split('-')[1])">
-      <div class="input-group">
-        <input type="text" class="form-control" value="Operation" readonly="readonly">
-        <span class="input-group-addon">
-          <select ng-model="objectCtrl.operation" id="operation" name="operation" type="select" required >
-            <option ng-if="(menu.split('-')[1] != 'ACL')">HEAD</option>
-            <option>GET</option>
-            <option>PUT</option>
-            <option ng-if="(menu.split('-')[1] != 'ACL')">DELETE</option>
-          </select>
-        </span>
+      <div ng-if="(menu.split('-')[1] != 'MultiDelete') && (menu.split('-')[1] != 'MultiPartUploadInit')">
+        <div class="input-group">
+          <input type="text" class="form-control" value="Operation" readonly="readonly">
+          <span class="input-group-addon">
+            <select ng-model="objectCtrl.operation" id="operation" name="operation" type="select" required >
+              <option ng-if="(menu.split('-')[1] != 'ACL') && (menu.split('-')[1] != 'MultiPartUploadInit') && (menu.split('-')[1] != 'MultiPartUpload')">HEAD</option>
+              <option>GET</option>
+              <option>PUT</option>
+              <option ng-if="(menu.split('-')[1] == 'MultiPartUploadInit') || (menu.split('-')[1] == 'MultiPartUpload')">POST</option>
+              <option ng-if="(menu.split('-')[1] != 'ACL')">DELETE</option>
+            </select>
+          </span>
+        </div>
+        <br />
       </div>
-      <br />
       <div class="input-group">
         <span class="input-group-addon">Namespace</span>
         <input ng-model="bucketCtrl.xEmcNamespace" class="form-control" id="xEmcNamespace" name="xEmcNamespace" type="text" />
@@ -24,124 +27,187 @@
         <input ng-model="objectCtrl.bucket_name" ng-required="true" class="form-control" id="bucket_name" name="bucket_name" type="text" />
       </div>
       <br />
-      <div class="input-group">
-        <span class="input-group-addon">Object name</span>
-        <input ng-model="objectCtrl.object_name" ng-required="true" class="form-control" id="object_name" name="object_name" type="text" />
-      </div>
-      <br />
-      <div ng-if="(objectCtrl.operation != 'PUT')" >
+      <div ng-if="(menu.split('-')[1] != 'MultiDelete')">
         <div class="input-group">
-          <span class="input-group-addon">Version id</span>
-          <input ng-model="objectCtrl.versionId" class="form-control" id="versionId" name="versionId" type="text" />
+          <span class="input-group-addon">Object name</span>
+          <input ng-model="objectCtrl.object_name" ng-required="true" class="form-control" id="object_name" name="object_name" type="text" />
         </div>
         <br />
-      </div>
-      <div ng-if="(objectCtrl.operation == 'PUT')" >
-        <div ng-if="(menu.split('-')[1] == 'ACL')" >
+        <div ng-if="(objectCtrl.operation != 'PUT') && (menu.split('-')[1] != 'MultiDelete') && (menu.split('-')[1] != 'MultiPartUploadInit') && (menu.split('-')[1] != 'MultiPartUpload')" >
           <div class="input-group">
-            <span class="input-group-addon">Body</span>
-            <textarea ng-model="objectCtrl.body" class="form-control" id="body" name="body" rows="10" />
+            <span class="input-group-addon">Version id</span>
+            <input ng-model="objectCtrl.versionId" class="form-control" id="versionId" name="versionId" type="text" />
           </div>
           <br />
         </div>
-        <div ng-if="(menu.split('-')[1] == 'Object')" >
+        <div ng-if="(menu.split('-')[1] == 'MultiPartUpload')" >
           <div class="input-group">
-            <span class="input-group-addon">File to upload</span>
-            <input class="form-control" id="file" name="file" type="file" />
+            <span class="input-group-addon">Upload id</span>
+            <input ng-model="objectCtrl.uploadId" class="form-control" id="uploadId" name="uploadId" type="text" />
           </div>
           <br />
-          <div class="input-group">
-            <span class="input-group-addon">Content</span>
-            <input ng-model="objectCtrl.content" class="form-control" id="content" name="content" type="number" />
+          <div ng-if="(objectCtrl.operation == 'PUT')" >
+            <div class="input-group">
+              <span class="input-group-addon">Part Number</span>
+              <input ng-model="objectCtrl.partNumber" class="form-control" id="partNumber" name="partNumber" type="text" />
+            </div>
+            <br />
           </div>
-          <br />
+          <div ng-if="(objectCtrl.operation == 'GET')" >
+            <div class="input-group">
+              <span class="input-group-addon">Maximum parts to return</span>
+              <input ng-model="objectCtrl.maxParts" class="form-control" id="maxParts" name="maxParts" type="number" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">Return parts after part number</span>
+              <input ng-model="objectCtrl.partNumberMarker" class="form-control" id="partNumberMarker" name="partNumberMarker" type="text" />
+            </div>
+            <br />
+          </div>
         </div>
       </div>
-      <div ng-if="(objectCtrl.operation == 'HEAD') || (((objectCtrl.operation == 'GET') || (objectCtrl.operation == 'PUT')) && (menu.split('-')[1] == 'Object'))" >
+      <div ng-if="(menu.split('-')[1] == 'MultiDelete') || ((objectCtrl.operation == 'PUT') && (menu.split('-')[1] == 'ACL')) || ((objectCtrl.operation == 'POST') && (menu.split('-')[1] == 'MultiPartUpload'))" >
         <div class="input-group">
-          <span class="input-group-addon">Range</span>
-          <input ng-model="objectCtrl.range" class="form-control" id="range" name="range" type="text" />
-        </div>
-        <br />
-      </div>
-      <div ng-if="(objectCtrl.operation == 'HEAD') || ((objectCtrl.operation == 'GET') && (menu.split('-')[1] == 'Object'))" >
-        <div class="input-group">
-          <span class="input-group-addon">If Modified Since</span>
-          <input ng-model="objectCtrl.ifModifiedSince" class="form-control" id="ifModifiedSince" name="ifModifiedSince" type="text" />
-        </div>
-        <br />
-        <div class="input-group">
-          <span class="input-group-addon">If Unmodified Since</span>
-          <input ng-model="objectCtrl.ifUnmodifiedSince" class="form-control" id="ifUnmodifiedSince" name="ifUnmodifiedSince" type="text" />
-        </div>
-        <br />
-        <div class="input-group">
-          <span class="input-group-addon">If Match</span>
-          <input ng-model="objectCtrl.ifMatch" class="form-control" id="ifMatch" name="ifMatch" type="text" />
+          <span class="input-group-addon">Body</span>
+          <textarea ng-model="objectCtrl.body" class="form-control" id="body" name="body" rows="10" />
         </div>
         <br />
       </div>
-      <div ng-if="(objectCtrl.operation == 'HEAD') || (((objectCtrl.operation == 'GET') || (objectCtrl.operation == 'PUT')) && (menu.split('-')[1] == 'Object'))" >
+      <div ng-if="(objectCtrl.operation == 'PUT') && ((menu.split('-')[1] == 'Object') || (menu.split('-')[1] == 'MultiPartUpload'))" >
         <div class="input-group">
-          <span class="input-group-addon">If None Match</span>
-          <input ng-model="objectCtrl.ifNoneMatch" class="form-control" id="ifNoneMatch" name="ifNoneMatch" type="text" />
+          <span class="input-group-addon">File to upload</span>
+          <input class="form-control" id="file" name="file" type="file" />
         </div>
         <br />
       </div>
-      <div ng-if="(objectCtrl.operation == 'DELETE')" >
+      <div ng-if="(objectCtrl.operation == 'PUT') && (menu.split('-')[1] == 'Object')" >
         <div class="input-group">
-          <span class="input-group-addon">x-amz-mfa</span>
-          <input ng-model="objectCtrl.xAmzMfa" class="form-control" id="xAmzMfa" name="xAmzMfa" type="text" />
+          <span class="input-group-addon">Content</span>
+          <input ng-model="objectCtrl.content" class="form-control" id="content" name="content" type="number" />
         </div>
         <br />
       </div>
-      <div ng-if="(objectCtrl.operation == 'PUT')" >
-        <div class="input-group">
-          <span class="input-group-addon">x-amz-acl</span>
-          <input ng-model="objectCtrl.xAmzAcl" class="form-control" id="xAmzAcl" name="xAmzAcl" type="text" />
-        </div>
-        <br />
-        <div class="input-group">
-          <span class="input-group-addon">x-amz-grant-read</span>
-          <input ng-model="objectCtrl.xAmzGrantRead" class="form-control" id="xAmzGrantRead" name="xAmzGrantRead" type="text" />
-        </div>
-        <br />
-        <div class="input-group">
-          <span class="input-group-addon">x-amz-grant-read-acp</span>
-          <input ng-model="objectCtrl.xAmzGrantReadAcp" class="form-control" id="xAmzGrantReadAcp" name="xAmzGrantReadAcp" type="text" />
-        </div>
-        <br />
-        <div class="input-group">
-          <span class="input-group-addon">x-amz-grant-write-acp</span>
-          <input ng-model="objectCtrl.xAmzGrantWriteAcp" class="form-control" id="xAmzGrantWriteAcp" name="xAmzGrantWriteAcp" type="text" />
-        </div>
-        <br />
-        <div class="input-group">
-          <span class="input-group-addon">x-amz-grant-full-control</span>
-          <input ng-model="objectCtrl.xAmzGrantFullControl" class="form-control" id="xAmzGrantFullControl" name="xAmzGrantFullControl" type="text" />
-        </div>
-        <br />
-        <div ng-if="(menu.split('-')[1] == 'Object')" >
+      <div ng-if="(menu.split('-')[1] != 'MultiDelete')">
+        <div ng-if="(objectCtrl.operation == 'HEAD') || (((objectCtrl.operation == 'GET') || (objectCtrl.operation == 'PUT')) && (menu.split('-')[1] == 'Object'))" >
           <div class="input-group">
-            <span class="input-group-addon">x-amz-retention-period</span>
-            <input ng-model="objectCtrl.xAmzRetentionPeriod" class="form-control" id="xAmzRetentionPeriod" name="xAmzRetentionPeriod" type="number" />
+            <span class="input-group-addon">Range</span>
+            <input ng-model="objectCtrl.range" class="form-control" id="range" name="range" type="text" />
+          </div>
+          <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'HEAD') || ((objectCtrl.operation == 'GET') && (menu.split('-')[1] == 'Object'))" >
+          <div class="input-group">
+            <span class="input-group-addon">If Modified Since</span>
+            <input ng-model="objectCtrl.ifModifiedSince" class="form-control" id="ifModifiedSince" name="ifModifiedSince" type="text" />
           </div>
           <br />
           <div class="input-group">
-            <span class="input-group-addon">x-amz-retention-policy</span>
-            <input ng-model="objectCtrl.xAmzRetentionPolicy" class="form-control" id="xAmzRetentionPolicy" name="xAmzRetentionPolicy" type="text" />
+            <span class="input-group-addon">If Unmodified Since</span>
+            <input ng-model="objectCtrl.ifUnmodifiedSince" class="form-control" id="ifUnmodifiedSince" name="ifUnmodifiedSince" type="text" />
           </div>
           <br />
           <div class="input-group">
-            <span class="input-group-addon">x-amz-copy-source</span>
-            <input ng-model="objectCtrl.xAmzCopySource" class="form-control" id="xAmzCopySource" name="xAmzCopySource" type="text" />
+            <span class="input-group-addon">If Match</span>
+            <input ng-model="objectCtrl.ifMatch" class="form-control" id="ifMatch" name="ifMatch" type="text" />
+          </div>
+          <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'HEAD') || (((objectCtrl.operation == 'GET') || (objectCtrl.operation == 'PUT')) && (menu.split('-')[1] == 'Object'))" >
+          <div class="input-group">
+            <span class="input-group-addon">If None Match</span>
+            <input ng-model="objectCtrl.ifNoneMatch" class="form-control" id="ifNoneMatch" name="ifNoneMatch" type="text" />
+          </div>
+          <br />
+        </div>
+        <div ng-if="(objectCtrl.operation == 'DELETE')" >
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-mfa</span>
+            <input ng-model="objectCtrl.xAmzMfa" class="form-control" id="xAmzMfa" name="xAmzMfa" type="text" />
+          </div>
+          <br />
+        </div>
+        <div ng-if="(((objectCtrl.operation == 'PUT') && (menu.split('-')[1] != 'MultiPartUpload')) || (menu.split('-')[1] == 'MultiPartUploadInit'))" >
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-acl</span>
+            <input ng-model="objectCtrl.xAmzAcl" class="form-control" id="xAmzAcl" name="xAmzAcl" type="text" />
           </div>
           <br />
           <div class="input-group">
-            <span class="input-group-addon">x-amz-metadata-directive</span>
-            <input ng-model="objectCtrl.xAmzMetadataDirective" class="form-control" id="xAmzMetadataDirective" name="xAmzMetadataDirective" type="text" />
+            <span class="input-group-addon">x-amz-grant-read</span>
+            <input ng-model="objectCtrl.xAmzGrantRead" class="form-control" id="xAmzGrantRead" name="xAmzGrantRead" type="text" />
           </div>
           <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-read-acp</span>
+            <input ng-model="objectCtrl.xAmzGrantReadAcp" class="form-control" id="xAmzGrantReadAcp" name="xAmzGrantReadAcp" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-write-acp</span>
+            <input ng-model="objectCtrl.xAmzGrantWriteAcp" class="form-control" id="xAmzGrantWriteAcp" name="xAmzGrantWriteAcp" type="text" />
+          </div>
+          <br />
+          <div class="input-group">
+            <span class="input-group-addon">x-amz-grant-full-control</span>
+            <input ng-model="objectCtrl.xAmzGrantFullControl" class="form-control" id="xAmzGrantFullControl" name="xAmzGrantFullControl" type="text" />
+          </div>
+          <br />
+          <div ng-if="(menu.split('-')[1] == 'Object')" >
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-retention-period</span>
+              <input ng-model="objectCtrl.xAmzRetentionPeriod" class="form-control" id="xAmzRetentionPeriod" name="xAmzRetentionPeriod" type="number" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-retention-policy</span>
+              <input ng-model="objectCtrl.xAmzRetentionPolicy" class="form-control" id="xAmzRetentionPolicy" name="xAmzRetentionPolicy" type="text" />
+            </div>
+            <br />
+          </div>
+        </div>
+        <div ng-if="(objectCtrl.operation == 'PUT')" >
+          <div ng-if="(menu.split('-')[1] == 'Object') || (menu.split('-')[1] == 'MultiPartUpload')" >
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-copy-source</span>
+              <input ng-model="objectCtrl.xAmzCopySource" class="form-control" id="xAmzCopySource" name="xAmzCopySource" type="text" />
+            </div>
+            <br />
+          </div>
+          <div ng-if="(menu.split('-')[1] == 'Object')" >
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-metadata-directive</span>
+              <input ng-model="objectCtrl.xAmzMetadataDirective" class="form-control" id="xAmzMetadataDirective" name="xAmzMetadataDirective" type="text" />
+            </div>
+            <br />
+          </div>
+          <div ng-if="(menu.split('-')[1] == 'MultiPartUpload')" >
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-copy-source-range</span>
+              <input ng-model="objectCtrl.xAmzCopySourceRange" class="form-control" id="xAmzCopySourceRange" name="xAmzCopySourceRange" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-copy-source-if-match</span>
+              <input ng-model="objectCtrl.xAmzCopySourceIfMatch" class="form-control" id="xAmzCopySourceIfMatch" name="xAmzCopySourceIfMatch" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-copy-source-if-none-match</span>
+              <input ng-model="objectCtrl.xAmzCopySourceIfNoneMatch" class="form-control" id="xAmzCopySourceIfNoneMatch" name="xAmzCopySourceIfNoneMatch" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-copy-source-if-unmodified-since</span>
+              <input ng-model="objectCtrl.xAmzCopySourceIfUnmodifiedSince" class="form-control" id="xAmzCopySourceIfUnmodifiedSince" name="xAmzCopySourceIfUnmodifiedSince" type="text" />
+            </div>
+            <br />
+            <div class="input-group">
+              <span class="input-group-addon">x-amz-copy-source-if-modified-since</span>
+              <input ng-model="objectCtrl.xAmzCopySourceIfModifiedSince" class="form-control" id="xAmzCopySourceIfModifiedSince" name="xAmzCopySourceIfModifiedSince" type="text" />
+            </div>
+            <br />
+          </div>
         </div>
       </div>
       <div class="actions">

@@ -241,9 +241,15 @@ function processXmlData(data) {
         this.operation = 'GET';
         this.scope = 'Object';
         this.submit = function(api, subApi) {
+            if ((subApi == 'MultiDelete') || (subApi == 'MultiPartUploadInit')) {
+              this.operation = 'POST';
+            }
             bucket_name = this.bucket_name;
             object_name = this.object_name;
-            var apiUrl = '/api/v1/' + api + '/' + bucket_name + '/' + object_name;
+            var apiUrl = '/api/v1/' + api + '/' + bucket_name;
+            if (subApi != 'MultiDelete') {
+              apiUrl = apiUrl + '/' + object_name;
+            }
             var separator = '?';
             var body = '';
             var requestHeaders = {};
@@ -254,6 +260,10 @@ function processXmlData(data) {
             }
 
             if (api == "s3") {
+              if (subApi == 'MultiPartUploadInit') {
+                apiUrl = apiUrl + '?uploads';
+                separator = '&';
+              }
               if (((this.operation == 'PUT') || (this.operation == 'GET')) && (subApi == 'ACL')) {
                 apiUrl = apiUrl + '?acl';
                 separator = '&';
@@ -265,7 +275,7 @@ function processXmlData(data) {
                 }
               }
 
-              if (this.operation == 'PUT') {
+              if ((this.operation == 'PUT') || (subApi == 'MultiPartUploadInit')) {
                 if (isNonEmptyString(this.xAmzAcl)) {
                   requestHeaders["X-amz-acl"] = this.xAmzAcl;
                 }
@@ -282,29 +292,72 @@ function processXmlData(data) {
                   requestHeaders["X-amz-grant-full-control"] = this.xAmzGrantFullControl;
                 }
               }
-              if ((this.operation != 'PUT') || (subApi != 'Object')) {
+              if (subApi == 'MultiPartUpload') {
+                if (isNonEmptyString(this.uploadId)) {
+                  apiUrl = apiUrl + separator + 'uploadId=' + this.uploadId;
+                  separator = '&';
+                }
+                if (this.operation == 'PUT') {
+                  if (isNonEmptyString(this.partNumber)) {
+                    apiUrl = apiUrl + separator + 'partNumber=' + this.partNumber;
+                    separator = '&';
+                  }
+                }
+                if (this.operation == 'GET') {
+                  if (this.maxParts > 0) {
+                    apiUrl = apiUrl + separator + 'max-parts=' + this.maxParts;
+                    separator = '&';
+                  }
+                  if (isNonEmptyString(this.partNumberMarker)) {
+                    apiUrl = apiUrl + separator + 'part-number-marker=' + this.partNumberMarker;
+                    separator = '&';
+                  }
+                }
+              }
+
+              if (((this.operation != 'PUT') && (this.operation != 'POST')) || ((subApi != 'Object') && (subApi != 'MultiDelete') && (subApi != 'MultiPartUploadInit') && (subApi != 'MultiPartUpload'))) {
                 if (isNonEmptyString(this.versionId)) {
                   apiUrl = apiUrl + separator + 'versionId=' + this.versionId;
                 }
-              } else if (subApi == 'ACL') {
+              } else if ((subApi == 'ACL') || (subApi == 'MultiDelete') || ((this.operation == 'POST') && (subApi == 'MultiPartUpload'))) {
                 body = this.body
-              } else {
-                if (isNonEmptyString(this.content)) {
-                  requestHeaders["Content"] = this.content;
-                }
-                if (isNonEmptyString(this.range)) {
-                  requestHeaders["Range"] = this.range;
-                }
-                if (isNonEmptyString(this.retentionPeriod)) {
-                  requestHeaders["X-retention-period"] = this.retentionPeriod;
-                }
-                if (isNonEmptyString(this.retentionPolicy)) {
-                  requestHeaders["X-retention-policy"] = this.retentionPolicy;
+              } else if (subApi != 'MultiPartUploadInit') {
+                if (subApi != 'MultiPartUpload') {
+                  if (isNonEmptyString(this.content)) {
+                    requestHeaders["Content"] = this.content;
+                  }
+                  if (isNonEmptyString(this.range)) {
+                    requestHeaders["Range"] = this.range;
+                  }
+                  if (isNonEmptyString(this.retentionPeriod)) {
+                    requestHeaders["X-retention-period"] = this.retentionPeriod;
+                  }
+                  if (isNonEmptyString(this.retentionPolicy)) {
+                    requestHeaders["X-retention-policy"] = this.retentionPolicy;
+                  }
                 }
                 if (isNonEmptyString(this.xAmzCopySource)) {
                   requestHeaders["X-amz-copy-source"] = this.xAmzCopySource;
-                  if (isNonEmptyString(this.xAmzMetadataDirective)) {
-                    requestHeaders["X-amz-metadata-directive"] = this.xAmzMetadataDirective;
+                  if (subApi != 'MultiPartUpload') {
+                    if (isNonEmptyString(this.xAmzMetadataDirective)) {
+                      requestHeaders["X-amz-metadata-directive"] = this.xAmzMetadataDirective;
+                    }
+                  } else {
+                    if (isNonEmptyString(this.xAmzCopySourceRange)) {
+                      requestHeaders["X-amz-copy-source-range"] = this.xAmzCopySourceRange;
+                    }
+                    if (isNonEmptyString(this.xAmzCopySourceIfMatch)) {
+                      requestHeaders["X-amz-copy-source-if-match"] = this.xAmzCopySourceIfMatch;
+                    }
+                    if (isNonEmptyString(this.xAmzCopySourceIfNoneMatch)) {
+                      requestHeaders["X-amz-copy-source-if-none-match"] = this.xAmzCopySourceIfNoneMatch;
+                    }
+                    if (isNonEmptyString(this.xAmzCopySourceIfUnmodifiedSince)) {
+                      requestHeaders["X-amz-copy-source-if-unmodified-since"] = this.xAmzCopySourceIfUnmodifiedSince;
+                    }
+                    if (isNonEmptyString(this.xAmzCopySourceIfModifiedSince)) {
+                      requestHeaders["X-amz-copy-source-if-modified-since"] = this.xAmzCopySourceIfModifiedSince;
+                    }
                   }
                 } else {
                   var file = document.getElementById('file').files[0];
