@@ -1,0 +1,681 @@
+/*
+CSS RESET
+http://meyerweb.com/eric/tools/css/reset/
+v2.0 | 20110126
+License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+
+body {
+    line-height: 1;
+}
+
+ol, ul {
+    list-style: none;
+}
+
+blockquote, q {
+    quotes: none;
+}
+
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/*
+END CSS RESET
+*/
+
+input.longField {
+    width: 350px;
+}
+
+#s3AboutPage {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 360px;
+    margin-top: -75px;
+    margin-left: -180px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    border-collapse: collapse;
+    box-shadow: 2px 3px 5px #555;
+    background-color: #e8e8e8;
+    z-index: 10000;
+    padding: 8px;
+    text-align: center;
+    font: 13px Arial, sans-serif;
+}
+
+#s3AboutPage .s3AboutTitle {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#s3AboutPage .featureList {
+    display: inline-block;
+    width: 210px;
+    margin: 8px 8px 14px 8px;
+    border: 1px solid black;
+    background-color: #fff;
+    padding: 4px;
+    text-align: center;
+    font-size: 12px;
+}
+
+#s3AboutPage li {
+    text-align: left;
+    margin: 2px;
+}
+
+#s3AboutPage .disabledFeature {
+    font-style: italic;
+    text-decoration: line-through;
+    color: #999;
+}
+
+#s3License {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    margin-top: -300px;
+    margin-left: -250px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    border-collapse: collapse;
+    box-shadow: 2px 3px 5px #555;
+    background-color: #e8e8e8;
+    z-index: 15000;
+    padding: 8px;
+    font: 11pt arial, sans-serif;
+}
+
+#s3License ul {
+    list-style: disc;
+    margin: 6px 2px;
+    padding: 2px;
+}
+
+#s3License li {
+    margin-left: 16px;
+}
+
+.s3Browser {
+    position: relative;
+    height: 100%;
+    background-color: #e8e8e8;
+    border-collapse: collapse;
+    font: 10pt arial, sans-serif;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 2px 3px 5px #555;
+}
+
+.s3TitleBar {
+    height: 18px;
+    background: #555;
+    background: -webkit-linear-gradient(top, #aaa, #000);
+    background: -moz-linear-gradient(top, #aaa, #000);
+    background: -o-linear-gradient(top, #aaa, #000);
+    background: -ms-linear-gradient(top, #aaa, #000);
+    background: linear-gradient(top, #aaa, #000);
+    border-radius: 8px 8px 0 0;
+    padding: 8px 10px;
+    font: bold 11pt arial, sans-serif;
+    color: #fff;
+    cursor: default;
+}
+
+.s3Title {
+    display: inline-block;
+    overflow: hidden;
+}
+
+.s3TitleBar .s3XButton {
+    display: inline-block;
+    float: right;
+    width: 16px;
+    height: 16px;
+    background: #aaa;
+    margin-top: -3px;
+    margin-left: 5px;
+    border: 1pt solid #777;
+    border-radius: 8px;
+    vertical-align: top;
+    font: bold 10pt arial, sans-serif;
+    color: #333;
+    text-align: center;
+    line-height: 1.4;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.s3TitleBar .configGear {
+    font-size: 12pt;
+    line-height: 1;
+}
+
+.s3ButtonBar {
+    font-size: 0;
+}
+
+.apiLink {
+    float: right;
+    margin: 3px 15px 3px 0;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.s3LocationField {
+    width: 75%;
+    margin: 2px 4px 0 2px;
+    font-size: 10pt;
+}
+
+.s3UploadContainer {
+    position: relative;
+    display: inline-block;
+    width: 56px;
+    overflow: hidden;
+    vertical-align: top;
+}
+
+.s3UploadField {
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    top: 0;
+    opacity: 0.0;
+    filter: alpha(opacity=0);
+    z-index: 1000;
+}
+
+.s3FilterContainer {
+    font-size: 0;
+}
+
+.s3FilterField {
+    margin: 3px -2px 0 1px;
+    width: 80px;
+}
+
+.s3Label {
+    display: inline-block;
+    padding: 3px 6px;
+}
+
+.s3Button {
+    display: inline-block;
+    width: auto;
+    background: #e0e0e0;
+    background: -webkit-linear-gradient(top, #fff, #ccc);
+    background: -moz-linear-gradient(top, #fff, #ccc);
+    background: -o-linear-gradient(top, #fff, #ccc);
+    background: -ms-linear-gradient(top, #fff, #ccc);
+    background: linear-gradient(top, #fff, #ccc);
+    margin: 2px 3px;
+    padding: 3px 4px;
+    border: 1pt solid #777;
+    border-radius: 4px;
+    vertical-align: top;
+    font: bold 8pt arial, sans-serif;
+    color: #444;
+    text-align: center;
+    text-transform: capitalize;
+    cursor: pointer;
+}
+
+.s3FileList {
+    position: absolute;
+    top: 86px;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    cursor: default;
+}
+
+.s3FileList .body {
+    position: absolute;
+    top: 22px;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.s3FileList .table {
+    table-layout: fixed;
+}
+
+.s3FileList .cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.s3StatusMessage {
+    position: absolute;
+    left: 50%;
+    top: 3px;
+    width: 400px;
+    margin-left: -200px;
+    border: 1px solid black;
+    padding: 5px 10px;
+    background-color: #999;
+    text-align: center;
+}
+
+.s3Browser .s3DropTarget.targetActive {
+    border: 1px solid #0f0;
+}
+
+.s3Browser .table,
+.s3ModalWindow .table {
+    width: 100%;
+    display: table;
+}
+
+.s3Browser .table .row,
+.s3ModalWindow .table .row {
+    display: table-row;
+    background-color: #fff;
+}
+
+.s3Browser .table .row:nth-child(even),
+.s3ModalWindow .table .row:nth-child(even) {
+    background-color: #f0f0f0;
+}
+
+.s3Browser .table .loading {
+    padding: 2px 8px;
+}
+
+.s3Browser .table .row .cell,
+.s3ModalWindow .table .row .cell {
+    display: table-cell;
+    border: 1px solid #ccc;
+    padding: 2px 6px;
+    vertical-align: middle;
+}
+
+.s3Browser .table .row h4.cell,
+.s3Browser .table .row th.cell,
+.s3ModalWindow .table .row h4.cell,
+.s3ModalWindow .table .row th.cell {
+    background: #eee;
+    background: -webkit-linear-gradient(top, #fff, #ddd);
+    background: -moz-linear-gradient(top, #fff, #ddd);
+    background: -o-linear-gradient(top, #fff, #ddd);
+    background: -ms-linear-gradient(top, #fff, #ddd);
+    background: linear-gradient(top, #fff, #ddd);
+    border: 1px solid #aaa;
+    padding: 3px 6px 2px 6px;
+    font: bold 10pt arial, sans-serif;
+}
+
+.s3Browser .table .row th.s3HeaderSpacer {
+    background: #e8e8e8;
+    border: none;
+    padding: 0;
+}
+
+.s3Browser .table .row.selected,
+.s3ModalWindow .table .row.selected,
+.s3DirectoryItem.selected {
+    color: #fff;
+    background-color: #06c;
+}
+
+.s3Browser .table .row .cell.s3Icon {
+    width: 20px;
+    padding: 1px;
+}
+
+.s3FileName {
+    width: auto;
+    min-width: 150px;
+}
+
+.s3FileSize {
+    width: 100px;
+    max-width: 100px;
+}
+
+.s3FileType {
+    width: 150px;
+    max-width: 150px;
+    text-transform: capitalize;
+}
+
+.s3FileDate {
+    width: 200px;
+    max-width: 200px;
+}
+
+.s3StatusBar {
+    width: 0;
+    height: 15px;
+    background-color: #85c2ff;
+    text-align: center;
+}
+
+/* Icons */
+.s3FileList .cell .icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    -webkit-background-size: contain;
+    -moz-background-size: contain;
+    -o-background-size: contain;
+    -ms-background-size: contain;
+    background-size: contain;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+}
+
+.s3FileList .cell .icon.regular {
+    background-image: url(../images/document.png);
+}
+
+.s3FileList .cell .icon.tag {
+    background-image: url(../images/folder.png);
+}
+
+.s3FileList .cell .icon.directory {
+    background-image: url(../images/folder.png);
+}
+
+
+.s3FileList .cell .icon.bucket {
+    background-image: url(../images/bucket.png);
+}
+
+.s3FileList .cell .icon.doc,
+.s3FileList .cell .icon.docx {
+    background-image: url(../images/doc.png);
+}
+
+.s3FileList .cell .icon.gif {
+    background-image: url(../images/gif.png);
+}
+
+.s3FileList .cell .icon.jpg,
+.s3FileList .cell .icon.jpeg {
+    background-image: url(../images/jpg.png);
+}
+
+.s3FileList .cell .icon.mov {
+    background-image: url(../images/mov.png);
+}
+
+.s3FileList .cell .icon.mp4 {
+    background-image: url(../images/mp4.png);
+}
+
+.s3FileList .cell .icon.pdf {
+    background-image: url(../images/pdf.png);
+}
+
+.s3FileList .cell .icon.png {
+    background-image: url(../images/png.png);
+}
+
+.s3FileList .cell .icon.ppt,
+.s3FileList .cell .icon.pptx {
+    background-image: url(../images/ppt.png);
+}
+
+.s3FileList .cell .icon.txt {
+    background-image: url(../images/txt.png);
+}
+
+.s3FileList .cell .icon.wmv {
+    background-image: url(../images/wmv.png);
+}
+
+.s3FileList .cell .icon.xls,
+.s3FileList .cell .icon.xlsx {
+    background-image: url(../images/xls.png);
+}
+
+/* END Icons */
+
+.s3ModalBackground {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #777;
+    opacity: 0.7;
+    filter: alpha(opacity=70);
+    z-index: 1000;
+}
+
+.s3ModalWindow {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 500px;
+    margin-top: -175px;
+    margin-left: -250px;
+    border: 1px solid #555;
+    border-radius: 8px 8px 0 0;
+    border-collapse: collapse;
+    box-shadow: 2px 3px 5px #555;
+    background-color: #e8e8e8;
+    z-index: 10000;
+}
+
+.s3ModalWindowContent {
+    max-height: 450px;
+    overflow: auto;
+    padding: 8px;
+    font: 10pt sans-serif;
+}
+
+.s3TableWrapper {
+    clear: both;
+    padding: 4px;
+    margin: 4px 0 6px 0;
+}
+
+.s3TableTitle {
+    display: inline-block;
+    margin: 6px 8px 0px 4px;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.s3ModalWindow .s3PropertiesTable {
+    margin-top: 4px;
+}
+
+.s3PropertyName {
+    width: 25%;
+}
+
+.s3PropertyValue {
+    width: auto;
+}
+
+input.s3PropertyValue {
+    width: 98%;
+}
+
+.s3ModalWindow .table .row .s3ButtonCell {
+    width: 55px;
+    background-color: #e8e8e8;
+    border: none;
+    padding: 0;
+}
+
+.s3ExpirationCount,
+.s3DownloadCount {
+    width: 50px;
+}
+
+.s3TableCaption {
+    margin: 0 8px 10px 8px;
+    text-align: center;
+    font-size: 8pt;
+}
+
+.s3ShareInstructions {
+    margin: 10px 0;
+    padding: 3px 6px;
+    font-size: 9pt;
+    line-height: 110%;
+}
+
+.s3ShareUrl {
+    min-height: 50px;
+    background-color: #fff;
+    margin: 2px;
+    border: 1px solid black;
+    padding: 5px 8px;
+    font-size: 9pt;
+    word-wrap: break-word;
+}
+
+.s3AclName {
+    width: auto;
+}
+
+.s3AclFC {
+    width: 40px;
+    text-align: center;
+}
+
+.s3AclWRITE {
+    width: 40px;
+    text-align: center;
+}
+
+.s3AclREAD {
+    width: 40px;
+    text-align: center;
+}
+
+.s3AclNONE {
+    width: 40px;
+    text-align: center;
+}
+
+.transparent {
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+}
+
+.s3ContextMenu {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: auto;
+    padding: 3px 0;
+    background-color: #e8e8e8;
+    border-radius: 3px;
+    box-shadow: 2px 2px 2px #777;
+    cursor: default;
+}
+
+.s3ContextMenuOption {
+    padding: 2px 3px;
+    font: 9pt arial, sans-serif;
+    color: black;
+    cursor: pointer;
+}
+
+.s3ContextMenuOption:hover {
+    color: #fff;
+    background-color: #06c;
+}
+
+.s3DirectoryDisplay {
+    display: inline-block;
+    width: 250px;
+    background-color: #fff;
+    margin: 0 4px;
+    border: 1px solid black;
+    padding: 2px 4px;
+    font-size: 13px;
+}
+
+.s3DirectoryListContainer {
+    height: 300px;
+    overflow-y: scroll;
+    background-color: #fff;
+    margin: 5px 10px;
+    border: 1px solid black;
+}
+
+.s3DirectoryItem {
+    padding: 2px 4px;
+    cursor: default;
+}
+
+.s3SelectedDisplay {
+    margin: 8px 12px;
+}
+
+.hidden {
+    display: none;
+}
+
+[draggable=true] {
+    -webkit-user-drag: element;
+    -moz-user-drag: element;
+    -o-user-drag: element;
+    -ms-user-drag: element;
+    user-drag: element;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+[unselectable=on] {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
