@@ -48,10 +48,10 @@ ConfigPage.loadActiveToken = function() {
     console.trace();
     if ( window.localStorage ) {
         var uid = window.localStorage.getItem( 'uid' );
-       
-       var secretC = window.localStorage.getItem( 'secret' );
-       // var secretC=Crypto.AES.encrypt( window.localStorage.getItem( 'secret' ), S3Browser.k );
-        if ( uid && secretC ) token = {uid: uid, secret: secretC};
+        var secretC = window.localStorage.getItem( 'secret' );
+        var endpoint = window.localStorage.getItem( 'endpoint' );
+        // var secretC=Crypto.AES.encrypt( window.localStorage.getItem( 'secret' ), S3Browser.k );
+        if ( uid && secretC && endpoint ) token = {uid: uid, secret: secretC, endpoint: endpoint};
     }
     return token;
 };
@@ -61,6 +61,7 @@ ConfigPage.saveActiveToken = function( token ) {
         try {
             window.localStorage.setItem( 'uid', token.uid );
             window.localStorage.setItem( 'secret', token.secret);
+            window.localStorage.setItem( 'endpoint', token.endpoint);
         } catch ( error ) {
             alert( this.templates.get( 'storageDisabledPrompt' ).render() );
         }
@@ -72,6 +73,7 @@ ConfigPage.deleteActiveToken = function( token ) {
             try {
                 window.localStorage.removeItem( 'uid' );
                 window.localStorage.removeItem( 'secret' );
+                window.localStorage.removeItem( 'endpoint' );
             } catch ( error ) {
                 alert( this.templates.get( 'storageDisabledPrompt' ).render() );
             }
@@ -90,7 +92,7 @@ ConfigPage.prototype.loadConfiguration = function() {
         }
         if ( configuration && configuration.uids ) {
             configuration.uids.forEach( function( token ) {
-                page.addUid( {uid: token.uid, secret: token.secret} )
+                page.addUid( {uid: token.uid, secret: token.secret, endpoint: token.endpoint} )
             } );
         } else { // import legacy settings
             var token = ConfigPage.loadActiveToken();
@@ -109,7 +111,8 @@ ConfigPage.prototype.saveConfiguration = function() {
         var $this = jQuery( this );
         var uid = $this.find( '.s3Uid' ).text();
         var secret = $this.find( '.s3Secret' ).text();
-        configuration.uids.push( {uid: uid, secret:secret } );
+        var endpoint = $this.find( '.s3Endpoint' ).text();
+        configuration.uids.push( {uid: uid, secret: secret, endpoint: endpoint } );
     } );
     if ( window.localStorage ) {
         try {
@@ -120,14 +123,14 @@ ConfigPage.prototype.saveConfiguration = function() {
     }
 };
 ConfigPage.prototype.addUid = function( token ) {
-    var $uidRow = jQuery( this.templates.get( 'uidRow' ).render( {token: token}, ['.s3Uid', '.s3Secret', '.s3LoginButton', '.s3DeleteButton'] ) );
+    var $uidRow = jQuery( this.templates.get( 'uidRow' ).render( {token: token}, ['.s3Uid', '.s3Secret', '.s3Endpoint', '.s3LoginButton', '.s3DeleteButton'] ) );
     var $loginButton = $uidRow.find( '.s3LoginButton' );
     var $deleteButton = $uidRow.find( '.s3DeleteButton' );
     var page = this;
     $loginButton[0].onclick = function() {
         ConfigPage.saveActiveToken( token );
         page.modalWindow.remove();
-        page.callback( token.uid, token.secret );
+        page.callback( token.uid, token.secret, token.endpoint );
     };
     $deleteButton[0].onclick = function() {
         if ( confirm( page.templates.get( 'deleteUidPrompt' ).render( {token: token} ) ) ) {
@@ -142,11 +145,13 @@ ConfigPage.prototype.showUidPage = function() {
     var requiredSelectors = [
         'input.s3UidField',
         'input.s3SecretField',
+        'input.s3EndpointField',
         '.s3SaveButton'
     ];
     var $uidRoot = jQuery( this.templates.get( 'uidPage' ).render( {}, requiredSelectors ) );
     var $uid = $uidRoot.find( '.s3UidField' );
     var $secret = $uidRoot.find( '.s3SecretField' );
+    var $endpoint = $uidRoot.find( '.s3EndpointField' );
     var $testButton = $uidRoot.find( '.s3TestButton' );
     var $saveButton = $uidRoot.find( '.s3SaveButton' );
     var $cancelButton = $uidRoot.find( '.s3CancelButton' );
@@ -158,7 +163,7 @@ ConfigPage.prototype.showUidPage = function() {
     if ( $testButton.length > 0 ) $testButton[0].onclick = function() {
     	
         //var s3 = new AtmosRest( {uid: $uid.val(), secret: $secret.val()} );
-        var s3 = new AWS.S3({endpoint: window.location.origin, accessKeyId: $uid.val(),secretAccessKey:  $secret.val(), sslEnabled: false, s3ForcePathStyle: true});
+        var s3 = new AWS.S3({endpoint: $endpoint.val(), accessKeyId: $uid.val(),secretAccessKey:  $secret.val(), sslEnabled: false, s3ForcePathStyle: true});
         var params={Bucket:'haha'};
         
         s3.headBucket(params,function(err,data){
@@ -181,7 +186,7 @@ ConfigPage.prototype.showUidPage = function() {
 //        } );
     };
     $saveButton[0].onclick = function() {
-        page.addUid( { uid: $uid.val(), secret: $secret.val()} );
+        page.addUid( { uid: $uid.val(), secret: $secret.val(), endpoint: $endpoint.val()} );
         page.saveConfiguration();
         modalWindow.remove();
     };
