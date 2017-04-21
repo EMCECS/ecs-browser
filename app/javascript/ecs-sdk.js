@@ -38,7 +38,7 @@ EcsS3.prototype.headBucket = function( bucketParams, callback ) {
         'X-Passthrough-Key': this.accessKeyId,
         'X-Passthrough-Secret': this.secretAccessKey,
         'X-Passthrough-Method': 'HEAD',
-        'Accept': 'application/json'
+        'Accept': 'application/xml'
     };
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -67,7 +67,7 @@ EcsS3.prototype.listObjects = function( bucketParams, callback ) {
         'X-Passthrough-Key': this.accessKeyId,
         'X-Passthrough-Secret': this.secretAccessKey,
         'X-Passthrough-Method': 'GET',
-        'Accept': 'application/json'
+        'Accept': 'application/xml'
     };
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -87,7 +87,29 @@ EcsS3.prototype.listBuckets = function(callback ) {
         'X-Passthrough-Key': this.accessKeyId,
         'X-Passthrough-Secret': this.secretAccessKey,
         'X-Passthrough-Method': 'GET',
-        'Accept': 'application/json'
+        'Accept': 'application/xml'
+    };
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            callback( null, data );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+        },
+    });
+
+};
+
+EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {
+    var apiUrl = 'http://localhost/api/v2/s3/' + bucketParams.Bucket + '?acl';
+
+    var headers = {
+        'X-Passthrough-Endpoint': this.endpoint,
+        'X-Passthrough-Key': this.accessKeyId,
+        'X-Passthrough-Secret': this.secretAccessKey,
+        'X-Passthrough-Method': 'GET',
+        'Accept': 'application/xml'
     };
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -99,3 +121,25 @@ EcsS3.prototype.listBuckets = function(callback ) {
         },
     });
 };
+
+EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
+    var apiUrl = 'http://localhost/api/v2/s3/' + objectParams.Bucket + '/' + objectParams.Key + '?acl';
+
+    var headers = {
+        'X-Passthrough-Endpoint': this.endpoint,
+        'X-Passthrough-Key': this.accessKeyId,
+        'X-Passthrough-Secret': this.secretAccessKey,
+        'X-Passthrough-Method': 'GET',
+        'Accept': 'application/xml'
+    };
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            callback( null, data );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+        },
+    });
+};
+

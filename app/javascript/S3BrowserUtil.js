@@ -460,7 +460,7 @@ S3BrowserUtil.prototype.getAcl = function(id,location, callback) {
                 util.s3Error(err);
             }else{
                 util.hideStatus('Retrieving ACL...');
-                callback(data);
+                callback(data.body);
             }
         });
     } else{
@@ -473,7 +473,7 @@ S3BrowserUtil.prototype.getAcl = function(id,location, callback) {
                 util.s3Error(err);
             } else{
                 util.hideStatus('Retrieving ACL...');
-                callback(data);
+                callback(data.body);
             }
         });
     }

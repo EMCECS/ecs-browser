@@ -132,6 +132,23 @@ type BucketSearchMetadataResult struct {
   IndexableKeys []IndexableKey `xml:"IndexableKeys>Key"`
 }
 
+type Person struct {
+  ID string `xml:"ID"`
+  Type string `xml:"type,attr"`
+  DisplayName string `xml:"DisplayName"`
+}
+
+type Grant struct {
+  Grantee Person `xml:"Grantee"`
+  Permission string `xml:"Permission"`
+}
+
+type AclResponse struct {
+  XMLName xml.Name `xml:"AccessControlPolicy"`
+  Owner Person `xml:"Owner"`
+  Grants []Grant `xml:"AccessControlList>Grant"`
+}
+
 type S3 struct {
   EndPointString string
   AccessKey string
@@ -267,8 +284,12 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
     path = path + object
   }
   separator := "?"
+  specialKey := "";
   for key, values := range r.URL.Query() {
     for _, value := range values {
+  	  if (key == "acl") {
+  	    specialKey = key;
+  	  }
       path = path + separator + key + "=" + value
       separator = "&"
     }
@@ -303,9 +324,18 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
   if (len(strings.TrimSpace(bucket)) == 0) {
     jsonBody = &ListBucketsResp{}
   } else if (len(strings.TrimSpace(object)) == 0) {
-    jsonBody = &ListResp{}
+  	if (specialKey == "acl") {
+      jsonBody = &AclResponse{}
+  	} else {
+      jsonBody = &ListResp{}
+  	}
+  } else {
+  	if (specialKey == "acl") {
+      jsonBody = &AclResponse{}
+  	}
   }
   xml.NewDecoder(strings.NewReader(response.Body)).Decode(jsonBody)
+  log.Print(response.Body);
 
   var passthroughResponse PassthroughResponse2
   passthroughResponse.Code = response.Code
