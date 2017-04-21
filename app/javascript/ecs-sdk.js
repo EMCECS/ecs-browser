@@ -18,6 +18,10 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  */
+function isNonEmptyString(theString) {
+  return (theString && theString.trim() && (theString != ""));
+}
+
 EcsS3 = function( s3Params ) {
     this.endpoint = s3Params.endpoint;
     this.accessKeyId = s3Params.accessKeyId;
@@ -49,6 +53,15 @@ EcsS3.prototype.headBucket = function( bucketParams, callback ) {
 
 EcsS3.prototype.listObjects = function( bucketParams, callback ) {
     var apiUrl = 'http://localhost/api/v2/s3/' + bucketParams.Bucket;
+    var separatorChar = '?';
+    if (isNonEmptyString(bucketParams.Delimiter)) {
+      apiUrl = apiUrl + separatorChar + 'delimiter=' + bucketParams.Delimiter;
+      separatorChar = '&';
+    };
+    if (isNonEmptyString(bucketParams.Prefix)) {
+      apiUrl = apiUrl + separatorChar + 'prefix=' + bucketParams.Prefix;
+      separatorChar = '&';
+    };
     var headers = {
         'X-Passthrough-Endpoint': this.endpoint,
         'X-Passthrough-Key': this.accessKeyId,
