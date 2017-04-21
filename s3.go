@@ -227,6 +227,103 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
   return nil
 }
 
+// make a generic S3 request
+func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
+  var passthroughMethod string
+  var passthroughNamespace string
+  var passthroughEndpoint string
+  var passthroughAccessKey string
+  var passthroughSecretKey string
+
+  headers := make(map[string][]string)
+  for key, value := range r.Header {
+  	if (key == "X-Passthrough-Method") {
+  	  passthroughMethod = value[0]
+  	} else if (key == "X-Passthrough-Namespace") {
+  	  passthroughNamespace = value[0]
+  	} else if (key == "X-Passthrough-Endpoint") {
+  	  passthroughEndpoint = value[0]
+  	} else if (key == "X-Passthrough-Key") {
+  	  passthroughAccessKey = value[0]
+  	} else if (key == "X-Passthrough-Secret") {
+  	  passthroughSecretKey = value[0]
+  	} else {
+      headers[key] = value
+  	}
+  }
+
+  s3 := S3{
+    EndPointString: passthroughEndpoint,
+    AccessKey: passthroughAccessKey,
+    SecretKey: passthroughSecretKey,
+    Namespace: passthroughNamespace,
+  }
+
+  vars := mux.Vars(r)
+  var bucket = vars["bucket"]
+  var object = vars["object"]
+  path := "/"
+  if (len(strings.TrimSpace(object)) > 0) {
+    path = path + object
+  }
+  separator := "?"
+  for key, values := range r.URL.Query() {
+    for _, value := range values {
+      path = path + separator + key + "=" + value
+      separator = "&"
+    }
+  }
+  var data = ""
+  var response Response
+  if (passthroughMethod == "POST") {
+    buffer, err := ioutil.ReadAll(r.Body)
+    if (err != nil) {
+      return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
+    }
+    data = string(buffer)
+  } else if (passthroughMethod == "PUT") {
+    file, _, err := r.FormFile("file")
+    if err != nil {
+      buffer, err := ioutil.ReadAll(r.Body)
+      if (err != nil) {
+        return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
+      }
+      data = string(buffer)
+    } else {
+      var Buf bytes.Buffer
+      defer file.Close()
+      io.Copy(&Buf, file)
+      data = string(Buf.Bytes())
+      Buf.Reset()
+    }
+  }
+  response, _ = s3Request(s3, bucket, passthroughMethod, path, headers, data)
+
+  var jsonBody interface{}
+  if (len(strings.TrimSpace(bucket)) == 0) {
+    jsonBody = &ListBucketsResp{}
+  } else if (len(strings.TrimSpace(object)) == 0) {
+    jsonBody = &ListResp{}
+  }
+  xml.NewDecoder(strings.NewReader(response.Body)).Decode(jsonBody)
+
+  var passthroughResponse PassthroughResponse2
+  passthroughResponse.Code = response.Code
+  passthroughResponse.Body = jsonBody
+  passthroughResponse.ResponseHeaders = make(map[string]string)
+  for key, values := range response.ResponseHeaders {
+  	fullValue := ""
+  	separator := ""
+    for _, value := range values {
+      fullValue = fullValue + separator + value
+      separator = ", "
+    }
+    passthroughResponse.ResponseHeaders[key] = fullValue
+  }
+  rendering.JSON(w, http.StatusOK, passthroughResponse)
+  return nil
+}
+
 // Returned an S3 struct to be used to execute S3 requests
 func GetS3(r *http.Request) (S3, error) {
   session, err := s3store.Get(r, "session-name")

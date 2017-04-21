@@ -18,11 +18,11 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWIS
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
-S3BrowserUtil = function(uid, secret, templateEngine, $statusMessage) {
+S3BrowserUtil = function(uid, secret, endpoint, templateEngine, $statusMessage) {
 	this.templates = templateEngine;
 	this.useHierarchicalMode = true;
 	this.$statusMessage = $statusMessage;
-	this.setCredentials(uid, secret);
+	this.setCredentials(uid, secret, endpoint);
 };
 // hackery to support IE <9. jQuery's bind will break remove() for any elements with associated events, so we can't use that either.
 S3BrowserUtil.bind = function(element, eventName, eventFunction) {
@@ -72,9 +72,9 @@ S3BrowserUtil.dumpObject = function(object, maxLevel) {
 	return output;
 };
 
-S3BrowserUtil.prototype.setCredentials = function(uid, secret) {
-	this.s3 = new AWS.S3({
-		endpoint : window.location.origin,
+S3BrowserUtil.prototype.setCredentials = function(uid, secret, endpoint) {
+	this.s3 = new EcsS3({
+		endpoint : endpoint,
 		accessKeyId : uid,
 		secretAccessKey : secret,
 		s3ForcePathStyle : true
@@ -288,7 +288,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
 				util.s3.listBuckets(function(err, result) {
 					util.hideStatus('Listing directory...');
 					if (!err) {
-						var buckets = result.Buckets;
+						var buckets = result.body.Buckets;
 						for (var i = 0; i < buckets.length; i++) {
 							var values = buckets[i];
 							var entry = {
@@ -323,8 +323,8 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
 				util.s3.listObjects(par, function(err, data) {
 					util.hideStatus('Listing directory...');
 					if (!err) {
-						var folders = data.CommonPrefixes;
-						var files = data.Contents;
+						var folders = data.body.CommonPrefixes;
+						var files = data.body.Contents;
 						var entries = [];
 						for (var i = 0; i < files.length; i++) {
 							var values = files[i];
@@ -356,7 +356,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
 				util.s3.listBuckets(function(err, result) {
 					util.hideStatus('Listing directory...');
 					if (!err) {
-						var buckets = result.Buckets;
+						var buckets = result.body.Buckets;
 						for (var i = 0; i < buckets.length; i++) {
 							var values = buckets[i];
 							var entry = {
@@ -393,8 +393,8 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
 				util.s3.listObjects(par, function(err, data) {
 					util.hideStatus('Listing directory...');
 					if (!err) {
-						var folders = data.CommonPrefixes;
-						var files = data.Contents;
+						var folders = data.body.CommonPrefixes;
+						var files = data.body.Contents;
 						var entries = [];
 						for (var i = 0; i < folders.length; i++) {
 							var values = folders[i];

@@ -109,13 +109,21 @@ func main() {
   rendering = render.New(render.Options{Directory: "app/templates"})
   // See http://www.gorillatoolkit.org/pkg/mux
   router.HandleFunc("/", Index)
+  router.HandleFunc("/test", Test)
   apiHandle("credentials", appHandler(Credentials), "GET")
   apiHandle("ecs/info", appHandler(GetEcsInfo), "GET")
   apiHandle("buckets", appHandler(ListBuckets), "GET")
   apiHandle("examples", appHandler(GetExamples), "GET")
+
   apiHandle("s3/{bucket}/{object}", appHandler(S3Passthrough), "POST")
   apiHandle("s3/{bucket}/", appHandler(S3Passthrough), "POST")
   apiHandle("s3/{bucket}", appHandler(S3Passthrough), "POST")
+
+  apiHandle2("s3/{bucket}/{object}", appHandler(S3Passthrough2), "POST")
+  apiHandle2("s3/{bucket}/", appHandler(S3Passthrough2), "POST")
+  apiHandle2("s3/{bucket}", appHandler(S3Passthrough2), "POST")
+  apiHandle2("s3/", appHandler(S3Passthrough2), "POST")
+
   apiHandle("bucket", appHandler(CreateBucket), "POST")
   apiHandle("metadatasearch", appHandler(MetadataSearch), "POST")
   apiHandle("searchmetadata", appHandler(SearchMetadata), "POST")
@@ -133,9 +141,19 @@ func main() {
 	log.Printf("Listening on port " + port)
 }
 
-var apiBase = "/api/v1/"
+var apiBase1 = "/api/v1/"
 
 func apiHandle(path string, handler http.Handler, methodName string) {
+    apiHandleBase(apiBase1, path, handler, methodName)
+}
+
+var apiBase2 = "/api/v2/"
+
+func apiHandle2(path string, handler http.Handler, methodName string) {
+    apiHandleBase(apiBase2, path, handler, methodName)
+}
+
+func apiHandleBase(apiBase string, path string, handler http.Handler, methodName string) {
     log.Printf(path)
 	router.Handle(apiBase + path, handler).Methods(methodName)
 }
@@ -152,6 +170,13 @@ func Index(w http.ResponseWriter, r *http.Request) {
   }
   rendering.HTML(w, http.StatusOK, "index",  map[string]interface{}{
     "s3login": s3Login,
+  })
+}
+
+// Main page
+func Test(w http.ResponseWriter, r *http.Request) {
+  rendering.HTML(w, http.StatusOK, "html/test.html",  map[string]interface{}{
+    "s3login": false,
   })
 }
 
@@ -408,6 +433,12 @@ type PassthroughResponse struct {
   Code int `json:"code"`
   ResponseHeaders map[string]string `json:"response_headers"`
   Body string `json:"body"`
+}
+
+type PassthroughResponse2 struct {
+  Code int `json:"code"`
+  ResponseHeaders map[string]string `json:"response_headers"`
+  Body interface{} `json:"body"`
 }
 
 // Execute the API request

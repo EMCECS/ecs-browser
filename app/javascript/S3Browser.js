@@ -26,6 +26,7 @@ S3Browser = function( options, $parent ) {
   this.settings = {
     uid: null,
     secret: null,
+    endpoint: null,
     deletePrompt: true,
     location: '/'
   };
@@ -51,9 +52,11 @@ S3Browser = function( options, $parent ) {
     console.log(credentials);
     self.settings.uid = credentials["access-key"];
     self.settings.secret = credentials["secret-key"];
+    self.settings.endpoint = credentials["endpoint"];
     window.localStorage.setItem("uid", credentials["access-key"]);
     window.localStorage.setItem("secret", credentials["secret-key"]);
-    self.util.setCredentials(credentials["access-key"], credentials["secret-key"]);
+    window.localStorage.setItem("endpoint", credentials["endpoint"]);
+    self.util.setCredentials(credentials["access-key"], credentials["secret-key"], credentials["endpoint"]);
     self.list("/");
     $(".s3ModalWindow:first").hide();
     $(".s3ModalBackground:first").hide();
@@ -215,7 +218,7 @@ S3Browser.prototype._init = function() {
   };
 
   var $statusMessage = $main.find( '.s3StatusMessage' );
-  this.util = new S3BrowserUtil( this.settings.uid, this.settings.secret, this.templates, $statusMessage );
+  this.util = new S3BrowserUtil( this.settings.uid, this.settings.secret, this.settings.endpoint, this.templates, $statusMessage );
   this.list( this.settings.location );
   //    this.util.getS3Info( function( serviceInfo ) {
   //        browser.s3Info = serviceInfo;
@@ -234,12 +237,13 @@ S3Browser.prototype.disableFilter = function() {
 };
 S3Browser.prototype.showConfig = function( init ) {
   var browser = this;
-  new ConfigPage( this.templates, function( uid, secret ) {
+  new ConfigPage( this.templates, function( uid, secret, endpoint ) {
     browser.settings.uid = uid;
     browser.settings.secret = secret;
+    browser.settings.endpoint = endpoint;
     if ( init ) browser._init();
     else {
-      browser.util.setCredentials( uid, secret );
+      browser.util.setCredentials( uid, secret, endpoint );
       browser.list( '/' );
     }
   }, !init );
@@ -587,10 +591,11 @@ S3Browser.prototype.useFlatMode = function() {
   jQuery( '.s3MoveButton' ).hide();
 };
 /* remember credentials if possible using the HTML5 local storage API */
-S3Browser.prototype.storeCredentials = function( uid, secret ) {
+S3Browser.prototype.storeCredentials = function( uid, secret, endpoint ) {
   if ( window.localStorage ) {
     window.localStorage.setItem( 'uid', uid );
     window.localStorage.setItem( 'secret', Crypto.AES.encrypt( secret, S3Browser.k ) );
+    window.localStorage.setItem( 'endpoint', endpoint );
   }
 };
 /* remember credentials if possible using the HTML5 local storage API */
@@ -599,8 +604,10 @@ S3Browser.prototype.retrieveCredentials = function( holder ) {
   if ( window.localStorage ) {
     var uid = window.localStorage.getItem( 'uid' );
     var secretC = window.localStorage.getItem( 'secret' );
+    var endpoint = window.localStorage.getItem( 'endpoint' );
     if ( uid ) holder.uid = uid;
     if ( secretC ) holder.secret =secretC;// Crypto.AES.decrypt( secretC, S3Browser.k );
+    if ( endpoint ) holder.endpoint = endpoint;
   }
 };
 S3Browser.prototype._checkNoDirectories = function( selectedRows ) {
