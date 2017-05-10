@@ -246,6 +246,7 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
 
 // make a generic S3 request
 func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
+  log.Print("Starting S3Passthrough2")
   var passthroughMethod string
   var passthroughNamespace string
   var passthroughEndpoint string
@@ -303,18 +304,23 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
     }
     data = string(buffer)
   } else if (passthroughMethod == "PUT") {
+  	log.Print("Receiving file or Body")
     file, _, err := r.FormFile("file")
     if err != nil {
+      log.Print("Reading body after error: " + err.Error())
       buffer, err := ioutil.ReadAll(r.Body)
       if (err != nil) {
         return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
       }
       data = string(buffer)
     } else {
+      log.Print("Received file with following data")
       var Buf bytes.Buffer
       defer file.Close()
       io.Copy(&Buf, file)
       data = string(Buf.Bytes())
+      log.Print(data)
+      log.Print("    >> end of data")
       Buf.Reset()
     }
   }

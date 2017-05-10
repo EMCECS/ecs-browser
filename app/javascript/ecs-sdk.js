@@ -38,7 +38,7 @@ EcsS3.prototype.headBucket = function( bucketParams, callback ) {
         'X-Passthrough-Key': this.accessKeyId,
         'X-Passthrough-Secret': this.secretAccessKey,
         'X-Passthrough-Method': 'HEAD',
-        'Accept': 'application/xml'
+        'Accept': 'application/json'
     };
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -134,6 +134,32 @@ EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
     };
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            callback( null, data );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+        },
+    });
+};
+
+EcsS3.prototype.putObject = function( objectParams, callback ) {
+    var apiUrl = 'http://localhost/api/v2/s3/' + objectParams.Bucket + '/' + objectParams.Key;
+
+    var headers = {
+        'X-Passthrough-Endpoint': this.endpoint,
+        'X-Passthrough-Key': this.accessKeyId,
+        'X-Passthrough-Secret': this.secretAccessKey,
+        'X-Passthrough-Method': 'PUT',
+        'Accept': 'application/json'
+    };
+    
+    var data = objectParams.Body ? objectParams.Body : '';
+    var contentType = objectParams.Body ? data.type : 'application/octet-stream';
+    if (!isNonEmptyString(contentType)) {
+       contentType = 'multipart/form-data';
+    }
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers, data: data, processData: false, contentType: contentType,
         success: function(data, textStatus, jqHXR) {
             callback( null, data );
         },

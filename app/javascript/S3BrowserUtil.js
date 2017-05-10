@@ -579,7 +579,7 @@ S3BrowserUtil.prototype.setUserMetadata = function(id, userMeta, callback) {
     });
 };
 
-
+//       browser.util.createObject( id, form, file, (file ? file.type : null), completeF, progressF, browser.currentLocation );
 S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, completeCallback, progressCallback, currentLocation) {
     var util = this;
     this.showStatus('Creating object...');
