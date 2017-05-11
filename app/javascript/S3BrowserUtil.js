@@ -590,15 +590,19 @@ S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, compl
     var params={Bucket:bucketName,Key:prefix + key,Body:data};
     util.s3.putObject(params,function(err,data){
     if(err != null){
-        if(err.statusCode==403){
+        if (err.statusCode==403) {
             alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-        }else{
+        } else {
             alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
         }
         completeCallback(false);
         util.hideStatus('Creating object...');
-    }else{
+    } else {
         console.log("DATA: " + data);
+        var status = {};
+        status.loaded = 1;
+        status.totalSize = 1;
+        progressCallback( status );
         completeCallback(true);
         util.hideStatus('Creating object...');
     }

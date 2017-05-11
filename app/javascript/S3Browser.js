@@ -435,7 +435,14 @@ S3Browser.prototype.uploadFile = function( file, useForm ) {
         // refresh local metadata
         browser.util.getSystemMetadata( browser.currentLocation + id, function( systemMeta ) {
           systemMeta["mtime"] = systemMeta.LastModified;
-          fileRow.updateEntry( {id: id, prefixKey: id, name: (browser.util.useNamespace ? fileName : id), objectId: returnValue, systemMeta: systemMeta} );
+          fileRow.updateEntry( {
+            id: id,
+            prefixKey: id,
+            name: (browser.util.useNamespace ? fileName : id),
+            objectId: returnValue,
+            systemMeta: systemMeta,
+            type: FileRow.ENTRY_TYPE.REGULAR
+          } );
           fileRow.hideStatus();
         } );
       } else {
@@ -447,8 +454,14 @@ S3Browser.prototype.uploadFile = function( file, useForm ) {
       var progressPercent = Math.floor( (status.position || status.loaded) / (status.totalSize || status.total) * 100 );
       fileRow.setStatus( progressPercent );
       browser.util.getSystemMetadata( browser.currentLocation + id, function( systemMeta ) {
-        //fileRow.updateEntry( {id: id, name: (browser.util.useNamespace ? fileName : id), objectId: returnValue, systemMeta: systemMeta} );
-        //fileRow.hideStatus();
+        fileRow.updateEntry( {
+          id: id,
+          name: (browser.util.useNamespace ? fileName : id),
+          objectId: returnValue,
+          systemMeta: systemMeta,
+          type: FileRow.ENTRY_TYPE.REGULAR
+        }  );
+        fileRow.hideStatus();
       } );
     };
 

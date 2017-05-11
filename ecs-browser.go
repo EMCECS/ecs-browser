@@ -154,9 +154,8 @@ func apiHandle2(path string, handler http.Handler, methodName string) {
 }
 
 func apiHandleBase(apiBase string, path string, handler http.Handler, methodName string) {
-    log.Printf("Started setting handler for " + apiBase + path + " - " + methodName)
+    log.Printf("Setting handler for " + apiBase + path + " - " + methodName)
 	router.Handle(apiBase + path, handler).Methods(methodName)
-    log.Printf("Finished setting handler for " + apiBase + path + " - " + methodName)
 }
 
 // Main page
