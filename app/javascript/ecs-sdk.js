@@ -145,6 +145,20 @@ EcsS3.prototype.putObject = function( objectParams, callback ) {
     });
 };
 
+EcsS3.prototype.deleteObject = function( objectParams, callback ) {
+    var apiUrl = this.getObjectApiUrl(objectParams);
+    var headers = this.getHeaders('DELETE');
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            callback( null, data );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+        },
+    });
+};
+
 EcsS3.prototype.getHeaders = function( passthroughMethod ) {
     var headers = {
         'X-Passthrough-Endpoint': this.endpoint,
