@@ -22,6 +22,32 @@ function isNonEmptyString(theString) {
   return (theString && theString.trim() && (theString != ""));
 }
 
+function combineWithSlash( part1, part2 ) {
+  var combination;
+  if (!isNonEmptyString(part2)) {
+    combination = part1;
+  } else if (part2.startsWith('/')) {
+    if (part1.endsWith('/')) {
+      combination = part1 + part2.substring(1);
+    } else {
+      combination = part1 + part2;
+    }
+  } else if (part1.endsWith('/')) {
+    combination = part1 + part2;
+  } else {
+    combination = part1 + '/' + part2;
+  }
+  return combination;
+};
+
+function handleData( data, callback ) {
+  if (( data.code >= 200 ) && ( data.code < 300 )) {
+    callback( null, data );
+  } else {
+    callback( { statusCode: data.code, errorThrown: "failure" }, null );
+  }
+};
+
 EcsS3 = function( s3Params ) {
     this.endpoint = s3Params.endpoint;
     this.accessKeyId = s3Params.accessKeyId;
@@ -151,7 +177,7 @@ EcsS3.prototype.deleteObject = function( objectParams, callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -175,10 +201,10 @@ EcsS3.prototype.getSystemApiUrl = function() {
 };
 
 EcsS3.prototype.getBucketApiUrl = function( params ) {
-    return this.getSystemApiUrl() + params.Bucket;
+    return combineWithSlash( this.getSystemApiUrl(), params.Bucket );
 };
 
 EcsS3.prototype.getObjectApiUrl = function( params ) {
-    return this.getBucketApiUrl( params ) + '/' + params.Key;
+    return combineWithSlash( this.getBucketApiUrl( params ), params.Key );
 };
 
