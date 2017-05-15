@@ -265,10 +265,13 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
   	  passthroughAccessKey = value[0]
   	} else if (key == "X-Passthrough-Secret") {
   	  passthroughSecretKey = value[0]
+  	} else if (key == "Accept") {
+  	  // do nothing`
   	} else {
       headers[key] = value
   	}
   }
+  headers["Accept"] = []string{"application/xml"}
 
   s3 := S3{
     EndPointString: passthroughEndpoint,

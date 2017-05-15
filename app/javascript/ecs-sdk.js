@@ -174,7 +174,7 @@ EcsS3.prototype.listBuckets = function(callback ) {
 };
 
 EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {
-    var apiUrl = this.getBucketApiUrl(bucketParams); + '?acl';
+    var apiUrl = this.getBucketApiUrl(bucketParams) + '?acl';
     var headers = this.getHeaders('GET');
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
