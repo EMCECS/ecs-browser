@@ -602,7 +602,9 @@ S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, compl
         var status = {};
         status.loaded = 1;
         status.totalSize = 1;
-        progressCallback( status );
+        if (progressCallback) {
+            progressCallback( status );
+        }
         completeCallback(true);
         util.hideStatus('Creating object...');
     }

@@ -44,7 +44,56 @@ function handleData( data, callback ) {
   if (( data.code >= 200 ) && ( data.code < 300 )) {
     callback( null, data );
   } else {
-    callback( { statusCode: data.code, errorThrown: "failure" }, null );
+    var message = getErrorMessage(data.code);
+    callback( { statusCode: data.code, message: message }, null );
+  }
+};
+
+function getErrorMessage( code ) {
+  if (( code >= 200 ) && ( code < 300 )) {
+    return "Success!";
+  } else if ( code == 400 ) {
+    return "Bad Request";
+  } else if ( code == 401 ) {
+    return "Unauthorized";
+  } else if ( code == 402 ) {
+    return "Payment Required";
+  } else if ( code == 403 ) {
+    return "Forbidden";
+  } else if ( code == 404 ) {
+    return "Not Found";
+  } else if ( code == 405 ) {
+    return "Method Not Allowed";
+  } else if ( code == 406 ) {
+    return "Not Acceptable";
+  } else if ( code == 407 ) {
+    return "Proxy Authentication Required";
+  } else if ( code == 408 ) {
+    return "Request Timeout";
+  } else if ( code == 409 ) {
+    return "Conflict";
+  } else if ( code == 410 ) {
+    return "Gone";
+  } else if ( code == 413 ) {
+    return "Payload Too Large";
+  } else if ( code == 500 ) {
+    return "Internal Server Error";
+  } else if ( code == 501 ) {
+    return "Not Implemented";
+  } else if ( code == 502 ) {
+    return "Bad Gateway";
+  } else if ( code == 503 ) {
+    return "Service Unavailable";
+  } else if ( code == 504 ) {
+    return "Gateway Timeout";
+  } else if ( code == 505 ) {
+    return "HTTP Version Not Supported";
+  } else if ( code == 507 ) {
+    return "Insufficient Storage";
+  } else if ( code == 511 ) {
+    return "Network Authentication Required";
+  } else {
+    return "Failure";
   }
 };
 
@@ -62,7 +111,7 @@ EcsS3.prototype.headBucket = function( bucketParams, callback ) {
     var headers = this.getHeaders('HEAD');
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -78,7 +127,7 @@ EcsS3.prototype.headObject = function( objectParams, callback ) {
             data.ContentLength = data.response_headers['Content-Length'];
             data.LastModified = data.response_headers['Last-Modified'];
             data.type = FileRow.ENTRY_TYPE.REGULAR;
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -101,7 +150,7 @@ EcsS3.prototype.listObjects = function( bucketParams, callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -115,7 +164,7 @@ EcsS3.prototype.listBuckets = function(callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -130,7 +179,7 @@ EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -144,7 +193,7 @@ EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -163,7 +212,7 @@ EcsS3.prototype.putObject = function( objectParams, callback ) {
     }
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers, data: data, processData: false, contentType: contentType,
         success: function(data, textStatus, jqHXR) {
-            callback( null, data );
+            handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
