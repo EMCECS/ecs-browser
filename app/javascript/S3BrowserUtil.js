@@ -79,6 +79,12 @@ S3BrowserUtil.prototype.setCredentials = function(uid, secret, endpoint) {
         secretAccessKey : secret,
         s3ForcePathStyle : true
     });
+    this.awsS3 = new AWS.S3({
+        endpoint : endpoint,
+        accessKeyId : uid,
+        secretAccessKey : secret,
+        s3ForcePathStyle : true
+    });
 };
 
 S3BrowserUtil.prototype.debug = function(message) {
@@ -604,7 +610,7 @@ S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, compl
         status.totalSize = 1;
         if (progressCallback) {
             progressCallback( status );
-        }
+        };
         completeCallback(true);
         util.hideStatus('Creating object...');
     }
@@ -889,7 +895,7 @@ S3BrowserUtil.prototype.getShareableUrl = function(id,bucketName, date, asAttach
     var fileName=this.getFileName(id);
     var expires = Math.floor( date.getTime() / 1000 );
     var params = {Bucket: bucketName, Key: id, Expires:expires};
-    return this.s3.getSignedUrl('getObject',params);
+    return this.awsS3.getSignedUrl('getObject',params);
 };
 
 S3BrowserUtil.prototype.createAttachmentDisposition=function(fileName){
