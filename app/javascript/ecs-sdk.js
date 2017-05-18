@@ -40,8 +40,11 @@ function combineWithSlash( part1, part2 ) {
   return combination;
 };
 
-function handleData( data, callback ) {
+function handleData( data, callback, dataProcessor ) {
   if (( data.code >= 200 ) && ( data.code < 300 )) {
+    if (dataProcessor) {
+      data = dataProcessor( data );
+    }
     callback( null, data );
   } else {
     var message = getErrorMessage(data.code);
@@ -97,6 +100,35 @@ function getErrorMessage( code ) {
   }
 };
 
+function makeMetaData( theMap ) {
+  var metaData = {};
+  if (theMap) {
+    for (var key in theMap) {
+      if (theMap.hasOwnProperty(key)) {
+        metaData[ keyProcessor(key) ] = theMap[key];
+      }
+    }
+  }
+  return metaData;
+};
+
+function keyProcessor( key ) {
+  var processedKey = '';
+  for (var i = 0, keyLength = key.length; i < keyLength; ++i) {
+    var theCharacter = key[i];
+    if (characterBetweenInclusive(theCharacter, 'a', 'z') ||
+        characterBetweenInclusive(theCharacter, 'A', 'Z') || 
+        characterBetweenInclusive(theCharacter, '0', '9')) {
+      processedKey = processedKey + theCharacter;
+    }
+  }
+  return processedKey;
+};
+
+function characterBetweenInclusive( theCharacter, startCharacter, endCharacter ) {
+  return (theCharacter >= startCharacter) && (theCharacter <= endCharacter);
+};
+
 EcsS3 = function( s3Params ) {
     this.endpoint = s3Params.endpoint;
     this.accessKeyId = s3Params.accessKeyId;
@@ -109,9 +141,14 @@ EcsS3 = function( s3Params ) {
 EcsS3.prototype.headBucket = function( bucketParams, callback ) {
     var apiUrl = this.getBucketApiUrl(bucketParams);
     var headers = this.getHeaders('HEAD');
+    var processData = function( data ) {
+        var metaData = makeMetaData(data.response_headers);
+        metaData.type = FileRow.ENTRY_TYPE.BUCKET;
+        return metaData;
+    };
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            handleData( data, callback );
+            handleData( data, callback, processData );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -122,12 +159,14 @@ EcsS3.prototype.headBucket = function( bucketParams, callback ) {
 EcsS3.prototype.headObject = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
     var headers = this.getHeaders('HEAD');
+    var processData = function( data ) {
+        var metaData = makeMetaData(data.response_headers);
+        metaData.type = FileRow.ENTRY_TYPE.REGULAR;
+        return metaData;
+    };
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            data.ContentLength = data.response_headers['Content-Length'];
-            data.LastModified = data.response_headers['Last-Modified'];
-            data.type = FileRow.ENTRY_TYPE.REGULAR;
-            handleData( data, callback );
+            handleData( data, callback, processData );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
