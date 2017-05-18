@@ -129,6 +129,10 @@ function characterBetweenInclusive( theCharacter, startCharacter, endCharacter )
   return (theCharacter >= startCharacter) && (theCharacter <= endCharacter);
 };
 
+function getEcsBody( data ) {
+  return data.body;
+};
+
 EcsS3 = function( s3Params ) {
     this.endpoint = s3Params.endpoint;
     this.accessKeyId = s3Params.accessKeyId;
@@ -189,7 +193,7 @@ EcsS3.prototype.listObjects = function( bucketParams, callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            handleData( data, callback );
+            handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -203,7 +207,7 @@ EcsS3.prototype.listBuckets = function(callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            handleData( data, callback );
+            handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -218,7 +222,7 @@ EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            handleData( data, callback );
+            handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
@@ -232,7 +236,7 @@ EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            handleData( data, callback );
+            handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
             callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );

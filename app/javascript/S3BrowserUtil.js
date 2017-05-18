@@ -294,7 +294,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                 util.s3.listBuckets(function(err, result) {
                     util.hideStatus('Listing directory...');
                     if (!err) {
-                        var buckets = result.body.Buckets;
+                        var buckets = result.Buckets;
                         for (var i = 0; i < buckets.length; i++) {
                             var values = buckets[i];
                             var entry = {
@@ -329,8 +329,8 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                 util.s3.listObjects(par, function(err, data) {
                     util.hideStatus('Listing directory...');
                     if (!err) {
-                        var folders = data.body.CommonPrefixes;
-                        var files = data.body.Contents;
+                        var folders = data.CommonPrefixes;
+                        var files = data.Contents;
                         var entries = [];
                         for (var i = 0; i < files.length; i++) {
                             var values = files[i];
@@ -362,7 +362,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                 util.s3.listBuckets(function(err, result) {
                     util.hideStatus('Listing directory...');
                     if (!err) {
-                        var buckets = result.body.Buckets;
+                        var buckets = result.Buckets;
                         for (var i = 0; i < buckets.length; i++) {
                             var values = buckets[i];
                             var entry = {
@@ -399,8 +399,8 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                 util.s3.listObjects(par, function(err, data) {
                     util.hideStatus('Listing directory...');
                     if (!err) {
-                        var folders = data.body.CommonPrefixes;
-                        var files = data.body.Contents;
+                        var folders = data.CommonPrefixes;
+                        var files = data.Contents;
                         var entries = [];
                         if (folders) {
                             for (var i = 0; i < folders.length; i++) {
@@ -466,7 +466,7 @@ S3BrowserUtil.prototype.getAcl = function(id,location, callback) {
                 util.s3Error(err);
             }else{
                 util.hideStatus('Retrieving ACL...');
-                callback(data.body);
+                callback(data);
             }
         });
     } else{
@@ -479,7 +479,7 @@ S3BrowserUtil.prototype.getAcl = function(id,location, callback) {
                 util.s3Error(err);
             } else{
                 util.hideStatus('Retrieving ACL...');
-                callback(data.body);
+                callback(data);
             }
         });
     }
