@@ -149,6 +149,12 @@ type AclResponse struct {
   Grants []Grant `xml:"AccessControlList>Grant"`
 }
 
+type CopyObjectResult struct {
+  XMLName xml.Name `xml:"CopyObjectResult"`
+  LastModified string `xml:"LastModified"`
+  ETag string `xml:"ETag"`
+}
+
 type S3 struct {
   EndPointString string
   AccessKey string
@@ -182,11 +188,11 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
   var passthroughMethod string
   headers := make(map[string][]string)
   for key, value := range r.Header {
-  	if (key == "X-Passthrough-Method") {
-  	  passthroughMethod = value[0]
-  	} else {
+    if (key == "X-Passthrough-Method") {
+      passthroughMethod = value[0]
+    } else {
       headers[key] = value
-  	}
+    }
   }
   vars := mux.Vars(r)
   var bucket = vars["bucket"]
@@ -232,8 +238,8 @@ func S3Passthrough(w http.ResponseWriter, r *http.Request) *appError {
   passthroughResponse.Body = response.Body
   passthroughResponse.ResponseHeaders = make(map[string]string)
   for key, values := range response.ResponseHeaders {
-  	fullValue := ""
-  	separator := ""
+    fullValue := ""
+    separator := ""
     for _, value := range values {
       fullValue = fullValue + separator + value
       separator = ", "
@@ -252,26 +258,42 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
   var passthroughEndpoint string
   var passthroughAccessKey string
   var passthroughSecretKey string
+  var copySource = false;
 
   headers := make(map[string][]string)
   for key, value := range r.Header {
-  	if (key == "X-Passthrough-Method") {
-  	  passthroughMethod = value[0]
-  	} else if (key == "X-Passthrough-Namespace") {
-  	  passthroughNamespace = value[0]
-  	} else if (key == "X-Passthrough-Endpoint") {
-  	  passthroughEndpoint = value[0]
-  	} else if (key == "X-Passthrough-Key") {
-  	  passthroughAccessKey = value[0]
-  	} else if (key == "X-Passthrough-Secret") {
-  	  passthroughSecretKey = value[0]
-  	} else if (key == "Accept") {
-  	  // do nothing`
-  	} else {
-      headers[key] = value
-  	}
+//    log.Print("Header " + key + ": {", value, "};")
+    if (key == "X-Passthrough-Method") {
+      passthroughMethod = value[0]
+    } else if (key == "X-Passthrough-Namespace") {
+      passthroughNamespace = value[0]
+    } else if (key == "X-Passthrough-Endpoint") {
+      passthroughEndpoint = value[0]
+    } else if (key == "X-Passthrough-Key") {
+      passthroughAccessKey = value[0]
+    } else if (key == "X-Passthrough-Secret") {
+      passthroughSecretKey = value[0]
+    } else if (key == "Accept") {
+      // do nothing
+    } else {
+      canonicalKey := strings.ToLower(key)
+      if (canonicalKey == "x-amz-copy-source") {
+        copySource = true;
+      }
+      headers[canonicalKey] = value
+    }
   }
   headers["Accept"] = []string{"application/xml"}
+  if (copySource) {
+    headers["Expect"] = []string{"100-continue"}
+    headers["Content-Encoding"] = []string{"identity"}
+//    headers["Content-Type"] = []string{"multipart/form-data"}
+//    headers["X-amz-storage-class"] = []string{"STANDARD"}
+  }
+
+  for key, value := range headers {
+    log.Print("Outgoing header " + key + ": {", value, "};")
+  }
 
   s3 := S3{
     EndPointString: passthroughEndpoint,
@@ -283,6 +305,7 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
   vars := mux.Vars(r)
   var bucket = vars["bucket"]
   var object = vars["object"]
+  log.Println("Bucket: ", bucket, ", Object: ", object)
   path := "/"
   if (len(strings.TrimSpace(object)) > 0) {
     path = path + object
@@ -291,9 +314,9 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
   specialKey := "";
   for key, values := range r.URL.Query() {
     for _, value := range values {
-  	  if (key == "acl") {
-  	    specialKey = key;
-  	  }
+      if (key == "acl") {
+        specialKey = key;
+      }
       path = path + separator + key + "=" + value
       separator = "&"
     }
@@ -306,8 +329,8 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
       return &appError{err: err, status: http.StatusInternalServerError, json: http.StatusText(http.StatusInternalServerError)}
     }
     data = string(buffer)
-  } else if (passthroughMethod == "PUT") {
-  	log.Print("Receiving file or Body")
+  } else if ((passthroughMethod == "PUT") && (copySource == false)) {
+    log.Print("Receiving file or Body")
     file, _, err := r.FormFile("file")
     if err != nil {
       log.Print("Reading body after error: " + err.Error())
@@ -333,15 +356,17 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
   if (len(strings.TrimSpace(bucket)) == 0) {
     jsonBody = &ListBucketsResp{}
   } else if (len(strings.TrimSpace(object)) == 0) {
-  	if (specialKey == "acl") {
+    if (specialKey == "acl") {
       jsonBody = &AclResponse{}
-  	} else {
+    } else {
       jsonBody = &ListResp{}
-  	}
+    }
   } else {
-  	if (specialKey == "acl") {
+    if (specialKey == "acl") {
       jsonBody = &AclResponse{}
-  	}
+    } else if (copySource) {
+      jsonBody = &CopyObjectResult{}
+    }
   }
   xml.NewDecoder(strings.NewReader(response.Body)).Decode(jsonBody)
   log.Print(response.Body);
@@ -351,8 +376,9 @@ func S3Passthrough2(w http.ResponseWriter, r *http.Request) *appError {
   passthroughResponse.Body = jsonBody
   passthroughResponse.ResponseHeaders = make(map[string]string)
   for key, values := range response.ResponseHeaders {
-  	fullValue := ""
-  	separator := ""
+    log.Print("Incoming response header " + key + ": {", values, "};")
+    fullValue := ""
+    separator := ""
     for _, value := range values {
       fullValue = fullValue + separator + value
       separator = ", "

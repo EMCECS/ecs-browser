@@ -119,7 +119,7 @@ func main() {
   apiHandle("s3/{bucket}/", appHandler(S3Passthrough), "POST")
   apiHandle("s3/{bucket}", appHandler(S3Passthrough), "POST")
 
-  apiHandle2("s3/{bucket}/{object}", appHandler(S3Passthrough2), "POST")
+  apiHandle2("s3/{bucket}/{object:.*}", appHandler(S3Passthrough2), "POST")
   apiHandle2("s3/{bucket}/", appHandler(S3Passthrough2), "POST")
   apiHandle2("s3/{bucket}", appHandler(S3Passthrough2), "POST")
   apiHandle2("s3/", appHandler(S3Passthrough2), "POST")

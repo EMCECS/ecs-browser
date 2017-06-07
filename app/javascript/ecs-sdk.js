@@ -20,7 +20,7 @@
  */
 function isNonEmptyString(theString) {
   return (theString && theString.trim() && (theString != ""));
-}
+};
 
 function combineWithSlash( part1, part2 ) {
   var combination;
@@ -47,10 +47,16 @@ function handleData( data, callback, dataProcessor ) {
     }
     callback( null, data );
   } else {
-    var message = getErrorMessage(data.code);
-    callback( { statusCode: data.code, message: message }, null );
+    handleError( callback,  data, null, null );
   }
 };
+
+function handleError ( callback, data, errorThrown, textStatus ) {
+  var message = getErrorMessage(data.code);
+  callback( { statusCode: data.code, errorThrown: errorThrown, message: message }, null );
+};
+
+var _metadataStart = 'x-amz-meta-';
 
 function getErrorMessage( code ) {
   if (( code >= 200 ) && ( code < 300 )) {
@@ -105,7 +111,14 @@ function makeMetaData( theMap ) {
   if (theMap) {
     for (var key in theMap) {
       if (theMap.hasOwnProperty(key)) {
-        metaData[ keyProcessor(key) ] = theMap[key];
+        if (!key.toLowerCase().startsWith(_metadataStart)) {
+          metaData[ keyProcessor(key) ] = theMap[key];
+        } else {
+          if (!metaData.Metadata) {
+            metaData.Metadata = {};
+          }
+          metaData.Metadata[ key.substring(_metadataStart.length) ] = theMap[key];
+        }
       }
     }
   }
@@ -155,7 +168,7 @@ EcsS3.prototype.headBucket = function( bucketParams, callback ) {
             handleData( data, callback, processData );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 };
@@ -173,7 +186,7 @@ EcsS3.prototype.headObject = function( objectParams, callback ) {
             handleData( data, callback, processData );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 };
@@ -196,7 +209,7 @@ EcsS3.prototype.listObjects = function( bucketParams, callback ) {
             handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 };
@@ -210,7 +223,7 @@ EcsS3.prototype.listBuckets = function(callback ) {
             handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 
@@ -225,7 +238,7 @@ EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {
             handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 };
@@ -239,7 +252,7 @@ EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
             handleData( data, callback, getEcsBody );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 };
@@ -258,10 +271,40 @@ EcsS3.prototype.putObject = function( objectParams, callback ) {
             handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 };
+
+EcsS3.prototype.copyObject = function( objectParams, callback ) {
+    var apiUrl = this.getObjectApiUrl(objectParams);
+    var headers = this.getHeaders('PUT');
+    var copySource = objectParams.CopySource;
+    if (!copySource.startsWith('/')) {
+      copySource = '/' + copySource;
+    }
+    headers['X-amz-copy-source'] = copySource;
+    if (objectParams.Metadata) {
+      for (var key in objectParams.Metadata) {
+        if (objectParams.Metadata.hasOwnProperty(key)) {
+          headers[_metadataStart + key] = objectParams.Metadata[key];
+        }
+      }
+    }
+    if (isNonEmptyString(objectParams.MetadataDirective)) {
+        headers['X-amz-metadata-directive'] = objectParams.MetadataDirective;
+    }
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
 
 EcsS3.prototype.deleteObject = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
@@ -272,7 +315,7 @@ EcsS3.prototype.deleteObject = function( objectParams, callback ) {
             handleData( data, callback );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            callback( { statusCode: jqHXR.statusCode, errorThrown: errorThrown }, null );
+            handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
 };

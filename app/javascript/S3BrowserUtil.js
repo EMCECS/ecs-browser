@@ -128,12 +128,12 @@ S3BrowserUtil.prototype.updateServiceInfo = function(serviceInfo) {
     this.s3.s3Config.utf8Support = serviceInfo.utf8;
 };
 
-S3BrowserUtil.prototype.createDirectory = function(parentDirectory, callback) {
-    var name = this.prompt('newDirectoryNamePrompt', {}, this.validName,
-    'validNameError');
+S3BrowserUtil.prototype.createBucketOrDirectory = function(parentDirectory, callback) {
+    var name = this.prompt('newDirectoryNamePrompt', {}, this.validName, 'validNameError');
     if (name == null || name.length == 0)
         return;
-    var path = this.endWithSlash(parentDirectory + name);
+    var directoryObjectName = this.endWithSlash(name);
+    var path = parentDirectory + directoryObjectName;
     var util = this;
     this.showStatus('Checking for existing object...');
     util.getSystemMetadata(path, function(result) {
@@ -144,10 +144,10 @@ S3BrowserUtil.prototype.createDirectory = function(parentDirectory, callback) {
             }));
             return;
         }
-        util.showStatus('Creating directory...');
-        util.createObject(name + "/", null, null, null,
+        util.showStatus('Creating bucket or directory...');
+        util.createObject(directoryObjectName, null, null, null,
             function(result) {
-                util.hideStatus('Creating directory...');
+                util.hideStatus('Creating bucket or directory...');
                 if (result) {
                     callback(name);
                 }else{
@@ -569,7 +569,13 @@ S3BrowserUtil.prototype.setUserMetadata = function(id, userMeta, callback) {
     var location=currentLocation;
     var path=location.split("/");
     var bucketName=path[1];
-    var params={Bucket:bucketName,CopySource:bucketName+"/"+id,Key:id,Metadata:userMeta,MetadataDirective:"REPLACE"};
+    var params={
+        Bucket: bucketName,
+        CopySource: "/" + bucketName + "/" + id,
+        Key: id,
+        Metadata: userMeta,
+        MetadataDirective: "REPLACE"
+    };
     this.s3.copyObject(params,function(err,data){
         util.hideStatus('Saving metadata...');
         if (err != null) {
@@ -585,7 +591,6 @@ S3BrowserUtil.prototype.setUserMetadata = function(id, userMeta, callback) {
     });
 };
 
-//       browser.util.createObject( id, form, file, (file ? file.type : null), completeF, progressF, browser.currentLocation );
 S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, completeCallback, progressCallback, currentLocation) {
     var util = this;
     this.showStatus('Creating object...');

@@ -111,7 +111,7 @@ S3Browser.prototype._init = function() {
     browser.list( browser.util.parentDirectory( browser.currentLocation ) );
   };
   if ( this.$createButton.length > 0 ) this.$createButton[0].onclick = function() {
-    browser.createDirectory();
+    browser.createBucketOrDirectory();
   };
   if ( this.$openButton.length > 0 ) this.$openButton[0].onclick = function() {
     browser.openSelectedItems();
@@ -248,11 +248,13 @@ S3Browser.prototype.showConfig = function( init ) {
     }
   }, !init );
 };
-S3Browser.prototype.createDirectory = function() {
+
+S3Browser.prototype.createBucketOrDirectory = function() {
   var browser = this;
-  this.util.createDirectory( this.currentLocation, function( name ) {
+  var fileType = (this.currentLocation === '/') ? FileRow.ENTRY_TYPE.BUCKET : FileRow.ENTRY_TYPE.DIRECTORY;
+  this.util.createBucketOrDirectory( this.currentLocation, function( name ) {
     var path = browser.util.endWithSlash( browser.currentLocation + name );
-    var fileRow = browser.addRow( {id: path, name: name, type: FileRow.ENTRY_TYPE.DIRECTORY} );
+    var fileRow = browser.addRow( { id: path, name: name, type: fileType } );
     browser.$fileTable.append( fileRow.$root );
   } );
 };
@@ -261,6 +263,7 @@ S3Browser.getCurrentLocation=function(){
 
   return browser.currentLocation;
 }
+
 S3Browser.prototype.list = function( id ) {
 
   if ( !id || id === '' ) id = '/';
