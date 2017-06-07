@@ -300,7 +300,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                             var entry = {
                                 name : values.Name,
                                 systemMeta : values,
-                                type : "bucket",
+                                type : FileRow.ENTRY_TYPE.BUCKET,
                                 id : path + values.Name,
                                 prefixKey: path + values.Name,
                                 bucket: bucketName
@@ -337,7 +337,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                             var entry = {
                                 name : values.Key,
                                 systemMeta : values,
-                                type : "regular",
+                                type : FileRow.ENTRY_TYPE.REGULAR,
                                 id : values.Key,
                                 prefixKey: values.Key,
                                 bucket: bucketName
@@ -368,7 +368,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                             var entry = {
                                 name : values.Name,
                                 systemMeta : values,
-                                type : "bucket",
+                                type : FileRow.ENTRY_TYPE.BUCKET,
                                 id : path + values.Name,
                                 prefixKey: path + values.Name,
                                 bucket: bucketName
@@ -404,18 +404,17 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                         var entries = [];
                         if (folders) {
                             for (var i = 0; i < folders.length; i++) {
-                                var values = folders[i];
-                                if (values.Prefix != '/') {
-                                    var folderName = values.Prefix;
-                                    folderName = folderName.substring(0, folderName.length - 1);
-                                    var folderVariable=folderName.split('/');
-                                    folderName=folderVariable[folderVariable.length-1];
+                                var prefix = folders[i];
+                                if (prefix != '/') {
+                                    folderName = prefix.substring(0, prefix.length - 1);
+                                    var folderVariable = folderName.split('/');
+                                    folderName = folderVariable[folderVariable.length-1];
                                     var entry = {
                                         name : folderName,
                                         systemMeta : values,
-                                        type : "directory",
+                                        type : FileRow.ENTRY_TYPE.DIRECTORY,
                                         id : path + folderName,
-                                        prefixKey: values.Prefix,
+                                        prefixKey: prefix,
                                         bucket: bucketName
                                     };
                                     entries.push(entry);
@@ -432,7 +431,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                                     var entry = {
                                         name : fileName,
                                         systemMeta : values,
-                                        type : "regular",
+                                        type : FileRow.ENTRY_TYPE.REGULAR,
                                         id : fileName,
                                         prefixKey: values.Key,
                                         bucket: bucketName
