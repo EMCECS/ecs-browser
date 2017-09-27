@@ -323,6 +323,7 @@ S3Browser.prototype.openSelectedItems = function() {
     }
   }
 };
+
 S3Browser.prototype.downloadSelectedItems = function() {
   //    if ( !this.s3Info.browsercompat ) {
   //        this.util.error( this.templates.get( 's3Error.noBrowserCompat' ).render( {info: S3BrowserUtil.dumpObject( this.s3Info )} ) );
@@ -336,6 +337,7 @@ S3Browser.prototype.downloadSelectedItems = function() {
     this.util.downloadFile( selectedRows[i].entry.prefixKey, i , this.currentLocation);
   }
 };
+
 S3Browser.prototype.showProperties = function( entry ) {
   var browser = this;
   this.util.getUserMetadata( entry, this.currentLocation,function() {
