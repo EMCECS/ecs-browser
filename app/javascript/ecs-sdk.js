@@ -191,6 +191,21 @@ EcsS3.prototype.headObject = function( objectParams, callback ) {
     });
 };
 
+EcsS3.prototype.listBuckets = function(callback ) {
+    var apiUrl = this.getSystemApiUrl();
+    var headers = this.getHeaders('GET');
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback, getEcsBody );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+
+};
+
 EcsS3.prototype.listObjects = function( bucketParams, callback ) {
     var apiUrl = this.getBucketApiUrl(bucketParams);
     var separatorChar = '?';
@@ -212,21 +227,6 @@ EcsS3.prototype.listObjects = function( bucketParams, callback ) {
             handleError( callback,  jqHXR, errorThrown, textStatus );
         },
     });
-};
-
-EcsS3.prototype.listBuckets = function(callback ) {
-    var apiUrl = this.getSystemApiUrl();
-    var headers = this.getHeaders('GET');
-    
-    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
-        success: function(data, textStatus, jqHXR) {
-            handleData( data, callback, getEcsBody );
-        },
-        error: function(jqHXR, textStatus, errorThrown) {
-            handleError( callback,  jqHXR, errorThrown, textStatus );
-        },
-    });
-
 };
 
 EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {

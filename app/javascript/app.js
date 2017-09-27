@@ -515,7 +515,7 @@ function processXmlData(data) {
                   apiUrl = apiUrl + separator + 'key-marker=' + this.keyMarker;
                   separator = '&';
                 } else if (subApi == 'Bucket') {
-                  apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.maxKeys;
+                  apiUrl = apiUrl + separator + startAfterNames[this.listType] + '=' + this.keyMarker;
                   separator = '&';
                   if (this.listType == '2') {
       	            apiUrl = apiUrl + separator + startAfterNames['1'] + '=' + this.keyMarker;
