@@ -325,7 +325,8 @@ EcsS3.prototype.getHeaders = function( passthroughMethod ) {
         'X-Passthrough-Key': this.accessKeyId,
         'X-Passthrough-Secret': this.secretAccessKey,
         'X-Passthrough-Method': passthroughMethod,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Content-Type': 'application/octet-stream'
     };
     return headers;
 };

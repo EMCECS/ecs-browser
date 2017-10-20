@@ -17,7 +17,7 @@ public class Application {
         FilterRegistrationBean registrationBean = new FilterRegistrationBean();
         ServiceFilter serviceFilter = new ServiceFilter();
         registrationBean.setFilter(serviceFilter);
-        registrationBean.addUrlPatterns(ServiceController.SERVLET_PATH);
+        registrationBean.addUrlPatterns("/service/*");
         registrationBean.setOrder(0);
         return registrationBean;
     }
