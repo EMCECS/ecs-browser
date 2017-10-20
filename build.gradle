@@ -1,0 +1,59 @@
+description = "ECS browser website"
+group = 'com.emc.ecs'
+version = '0.9.0'
+
+ext.licenseName = ''
+ext.licenseUrl = ''
+
+buildscript {
+    ext {
+        springBootVersion = '1.3.7.RELEASE'
+    }
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+
+defaultTasks 'build'
+
+jar {
+    baseName = 'ecs-browser'
+    version =  '0.9.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {
+        exclude module: "spring-boot-starter-tomcat"
+    }
+    compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
+    compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
+    compile("org.slf4j:slf4j-api:1.7.21")
+    compile("com.emc.ecs:object-client:3.0.3") {
+        exclude group: 'com.emc.ecs', module: 'smart-client'
+        exclude group: 'com.emc.ecs', module: 'object-transform'
+        exclude group: 'org.jdom', module: 'jdom2'
+        exclude group: 'org.slf4j', module: 'slf4j-api'
+        exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    }
+    testCompile("junit:junit:4.12")
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.14'
+}

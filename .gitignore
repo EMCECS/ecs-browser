@@ -1,0 +1,29 @@
+/build/
+target
+bin
+*.class
+# Package Files #
+*.jar
+*.war
+*.ear
+# Local files
+.DS_Store
+.classpath
+.project
+.settings
+.idea
+*.iml
+*.ipr
+*.iws
+dependency-reduced-pom.xml
+esu.log
+.gradle
+*.user
+*.csuser
+Debug/
+Release/
+packages/
+.vs/
+*.bak
+*.suo
+

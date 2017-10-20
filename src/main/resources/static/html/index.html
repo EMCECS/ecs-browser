@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<!--
+
+ Copyright (c) 2011-2017, EMC Corporation
+
+ All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * Neither the name of the EMC Corporation nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-->
+<html>
+<head>
+<meta charset="UTF-8">
+<title>S3 HTML5 Browser</title>
+<link href="css/s3-browser.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+    html {
+        height: 100%;
+    }
+
+    body {
+        height: 97%;
+        margin: 0;
+        padding: 8px;
+        background-color: #ddd;
+    }
+
+    .main-content {
+        width: 100%;
+        height: 100%;
+    }
+
+    .s3Browser {
+        width: 100%;
+        height: 100%;
+        /*
+        width: 675px;
+        height: 500px;
+        */
+    }
+
+</style>
+<!--[if lt IE 9]>
+<style type="text/css">
+    .s3TitleBar {
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#aaaaaa', endColorstr='#000000', GradientType=0);
+    }
+
+    .s3Button {
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#cccccc', GradientType=0);
+    }
+</style>
+<![endif]-->
+<!--[if lt IE 8]>
+<style type="text/css">/
+    .s3HeaderSpacer {
+        display: none;
+    }
+
+    .s3UploadContainer {
+        width: 59px;
+    }
+</style>
+<![endif]-->
+<!-- S3 REST API -->
+<script type="text/javascript" src="javascript/ecs-sdk.js"></script>
+<script type="text/javascript" src="javascript/atmos-min-2.1.1.js"></script>
+<script type="text/javascript" src="javascript/crypto-sha1-hmac-pbkdf2-ofb-aes.js"></script>
+<script type="text/javascript" src="javascript/aws-sdk-2.1.44.js"></script>
+<script type="text/javascript" src="javascript/jquery.min.js"></script>
+<script type="text/javascript" src="javascript/jquery-migrate-1.1.1.js"></script>
+<script type="text/javascript" src="javascript/aws-sdk-2.1.44.js"></script>
+<script type="text/javascript" src="javascript/deps.js"></script>
+<script type="text/javascript" src="javascript/AclPage.js"></script>
+<script type="text/javascript" src="javascript/S3Browser.js"></script>
+<script type="text/javascript" src="javascript/S3BrowserUtil.js"></script>
+<script type="text/javascript" src="javascript/S3Template.js"></script>
+<script type="text/javascript" src="javascript/S3TemplateEngine.js"></script>
+<script type="text/javascript" src="javascript/ConfigPage.js"></script>
+<script type="text/javascript" src="javascript/ContextMenu.js"></script>
+<script type="text/javascript" src="javascript/DirectoryPage.js"></script>
+<script type="text/javascript" src="javascript/FileRow.js"></script>
+<script type="text/javascript" src="javascript/ModalWindow.js"></script>
+<script type="text/javascript" src="javascript/ObjectInfoPage.js"></script>
+<script type="text/javascript" src="javascript/PropertiesPage.js"></script>
+<script type="text/javascript" src="javascript/SharePage.js"></script>
+<script type="text/javascript" src="javascript/VersionsPage.js"></script>
+<script type="text/javascript">
+    function getHashParameterByName( name ) {
+        var match = new RegExp( '[#&]' + name + '=([^&]*)' ).exec( window.location.hash );
+        return match && decodeURIComponent( match[1].replace( /\+/g, ' ' ) );
+    }
+
+    $( document ).ready( function() {
+
+        // pull credentials from hash string if present (hash string is *not* sent over the wire)
+        var uid = getHashParameterByName( "uid" );
+        var secret = getHashParameterByName( "secret" );
+        var endpoint = getHashParameterByName( "endpoint" );
+
+        browser = new S3Browser( {
+            uid: uid,
+            secret: secret,
+            endpoint: endpoint,
+            location: "/"
+        }, $( '.main-content' ) );
+        console.trace();
+        console.log(browser);
+        // account for the scrollbar (must be dynamic to support Lion's overlay scrollbars)
+        var sbWidth = jQuery.scrollbarWidth();
+        if ( sbWidth ) $.cssRule( '.s3HeaderSpacer', 'width', sbWidth + 'px' );
+
+        // make toolbar size dynamic (top of file list is absolute in the CSS)
+        sizeToolBar();
+        $( window ).resize( function() {
+            sizeToolBar();
+        } );
+    } );
+
+    function sizeToolBar() {
+        var toolBarHeight = $( '.s3ToolBar' ).height();
+        $( '.s3FileList' ).css( {top: (toolBarHeight + 34) + 'px'} );
+    }
+
+    function flatModeClick() {
+
+    	browser.useFlatMode();
+        $( '#s3FlatMode' ).hide();
+        $( '#s3HierarchicalMode' ).show();
+    }
+    function hierarchicalModeClick() {
+   browser.useHierarchicalMode();
+        $( '#s3HierarchicalMode' ).hide();
+        $( '#s3FlatMode' ).show();
+        removeFilterClick();
+    }
+
+    function showAboutPage() {
+        var $about = $( '#s3AboutPage' );
+
+        // populate browser release version
+        $about.find( '.s3AboutVersion' ).text( S3Browser.version );
+
+        // populate S3 service version
+       // $about.find( '.s3-version' ).text( browser.s3Info.version );
+
+        // populate S3 service features
+        for ( var feature in browser.s3Info ) {
+            if ( !browser.s3Info[feature] ) continue;
+            $about.find( '.feature-' + feature ).removeClass( 'disabledFeature' );
+        }
+        $about.show()
+    }
+</script>
+
+<script id="template.s3.main" type="text/html">
+    <div unselectable="on" class="s3Browser">
+        <div class="s3TitleBar">
+            <span class="s3Title">File Manager</span>
+            <span class="s3XButton" onclick="showAboutPage()">?</span>
+            <span class="s3XButton configGear" onclick="browser.showConfig()">&#x2699;</span>
+        </div>
+        <div class="s3ToolBar">
+            <div class="s3ButtonBar">
+                <input class="s3LocationField" type="text"/>
+
+                <span class="s3Button s3GoButton" title="Go">Go</span>
+                <span class="s3Button s3UpButton" title="Go to the parent directory">Up</span>
+                <span class="s3Button s3CreateButton s3NamespaceButton" title="Create directory">Create</span>
+            </div>
+
+
+            <div id="s3HierarchicalMode" class="apiLink" onclick="hierarchicalModeClick()" style="display:none;">Switch to Hierarchical Mode</div>
+
+            <div id="s3FlatMode" class="apiLink" onclick="flatModeClick()">Switch to flat Mode</div>
+
+
+
+            <div class="s3ButtonBar">
+                <span class="s3UploadContainer">
+                    <span class="s3Button s3UploadButton" title="Upload files">Upload</span>
+                    <form><input type="file" name="upload" multiple="multiple" class="s3UploadField"
+                                 title="Select files to upload"/></form>
+                </span>
+                <span class="s3Button s3OpenButton" title="Open selected item(s)">Open</span>
+                <span class="s3Button s3DownloadButton" title="Download selected item(s)">Download</span>
+                <span class="s3Button s3DeleteButton" title="Delete selected item(s)">Delete</span>
+                <span class="s3Button s3RenameButton s3NamespaceButton"
+                      title="Rename selected item">Rename</span>
+                <span class="s3Button s3MoveButton s3NamespaceButton" title="Move selected item(s)">Move</span>
+                <span class="s3Button s3ShareButton" title="Share selected item with other people">Share</span>
+                <span class="s3Button s3PropertiesButton" title="Properties of selected item">Properties</span>
+                <span class="s3Button s3AclButton" title="ACL of selected item">ACL</span>
+                <!-- <span class="s3Button s3InfoButton" title="Storage information of selected item">Info</span>-->
+                <!--<span class="s3Button s3VersionsButton" title="Snapshots of selected object">Snapshots</span>-->
+                <span class="s3Button s3FilterButton s3NamespaceButton" title="Filter results">Filter</span>
+                <span class="s3FilterContainer hidden">
+                    <input type="text" class="s3FilterField"/>
+                    <span class="s3Button s3DisableFilterButton" title="Remove filter">X</span>
+                </span>
+            </div>
+        </div>
+        <div class="s3FileList">
+            <div class="head">
+                <table class="table">
+                    <tr class="row">
+                        <th class="cell s3Icon">&nbsp;</th>
+                        <th data-sort-class="s3FileName" class="cell s3FileName">Name</th>
+                        <th data-sort-class="s3FileSize" class="cell s3FileSize">Size</th>
+                        <th data-sort-class="s3FileDate" class="cell s3FileDate">Date</th>
+                        <th class="cell s3HeaderSpacer"></th>
+                    </tr>
+                </table>
+            </div>
+            <div class="body s3DropTarget">
+                <table class="table s3FileListTable">
+                </table>
+            </div>
+        </div>
+        <div class="s3StatusMessage">Loading...</div>
+    </div>
+</script>
+<script id="template.s3.modalBackground" type="text/html">
+    <div unselectable="on" class="s3ModalBackground"></div>
+</script>
+<script id="template.s3.modalWindow" type="text/html">
+    <div class="s3ModalWindow">
+        <div class="s3TitleBar">
+            <span class="s3Title">%{title}</span>
+            <span class="s3XButton">x</span>
+        </div>
+        <div class="s3ModalWindowContent"></div>
+    </div>
+</script>
+<script id="template.s3.configPage" type="text/html">
+    <div class="s3ConfigPage">
+        <div class="s3TableWrapper">
+            <span class="s3TableTitle">Credentials</span>
+            <span class="s3Button s3AddButton" title="Add a UID">Add</span>
+            <table class="table s3UidTable">
+            </table>
+        </div>
+        <div class="s3ButtonBar">
+            <span class="s3Button s3CloseButton" title="Close">Close</span>
+        </div>
+    </div>
+</script>
+<script id="template.s3.uidRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3Uid">%{token.uid}</td>
+        <td class="hidden s3Secret">%{token.secret}</td>
+        <td class="cell s3Endpoint">%{token.endpoint}</td>
+        <td class="s3ButtonCell cell">
+            <span class="s3Button s3LoginButton" title="Login with this UID">Login</span>
+        </td>
+        <td class="s3ButtonCell cell">
+            <span class="s3Button s3DeleteButton" title="Delete this UID">Delete</span>
+        </td>
+    </tr>
+</script>
+<script id="template.s3.uidPage" type="text/html">
+    <div class="s3UidPage">
+        <table class="table">
+            <tr class="row">
+                <td class="s3Label cell">UID:</td>
+                <td class="cell"><input type="text" class="longField s3UidField"/></td>
+            </tr>
+            <tr class="row">
+                <td class="s3Label cell">Secret:</td>
+                <td class="cell"><input type="text" class="longField s3SecretField"/></td>
+            </tr>
+            <tr class="row">
+                <td class="s3Label cell">Endpoint:</td>
+                <td class="cell"><input type="text" class="longField s3EndpointField"/></td>
+            </tr>
+        </table>
+        <div class="s3ButtonBar">
+            <span class="s3Button s3TestButton" title="Test these credentials">Test</span>
+        </div>
+        <div class="s3ButtonBar">
+            <span class="s3Button s3SaveButton" title="Save">Save</span>
+            <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
+        </div>
+    </div>
+</script>
+<script id="template.s3.fileRow" type="text/html">
+    <tr class="row" draggable="true" unselectable="on">
+    </tr>
+</script>
+<script id="template.s3.fileRowContents" type="text/html">
+    <tr>
+        <td class="s3Icon cell"><span class="s3FileIcon icon"></span></td>
+        <td class="s3FileName cell"></td>
+        <td class="s3FileSize cell"></td>
+        <td data-raw-value="${entry.systemMeta.lastModified}" class="s3FileDate cell" title="D{entry.systemMeta.lastModified}">
+            D{entry.systemMeta.lastModified}
+        </td>
+    </tr>
+</script>
+<script id="template.s3.fileRowLoading" type="text/html">
+    <tr class="loading">
+        <td>Please wait...</td>
+    </tr>
+</script>
+<script id="template.s3.statusBar" type="text/html">
+    <p class="s3StatusBar"></p>
+</script>
+<script id="template.s3.directoryContextMenu" type="text/html">
+    <div unselectable="on" class="s3ContextMenu s3DirectoryContextMenu">
+        <div class="s3ContextMenuOption openOption">Open</div>
+        <div class="s3ContextMenuOption deleteOption">Delete</div>
+        <div class="s3ContextMenuOption renameOption">Rename</div>
+        <div class="s3ContextMenuOption moveOption">Move</div>
+        <div class="s3ContextMenuOption propertiesOption">Properties</div>
+        <div class="s3ContextMenuOption aclOption">ACL</div>
+    </div>
+</script>
+<script id="template.s3.tagContextMenu" type="text/html">
+    <div unselectable="on" class="s3ContextMenu s3TagContextMenu">
+        <div class="s3ContextMenuOption openOption">Open</div>
+    </div>
+</script>
+<script id="template.s3.fileContextMenu" type="text/html">
+    <div unselectable="on" class="s3ContextMenu s3FileContextMenu">
+        <div class="s3ContextMenuOption openOption">Open</div>
+        <div class="s3ContextMenuOption downloadOption">Download</div>
+        <div class="s3ContextMenuOption deleteOption">Delete</div>
+        <div class="s3ContextMenuOption renameOption">Rename</div>
+        <div class="s3ContextMenuOption moveOption">Move</div>
+        <div class="s3ContextMenuOption shareOption">Share</div>
+        <div class="s3ContextMenuOption propertiesOption">Properties</div>
+        <div class="s3ContextMenuOption aclOption">ACL</div>
+        <div class="s3ContextMenuOption infoOption">Info</div>
+        <div class="s3ContextMenuOption versionsOption">Snapshots</div>
+    </div>
+</script>
+<script id="template.s3.propertiesPage" type="text/html">
+    <div class="s3PropertiesPage">
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3SaveButton" title="Save">Save</span>
+            <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
+        </div>
+        <div class="s3TableWrapper">
+            <span class="s3TableTitle">User Metadata</span>
+            <span class="s3Button s3AddUserMetadataButton" title="Add a tag">Add</span>
+            <table class="table s3UserMetadataTable">
+            </table>
+        </div>
+     <!--  <div class="s3TableWrapper">
+            <span class="s3TableTitle">Listable Metadata</span>
+            <span class="s3Button s3AddListableMetadataButton" title="Add a tag">Add</span>
+            <table class="table s3ListableMetadataTable">
+            </table>
+        </div>-->
+        <div class="s3TableWrapper">
+            <span class="s3TableTitle">System Metadata</span>
+            <table class="table s3SystemMetadataTable">
+            </table>
+        </div>
+    </div>
+</script>
+<script id="template.s3.editablePropertyRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3PropertyName">%{name}</td>
+        <td class="cell"><input type="text" class="s3PropertyValue" value="${value}"/></td>
+        <td class="s3ButtonCell cell">
+            <span class="s3Button s3DeleteButton" title="Delete this tag">Delete</span>
+        </td>
+    </tr>
+</script>
+<script id="template.s3.readonlyPropertyRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3PropertyName">%{name}</td>
+        <td class="cell s3PropertyValue">${value}</td>
+    </tr>
+</script>
+<script id="template.s3.sharePage" type="text/html">
+    <div class="s3SharePage">
+        <div unselectable="on" class="s3ShareExpirationWrapper">
+            <span class="s3Label">How long will this URL remain active?</span>
+            <input type="text" class="s3ExpirationCount" value="1"/>
+            <select class="s3ExpirationUnit">
+                <option>Hours</option>
+                <option>Days</option>
+                <option>Months</option>
+                <option selected="selected">Years</option>
+            </select>
+        </div>
+        <div class="s3TokenFeature hidden">
+            <div unselectable="on">
+                <span class="s3Label">How many times can this URL be used?</span>
+                <input type="text" class="s3DownloadCount"/>
+                <span>(blank for unlimited)</span>
+            </div>
+            <div class="s3TableWrapper">
+                <span class="s3TableTitle">Restrict access to the following IPs:</span>
+                <span class="s3Button s3AddAllowButton" title="Add an IP">Add</span>
+                <table class="table s3AllowTable">
+                </table>
+            </div>
+            <div class="s3TableWrapper">
+                <span class="s3TableTitle">Deny access from the following IPs:</span>
+                <span class="s3Button s3AddDenyButton" title="Add an IP">Add</span>
+                <table class="table s3DenyTable">
+                </table>
+            </div>
+            <div class="s3TableCaption">
+                Specify IP addresses in the format &lt;address&gt;/&lt;mask&gt; (i.e. 1.2.3.4/24)
+            </div>
+        </div>
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3GenerateButton" title="Generate shareable URL">Generate</span>
+        </div>
+        <div class="s3ShareInstructions">Once generated, copy the URL below and share it with other people. Remember
+            that this URL is public. Anyone you share it with can access this item without authenticating (confined to
+            the restrictions above).
+        </div>
+        <div class="s3ShareUrl"></div>
+    </div>
+</script>
+<script id="template.s3.ipRow" type="text/html">
+    <tr class="row">
+        <td class="cell"><input type="text" class="longField s3IpSubnet"/></td>
+        <td class="s3ButtonCell cell">
+            <span class="s3Button s3DeleteButton" title="Delete this tag">Delete</span>
+        </td>
+    </tr>
+</script>
+<script id="template.s3.aclPage" type="text/html">
+    <div class="s3AclPage">
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3SaveButton" title="Save">Save</span>
+            <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
+        </div>
+        <div class="s3TableWrapper">
+            <span class="s3TableTitle">User ACLs</span>
+            <span class="s3Button s3AddUserAclButton" title="Give a user access">Add</span>
+            <table class="table">
+                <tr class="row">
+                    <th class="cell s3AclName s3AclNameHeader">User Name</th>
+                    <th class="cell s3AclFC s3AclFCHeader">Full</th>
+                    <th class="cell s3AclWRITE s3AclWRITENameHeader">Write</th>
+                    <th class="cell s3AclREAD s3AclREADNameHeader">Read</th>
+                    <th class="cell s3AclNONE s3AclNONENameHeader">None</th>
+                </tr>
+            </table>
+            <form>
+                <table class="table s3AclTable s3UserAclTable">
+                </table>
+            </form>
+        </div>
+        <div class="s3TableCaption">
+            To remove a user, select "None" for their permission level
+        </div>
+        <div class="s3TableWrapper">
+            <div class="s3TableTitle">Group ACLs</div>
+            <table class="table">
+                <tr class="row">
+                    <th class="cell s3AclName s3AclNameHeader">Group Name</th>
+                    <th class="cell s3AclFC s3AclFCHeader">Full</th>
+                    <th class="cell s3AclWRITE s3AclWRITENameHeader">Write</th>
+                    <th class="cell s3AclREAD s3AclREADNameHeader">Read</th>
+                    <th class="cell s3AclNONE s3AclNONENameHeader">None</th>
+                </tr>
+            </table>
+            <form>
+                <table class="table s3AclTable s3GroupAclTable">
+                    <tr class="row">
+                        <td class="cell s3AclName">other</td>
+                        <td class="cell s3AclFC">
+                            <input type="radio" name="group" value="FULL_CONTROL" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclWRITE">
+                            <input type="radio" name="group" value="WRITE" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclREAD">
+                            <input type="radio" name="group" value="READ" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclNONE">
+                            <input type="radio" name="group" value="NONE" class="s3AclValue"/>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+</script>
+<script id="template.s3.aclRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3AclName">%{name}</td>
+        <td class="cell s3AclFC">
+            <input type="radio" name="%{name}" value="FULL_CONTROL" class="s3AclValue"/>
+        </td>
+        <td class="cell s3AclWRITE">
+            <input type="radio" name="%{name}" value="WRITE" class="s3AclValue"/>
+        </td>
+        <td class="cell s3AclREAD">
+            <input type="radio" name="%{name}" value="READ" class="s3AclValue"/>
+        </td>
+        <td class="cell s3AclNONE">
+            <input type="radio" name="%{name}" value="NONE" class="s3AclValue"/>
+        </td>
+    </tr>
+</script>
+<script id="template.s3.objectInfoPage" type="text/html">
+    <div class="s3ObjectInfoPage">
+        <div class="s3TableWrapper">
+            <table class="table">
+                <tr class="row">
+                    <td class="cell s3PropertyName">Object Id</td>
+                    <td class="cell s3PropertyValue">%{objectInfo.objectId}</td>
+                </tr>
+                <tr class="row">
+                    <td class="cell s3PropertyName">Read Selection</td>
+                    <td class="cell s3PropertyValue">${objectInfo.selection}</td>
+                </tr>
+                <tr class="row">
+                    <td class="cell s3PropertyName">Expiration Enabled</td>
+                    <td class="cell s3PropertyValue">%{objectInfo.expirationEnabled}</td>
+                </tr>
+                <tr class="row">
+                    <td class="cell s3PropertyName">Expiration Time</td>
+                    <td class="cell s3PropertyValue">${objectInfo.expirationEndsAt}</td>
+                </tr>
+                <tr class="row">
+                    <td class="cell s3PropertyName">Retention Enabled</td>
+                    <td class="cell s3PropertyValue">%{objectInfo.retentionEnabled}</td>
+                </tr>
+                <tr class="row">
+                    <td class="cell s3PropertyName">Retention End Time</td>
+                    <td class="cell s3PropertyValue">${objectInfo.retentionEndsAt}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="s3ReplicaList">
+        </div>
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3CloseButton" title="Close">Close</span>
+        </div>
+    </div>
+</script>
+<script id="template.s3.objectInfoReplica" type="text/html">
+    <div class="s3TableWrapper s3ObjectInfoReplica">
+        <span class="s3TableTitle">Replica</span>
+        <table class="table">
+            <tr class="row">
+                <td class="cell s3PropertyName">Replica ID</td>
+                <td class="cell s3PropertyValue">%{replica.id}</td>
+            </tr>
+            <tr class="row">
+                <td class="cell s3PropertyName">Location</td>
+                <td class="cell s3PropertyValue">%{replica.location}</td>
+            </tr>
+            <tr class="row">
+                <td class="cell s3PropertyName">Type</td>
+                <td class="cell s3PropertyValue">%{replica.replicaType}</td>
+            </tr>
+            <tr class="row">
+                <td class="cell s3PropertyName">Current</td>
+                <td class="cell s3PropertyValue">%{replica.current}</td>
+            </tr>
+            <tr class="row">
+                <td class="cell s3PropertyName">Storage Type</td>
+                <td class="cell s3PropertyValue">%{replica.storageType}</td>
+            </tr>
+        </table>
+    </div>
+</script>
+<script id="template.s3.directoryPage" type="text/html">
+    <div unselectable="on" class="s3DirectoryPage">
+        <div class="s3ButtonBar">
+            <span class="s3DirectoryDisplay"></span>
+            <span class="s3Button s3UpButton" title="Up">Up</span>
+            <span class="s3Button s3CreateButton" title="Create">Create</span>
+        </div>
+        <div class="s3DirectoryListContainer">
+            <ul class="s3DirectoryList"></ul>
+        </div>
+        <div class="s3SelectedDisplay"></div>
+        <div class="s3ButtonBar">
+            <span class="s3Button s3SelectButton" title="Select">Select</span>
+            <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
+        </div>
+    </div>
+</script>
+<script id="template.s3.directoryItem" type="text/html">
+    <li class="s3DirectoryItem">%{name}</li>
+</script>
+<script id="template.s3.versionsPage" type="text/html">
+    <div class="s3VersionsPage">
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3CreateButton" title="Create">Create Snapshot</span>
+        </div>
+        <div class="s3TableWrapper">
+            <form>
+                <table class="table s3VersionTable">
+                </table>
+            </form>
+        </div>
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3CloseButton" title="Close">Close</span>
+        </div>
+    </div>
+</script>
+<script id="template.s3.versionRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3VersionDate">D{version.dateCreated}</td>
+        <td class="s3ButtonCell cell">
+            <div class="s3Button s3DownloadButton" title="Download this snapshot">Download</div>
+        </td>
+        <td class="s3ButtonCell cell">
+            <div class="s3Button s3RestoreButton" title="Restore this snapshot">Restore</div>
+        </td>
+        <td class="s3ButtonCell cell">
+            <div class="s3Button s3DeleteButton" title="Delete this snapshot">Delete</div>
+        </td>
+    </tr>
+</script>
+
+</head>
+<body>
+
+<div class="main-content">
+</div>
+
+<div id="s3AboutPage" onclick="$(this).hide()">
+    <span class="s3AboutTitle">S3 HTML5 Browser v<span class="s3AboutVersion"></span></span><br/>
+    <br/>
+    Connected to S3 v<span class="s3-version"></span> with the following features:
+    <br/>
+    <ul class="featureList">
+        <li class="feature-object disabledFeature">Object API</li>
+        <li class="feature-namespace disabledFeature">Namespace API</li>
+        <li class="feature-keyvalue disabledFeature">Key-Pool API</li>
+        <li class="feature-utf8 disabledFeature">UTF-8 Extended Character Support</li>
+        <li class="feature-browsercompat disabledFeature">Browser Compatibility</li>
+        <li class="feature-versioning disabledFeature">Object Snapshots</li>
+    </ul>
+    <br/>
+    <a href="http://code.google.com/p/s3-js/wiki/HTML5App" target="_blank">Website</a>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <a href="#" onclick="$('#s3License').show(); return false;">License</a>
+</div>
+
+<div id="s3License" onclick="$(this).hide()">
+    Copyright (c) 2011-2013, EMC Corporation<br/>
+    <br/>
+    All rights reserved.<br/>
+    <br/>
+    Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+    following conditions are met:
+    <ul>
+        <li>Redistributions of source code must retain the above copyright notice, this list of conditions and the
+            following disclaimer.
+        </li>
+        <li>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+            following disclaimer in the documentation and/or other materials provided with the distribution.
+        </li>
+        <li>Neither the name of the EMC Corporation nor the names of its contributors may be used to endorse or promote
+            products derived from this software without specific prior written permission.
+        </li>
+    </ul>
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</div>
+
+</body>
+</html>
