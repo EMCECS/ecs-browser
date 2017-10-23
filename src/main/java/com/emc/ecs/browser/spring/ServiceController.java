@@ -67,7 +67,7 @@ public class ServiceController {
 
     public static final String SERVLET_PATH = "/service/";
 
-    @RequestMapping(value = { "*", "**/*" }, method = RequestMethod.POST, produces="application/json", consumes="*/*")
+    @RequestMapping(value = "**", method = RequestMethod.POST, produces="application/json", consumes="*/*")
     public ResponseEntity<?> postService(HttpServletRequest request) throws Exception {
         System.err.println(">>>> hit! <<<<");
         HttpMethod method = getMethod(request);
