@@ -105,18 +105,18 @@ function getErrorMessage( code ) {
   }
 };
 
-function makeMetaData( theMap ) {
+function makeMetaData( data ) {
   var metaData = {};
-  if (theMap) {
-    for (var key in theMap) {
-      if (theMap.hasOwnProperty(key)) {
+  if (data && data.headers) {
+    for (var key in data.headers) {
+      if (data.headers.hasOwnProperty(key)) {
         if (!key.toLowerCase().startsWith(_metadataStart)) {
-          metaData[ keyProcessor(key) ] = theMap[key];
+          metaData[ keyProcessor(key) ] = data.headers[key];
         } else {
           if (!metaData.Metadata) {
             metaData.Metadata = {};
           }
-          metaData.Metadata[ key.substring(_metadataStart.length) ] = theMap[key];
+          metaData.Metadata[ key.substring(_metadataStart.length) ] = data.headers[key];
         }
       }
     }
@@ -126,11 +126,15 @@ function makeMetaData( theMap ) {
 
 function keyProcessor( key ) {
   var processedKey = '';
+  var afterGap = false;
   for (var i = 0, keyLength = key.length; i < keyLength; ++i) {
     var theCharacter = key[i];
     if (characterBetweenInclusive(theCharacter, 'a', 'z') ||
         characterBetweenInclusive(theCharacter, 'A', 'Z') || 
         characterBetweenInclusive(theCharacter, '0', '9')) {
+      if (processedKey === '') {
+        theCharacter = theCharacter.toLowerCase();
+      }
       processedKey = processedKey + theCharacter;
     }
   }
@@ -158,7 +162,7 @@ EcsS3.prototype.headBucket = function( bucketParams, callback ) {
     var apiUrl = this.getBucketApiUrl(bucketParams);
     var headers = this.getHeaders('HEAD');
     var processData = function( data ) {
-        var metaData = makeMetaData(data.response_headers);
+        var metaData = makeMetaData(data);
         metaData.type = FileRow.ENTRY_TYPE.BUCKET;
         return metaData;
     };
@@ -176,7 +180,7 @@ EcsS3.prototype.headObject = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
     var headers = this.getHeaders('HEAD');
     var processData = function( data ) {
-        var metaData = makeMetaData(data.response_headers);
+        var metaData = makeMetaData(data);
         metaData.type = FileRow.ENTRY_TYPE.REGULAR;
         return metaData;
     };

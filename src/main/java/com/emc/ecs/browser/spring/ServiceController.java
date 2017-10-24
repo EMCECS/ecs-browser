@@ -159,18 +159,7 @@ public class ServiceController {
 
         RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
         RestTemplate client = new RestTemplate();
-        ResponseEntity<?> bareResponse = client.exchange(requestEntity, responseClass);
-        System.err.println("Bare response: " + new ObjectMapper().writeValueAsString(bareResponse));
-        System.err.println("Has body: " + bareResponse.hasBody());
-        System.err.println("Has non-null body: " + (bareResponse.getBody() != null));
-        if (bareResponse.hasBody()) {
-            return ResponseEntity.ok(bareResponse);
-        } else {
-            EmptyResponseEntity emptyResponse = new EmptyResponseEntity(bareResponse);
-            bareResponse = ResponseEntity.ok(emptyResponse);
-            System.err.println("Empty response: " + new ObjectMapper().writeValueAsString(bareResponse));
-            return bareResponse;
-        }
+        return ResponseEntity.ok(client.exchange(requestEntity, responseClass));
     } 
 
     /**
