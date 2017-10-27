@@ -52,6 +52,10 @@ function handleData( data, callback, dataProcessor ) {
 };
 
 function handleError ( callback, data, errorThrown, textStatus ) {
+  if (!data.status) {
+    data.statusText = "Server not running";
+    data.status = "REJECTED";
+  }
   callback( { statusCode: data.status, errorThrown: errorThrown, message: data.statusText }, null );
 };
 
