@@ -65,15 +65,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @RequestMapping(ServiceController.SERVLET_PATH)
 public class ServiceController {
 
-    public static final String SERVLET_PATH = "/service/";
+    protected static final String SERVLET_PATH = "/service";
 
-    @RequestMapping(value = "**", method = RequestMethod.POST, produces="application/json", consumes="*/*")
-    public ResponseEntity<?> postService(HttpServletRequest request) throws Exception {
-        System.err.println(">>>> hit! <<<<");
+    private static final String PROXY_SUBPATH = "/proxy/";
+
+    private static final String PROXY_PATH = SERVLET_PATH + PROXY_SUBPATH;
+
+    @RequestMapping(value = PROXY_SUBPATH + "**", method = RequestMethod.POST, produces="application/json", consumes="*/*")
+    public ResponseEntity<?> postProxy(HttpServletRequest request) throws Exception {
         HttpMethod method = getMethod(request);
 
         String resource = request.getRequestURI();
-        resource = resource.substring(resource.indexOf(SERVLET_PATH) + SERVLET_PATH.length() - 1);
+        resource = resource.substring(resource.indexOf(PROXY_PATH) + PROXY_PATH.length() - 1);
 
         Map<String, String> parameters = RestUtil.getQueryParameterMap(request.getQueryString());
 
