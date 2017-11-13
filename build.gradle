@@ -12,9 +12,11 @@ buildscript {
 
     repositories {
         mavenCentral()
+        jcenter { url "https://jcenter.bintray.com/" }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath 'com.smokejumperit.gradle.license:Gradle-License-Report:0.0.2'
     }
 }
 
@@ -22,6 +24,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'spring-boot'
+apply plugin: 'license-report'
 
 defaultTasks 'build'
 
@@ -29,6 +32,9 @@ jar {
     baseName = 'ecs-browser'
     version =  '0.9.0'
 }
+
+processResources.dependsOn 'dependencyLicenseReport'
+dependencyLicenseReport.dependsOn 'compileJava'
 
 repositories {
     mavenCentral()
