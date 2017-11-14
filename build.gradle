@@ -31,10 +31,12 @@ defaultTasks 'build'
 jar {
     baseName = 'ecs-browser'
     version =  '0.9.0'
+    into('META-INF/dependency-license') {
+        from 'build/reports/dependency-license'
+    }
 }
 
-processResources.dependsOn 'dependencyLicenseReport'
-dependencyLicenseReport.dependsOn 'compileJava'
+jar.dependsOn 'dependencyLicenseReport'
 
 repositories {
     mavenCentral()
