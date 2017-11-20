@@ -67,16 +67,25 @@ public class ServiceController {
 
     protected static final String SERVLET_PATH = "/service";
 
-    private static final String PROXY_SUBPATH = "/proxy/";
+    private static final String PROXY_SUBPATH = "/proxy";
 
     private static final String PROXY_PATH = SERVLET_PATH + PROXY_SUBPATH;
 
-    @RequestMapping(value = PROXY_SUBPATH + "**", method = RequestMethod.POST, produces="application/json", consumes="*/*")
+    @RequestMapping(value = PROXY_SUBPATH + "/**", method = RequestMethod.POST, produces="application/json", consumes="*/*")
     public ResponseEntity<?> postProxy(HttpServletRequest request) throws Exception {
         HttpMethod method = getMethod(request);
 
         String resource = request.getRequestURI();
-        resource = resource.substring(resource.indexOf(PROXY_PATH) + PROXY_PATH.length() - 1);
+        System.out.println("Resource: " + resource);
+        resource = resource.substring(resource.indexOf(PROXY_PATH) + PROXY_PATH.length());
+        if (!resource.startsWith("/")) {
+            resource = "/" + resource;
+        } else  {
+            while (resource.startsWith("//")) {
+                resource = resource.substring(1);
+            }
+        }
+        System.out.println("Resource 2: " + resource);
 
         Map<String, String> parameters = RestUtil.getQueryParameterMap(request.getQueryString());
 
@@ -158,7 +167,12 @@ public class ServiceController {
         if (StringUtil.isNotBlank(queryString)) {
             resource = resource + "?" + queryString;
         }
-        resource = request.getHeader("X-Passthrough-Endpoint") + resource;
+        String endpoint = request.getHeader("X-Passthrough-Endpoint");
+        while (endpoint.endsWith("/")) {
+            endpoint = endpoint.substring(0,  endpoint.length() - 1);
+        }
+        resource = endpoint + resource;
+        System.out.println("Final resource: " + resource);
 
         RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
         RestTemplate client = new RestTemplate();

@@ -22,19 +22,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-//@Configuration
+@Configuration
 @Controller
-//@EnableAutoConfiguration
-//@ComponentScan
+@EnableAutoConfiguration
+@ComponentScan
 public class StaticController {
 
     private static final Logger log = LoggerFactory.getLogger(StaticController.class);
 
-
     @RequestMapping("/")
     public String index() {
         log.info("Returning index");
-        return "index.html";
+        return "index";
     }
 
     @RequestMapping("/raw")

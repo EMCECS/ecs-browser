@@ -269,6 +269,8 @@ S3BrowserUtil.prototype.parentDirectory = function(path) {
     return path.substr(0, lastSlashIndex);
 };
 
+ListOptions=function(a,b,c,d,e){this.limit=a;this.token=b;this.includeMeta=c;this.userMetaTags=d;this.systemMetaTags=e};
+
 S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
     var win = window;
     var util = this;
