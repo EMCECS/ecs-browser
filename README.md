@@ -16,9 +16,12 @@ To build this application, just go to the code root folder and run the command `
 RUN
 --------------
 
-To start the application, just go to the code root folder and run the command `java -jar build/libs/ecs-browser-<version>.jar`.
+To start the application, just go to the code root folder and run the following command.
+````
+java -jar build/libs/ecs-browser-<version>.jar
+````
 
-The application is then available `http://localhost:8080`.
+The application is then available at [http://localhost:8080](http://localhost:8080).
 
 LICENSING
 --------------
