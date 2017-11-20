@@ -1,38 +1,24 @@
 ECS API Browser
 ==============
 
-[![wercker status](https://app.wercker.com/status/5ea6589e95e1aa62a999e918754fb7d8/m "wercker status")](https://app.wercker.com/project/bykey/5ea6589e95e1aa62a999e918754fb7d8)
-
 OVERVIEW
 --------------
 
-ECS API Browser is a web application developped in Golang and leveraging AngularJS
+ECS API Browser is a web application developed in Java and leveraging AngularJS
 
-The goals of ECS Browser are to:
-
-- demonstrate some nice S3 features (versioning, lifecycle policy, …) and several unique ECS capabilities using either the S3, Swift or Atmos API (byte range, retentions, metadata search, …)
-- simplify the usage of the S3, Swift, Atmos and ECS Management API
-- provide a simple UI for the ECS metadata search features
-- provide a simple UI to get metering information from ECS
+The goal of the ECS Browser is to simplify the usage of the ECS S3 API, including features that aren't available in AWS S3 These include namespaces, byte range updates, and metadata search.
 
 BUILD
 --------------
 
-The Dockerfile can be used to create a Docker container for this web application.
-
-Just run the following command in the folder that contains the Dockerfile: docker build -t ecs-browser .
+To build this application, just go to the code root folder and run the command `./gradlew`.
 
 RUN
 --------------
 
-You can optionally set environment variables (*USER*, *PASSWORD* and *ENDPOINT*) to let the application using the ECS management API to provide some additional features (like displaying the *Replication Groups* available when creating a bucket).
+To start the application, just go to the code root folder and run the command `java -jar build/libs/ecs-browser-<version>.jar`.
 
-To start the application, run:
-```
-docker run -d -p 80:80 djannot/ecs-browser
-```
-
-The application is now available on port 80.
+The application is then available `http://localhost:8080`.
 
 LICENSING
 --------------
