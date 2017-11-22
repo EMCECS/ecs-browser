@@ -519,7 +519,7 @@ S3BrowserUtil.prototype.getSystemMetadata = function(id, callback) {
     var key = splits.splice(1, splits.length).join('/');
     this.showStatus('Retrieving system metadata...');
     var params={Bucket:bucketName,Key:key};
-    util.s3.headObject(params,function(err,data){
+    util.s3.headAnything(params,function(err,data){
         util.hideStatus('Retrieving system metadata...');
         if(err != null){
             if(err.statusCode==404){
@@ -539,7 +539,7 @@ S3BrowserUtil.prototype.getUserMetadata = function(entry,location, callback) {
     var path=location.split("/");
     var bucketName=path[1];
     var params={Bucket:bucketName,Key:entry.prefixKey};
-    util.s3.headObject(params,function(err,data){
+    util.s3.headAnything(params,function(err,data){
         util.hideStatus('Retrieving system metadata...');
         if(err != null){
             alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
@@ -639,7 +639,7 @@ S3BrowserUtil.prototype.moveObject=function(existingPath, newPath, callback) {
     var newPath1=updatedPath.splice(2, updatedPath.length).join('/');
     var params={Bucket:bucketName,Key:newPath1};
     console.trace();
-    var file=util.s3.headObject(params,function(err,data) {
+    var file=util.s3.headAnything(params,function(err,data) {
         util.hideStatus('Checking for existing object...');
         if(err != null){
             if(err.statusCode==404){
@@ -720,7 +720,7 @@ S3BrowserUtil.prototype.renameObject = function(existingPath, newPath, callback)
     var bucketName=updatedPath[1];
     var newPath1=updatedPath.splice(2, updatedPath.length).join('/');
     var params={Bucket:bucketName,Key:newPath1};
-    var file=util.s3.headObject(params,function(err,data){
+    var file=util.s3.headAnything(params,function(err,data){
         util.hideStatus('Checking for existing object...');
         if(err != null){
             if(err.statusCode==404){

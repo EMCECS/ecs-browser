@@ -156,18 +156,16 @@ ConfigPage.prototype.showUidPage = function() {
     var page = this;
     if ( $testButton.length > 0 ) $testButton[0].onclick = function() {
         var s3 = new EcsS3({endpoint: $endpoint.val(), accessKeyId: $uid.val(),secretAccessKey:  $secret.val(), s3ForcePathStyle: true});
-        var params={Bucket:'haha'};
-        
-        s3.headBucket(params,function(err,data){
+        var params={Bucket: '',Key:'/haha'};
+        s3.headAnything(params,function(err,data){
             if(err){
-                alert( page.templates.get( 'uidFailurePrompt' ).render() );
-            } else {
-                if(data.code==404){
+                if (err.statusCode==404) {
                     alert( page.templates.get( 'uidSuccessPrompt' ).render() );
-                }else{
+                } else {
                     alert( page.templates.get( 'uidFailurePrompt' ).render() );
                 }
-                
+            } else {
+                alert( page.templates.get( 'uidFailurePrompt' ).render() );
             }
         });
 

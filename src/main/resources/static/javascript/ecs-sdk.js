@@ -49,6 +49,9 @@ function handleError ( callback, data, errorThrown, textStatus ) {
   if (!data.status) {
     data.statusText = "Server not running";
     data.status = "REJECTED";
+  } else if ((data.status == 500) && (data.responseText.search(" 404 ") > 0)) {
+    data.status = 404;
+    data.statusText = getErrorMessage(404);
   }
   callback( { statusCode: data.status, errorThrown: errorThrown, message: data.statusText }, null );
 };
@@ -156,25 +159,7 @@ EcsS3 = function( s3Params ) {
     this.configuration = s3Params;
 };
 
-EcsS3.prototype.headBucket = function( bucketParams, callback ) {
-    var apiUrl = this.getBucketApiUrl(bucketParams);
-    var headers = this.getHeaders('HEAD');
-    var processData = function( data ) {
-        var metaData = makeMetaData(data);
-        metaData.type = FileRow.ENTRY_TYPE.BUCKET;
-        return metaData;
-    };
-    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
-        success: function(data, textStatus, jqHXR) {
-            handleData( data, callback, processData );
-        },
-        error: function(jqHXR, textStatus, errorThrown) {
-            handleError( callback,  jqHXR, errorThrown, textStatus );
-        },
-    });
-};
-
-EcsS3.prototype.headObject = function( objectParams, callback ) {
+EcsS3.prototype.headAnything = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
     var headers = this.getHeaders('HEAD');
     var processData = function( data ) {
