@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -76,7 +77,6 @@ public class ServiceController {
         HttpMethod method = getMethod(request);
 
         String resource = request.getRequestURI();
-        System.out.println("Resource: " + resource);
         resource = resource.substring(resource.indexOf(PROXY_PATH) + PROXY_PATH.length());
         if (!resource.startsWith("/")) {
             resource = "/" + resource;
@@ -85,7 +85,6 @@ public class ServiceController {
                 resource = resource.substring(1);
             }
         }
-        System.out.println("Resource 2: " + resource);
 
         Map<String, String> parameters = RestUtil.getQueryParameterMap(request.getQueryString());
 
@@ -172,11 +171,16 @@ public class ServiceController {
             endpoint = endpoint.substring(0,  endpoint.length() - 1);
         }
         resource = endpoint + resource;
-        System.out.println("Final resource: " + resource);
 
         RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
         RestTemplate client = new RestTemplate();
-        return ResponseEntity.ok(client.exchange(requestEntity, responseClass));
+        Object dataToReturn = null;
+        try {
+            dataToReturn = client.exchange(requestEntity, responseClass);
+        } catch (HttpClientErrorException e) {
+            dataToReturn = new ErrorData(e); // handle and display on the other end
+        }
+        return ResponseEntity.ok(dataToReturn);
     } 
 
     /**
@@ -251,32 +255,39 @@ public class ServiceController {
         return ((list != null) && (list.size() > 0));
     }
 
-    private static final class EmptyResponseEntity {
+    private static class ErrorData {
 
-        private final HttpHeaders headers;
-
-        private final HttpStatus statusCode;
+        final public int statusCode;
+        final public String statusText;
+        final public String message;
+        final public String responseBody;
 
         /**
-         * @param bareResponse
+         * @param e
          */
-        public EmptyResponseEntity(ResponseEntity<?> bareResponse) {
-            headers = bareResponse.getHeaders();
-            statusCode = bareResponse.getStatusCode().is2xxSuccessful() ? HttpStatus.NO_CONTENT : bareResponse.getStatusCode();
-            System.err.println(getStatusCode().toString());
+        public ErrorData(HttpClientErrorException e) {
+            statusCode = e.getStatusCode().value();
+            statusText = e.getStatusText();
+            message = e.getMessage();
+            responseBody = e.getResponseBodyAsString();
         }
 
-        public String getBody() {
-            return "";
-        }
-
-        public HttpHeaders getHeaders() {
-            return headers;
-        }
-
-        public HttpStatus getStatusCode() {
+        public int getStatusCode() {
             return statusCode;
         }
 
+        public String getStatusText() {
+            return statusText;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public String getResponseBody() {
+            return responseBody;
+        }
+
     }
+
 }

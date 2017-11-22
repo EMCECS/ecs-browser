@@ -163,6 +163,9 @@ EcsS3.prototype.headAnything = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
     var headers = this.getHeaders('HEAD');
     var processData = function( data ) {
+        if (!data.headers) {
+          return data;
+        }
         var metaData = makeMetaData(data);
         metaData.type = FileRow.ENTRY_TYPE.REGULAR;
         return metaData;
