@@ -33,7 +33,7 @@ public class StaticController {
     @RequestMapping("/")
     public String index() {
         log.info("Returning index");
-        return "index";
+        return "index.html";
     }
 
     @RequestMapping("/raw")

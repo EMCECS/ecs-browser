@@ -49,9 +49,6 @@ function handleError ( callback, data, errorThrown, textStatus ) {
   if (!data.status) {
     data.statusText = "Server not running";
     data.status = "REJECTED";
-  } else if ((data.status == 500) && (data.responseText.search(" 404 ") > 0)) {
-    data.status = 404;
-    data.statusText = getErrorMessage(404);
   }
   callback( { statusCode: data.status, errorThrown: errorThrown, message: data.statusText }, null );
 };
