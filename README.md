@@ -21,7 +21,10 @@ To start the application, just go to the code root folder and run the following 
 java -jar build/libs/ecs-browser-<version>.jar
 ````
 
-The application is then available at [http://localhost:8080](http://localhost:8080).
+The application is then available at [http://localhost:8080](http://localhost:8080). The credentials page will then prompt you for the information needed to connect to your ECS.
+* `UID` - this is your S3 access key.
+* `Secret` - this is your S3 secret key.
+* `Endpoint` - ths is the full data endpoint including protocol and port, e.g., `https://object.ecstestdrive.com:443`, or `http://1.2.3.4:9020`.
 
 LICENSING
 --------------
