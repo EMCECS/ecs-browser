@@ -319,7 +319,7 @@ EcsS3.prototype.getHeaders = function( passthroughMethod ) {
 };
 
 EcsS3.prototype.getSystemApiUrl = function() {
-    return 'http://localhost:8080/service/proxy';
+    return window.location.protocol + '//' + window.location.host + '/service/proxy';
 };
 
 EcsS3.prototype.getBucketApiUrl = function( params ) {
