@@ -119,6 +119,9 @@ S3Browser.prototype._init = function() {
   };
   if ( this.$renameButton.length > 0 ) this.$renameButton[0].onclick = function() {
     fileRow = browser.singleSelectedRow();
+    if ( !browser._checkNoDirectories( browser.getSelectedRows() ) ) {
+        return;
+      }
     if ( fileRow ) browser.renameEntry( fileRow.entry );
   };
   if ( this.$moveButton.length > 0 ) this.$moveButton[0].onclick = function() {
@@ -370,6 +373,10 @@ S3Browser.prototype.shareEntry = function( entry ) {
 S3Browser.prototype.moveSelectedItems = function() {
   var fileRows = this.getSelectedRows();
   if ( fileRows.length == 0 ) this.util.error( this.templates.get( 'nothingSelectedError' ).render() );
+  if ( !this._checkNoDirectories( fileRows ) ) {
+    return;
+  }
+
   var browser = this;
   new DirectoryPage( this.util, this.currentLocation, this.templates, function( path ) {
     if ( !path || path == browser.currentLocation ) return;

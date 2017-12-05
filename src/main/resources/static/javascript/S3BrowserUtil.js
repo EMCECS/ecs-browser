@@ -722,38 +722,36 @@ S3BrowserUtil.prototype.renameObject = function(existingPath, newPath, callback)
     var params={Bucket:bucketName,Key:newPath1};
     var file=util.s3.headAnything(params,function(err,data){
         util.hideStatus('Checking for existing object...');
-        if(err != null){
-            if(err.statusCode==404){
-                var newParams={Bucket:bucketName,CopySource:bucketName+"/"+existingPath,Key:newPath1};
-                util.s3.copyObject(newParams,function(err,data){
-                    if(err != null){
-                        if(err.statusCode==403){
-                            alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                        }else{
-                            alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
-                        }
-                        console.log(err);
+        if( err != null ){
+            console.log(err);
+        } else if (data.statusCode == 404) {
+            var newParams={Bucket:bucketName,CopySource:bucketName+"/"+existingPath,Key:newPath1};
+            util.s3.copyObject(newParams,function(err,data){
+                if(err != null){
+                    if(err.statusCode==403){
+                        alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
                     }else{
-                        var deleteParams={Bucket:bucketName,Key:existingPath};
-                        util.s3.deleteObject(deleteParams,function(err,data){
-                            if(err != null){
-                                if(err.statusCode==403){
-                                    alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                                }else{
-                                    alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
-                                }
-                                console.log(err);
-                            }else{
-                                util.hideStatus('Renaming object...');
-                                callback();
-                            }
-                        });
+                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
                     }
-                });
-            }else{
-                console.log(err);
-            }
-        }else{
+                    console.log(err);
+                }else{
+                    var deleteParams={Bucket:bucketName,Key:existingPath};
+                    util.s3.deleteObject(deleteParams,function(err,data){
+                        if(err != null){
+                            if(err.statusCode==403){
+                                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
+                            }else{
+                                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                            }
+                            console.log(err);
+                        }else{
+                            util.hideStatus('Renaming object...');
+                            callback();
+                        }
+                    });
+                }
+            });
+         } else {
             overwrite = confirm(util.templates.get('itemExistsPrompt').render({
                 name : newPath
             }));

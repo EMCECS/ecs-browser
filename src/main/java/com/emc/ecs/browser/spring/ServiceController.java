@@ -14,10 +14,8 @@
  */
 package com.emc.ecs.browser.spring;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -29,17 +27,10 @@ import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 
 import org.eclipse.jetty.util.StringUtil;
-import org.springframework.boot.autoconfigure.web.HttpMessageConverters;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.ByteArrayHttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,16 +38,14 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-import org.springframework.web.servlet.HandlerMapping;
 
 import com.emc.object.s3.S3Config;
 import com.emc.object.s3.S3SignerV2;
 import com.emc.object.s3.bean.AccessControlList;
-import com.emc.object.s3.bean.CopyObjectResult;
 import com.emc.object.s3.bean.ListBucketsResult;
 import com.emc.object.s3.bean.ListObjectsResult;
+import com.emc.object.s3.bean.SlimCopyObjectResult;
 import com.emc.object.util.RestUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author seibed
@@ -148,7 +137,7 @@ public class ServiceController {
                 if (firstSlash < 0) { // no object name exists
                     responseClass = ListObjectsResult.class;
                 } else if (copySource) {
-                    responseClass = CopyObjectResult.class;
+                    responseClass = SlimCopyObjectResult.class;
                 }
             }
         }
