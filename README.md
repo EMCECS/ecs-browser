@@ -16,12 +16,17 @@ To build this application, just go to the code root folder and run the command `
 RUN
 --------------
 
-To start the application, just go to the code root folder and run the following command.
+To start the application after building, just go to the code root folder and run the following command.
 ````
 java -jar build/libs/ecs-browser-<version>.jar
 ````
 
-The application is then available at [http://localhost:8080](http://localhost:8080). The credentials page will then prompt you for the information needed to connect to your ECS.
+On a linux or Mac, you can also start the application after building using the following bash shell command from the code root folder. If you specify the optional debug port, the application can be debugged using socket attach to that port.
+````
+./run <version> [<debug_port>]
+````
+
+The application is then available at [http://localhost:8080](http://localhost:8080). The credentials page will prompt you for the information needed to connect to your ECS.
 * `UID` - this is your S3 access key.
 * `Secret` - this is your S3 secret key.
 * `Endpoint` - ths is the full data endpoint including protocol and port, e.g., `https://object.ecstestdrive.com:443`, or `http://1.2.3.4:9020`.
