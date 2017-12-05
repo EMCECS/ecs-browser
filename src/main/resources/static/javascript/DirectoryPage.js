@@ -56,7 +56,7 @@ DirectoryPage.prototype.goTo = function( path ) {
         page.$list.empty();
         for ( var i = 0; i < contents.length; i++ ) {
            
-            if ( page.util.isDirectory(contents[i].type ) ) {
+            if ( page.util.isListable(contents[i].type ) ) {
                 page.addDirectory( contents[i].name );
             }
         }

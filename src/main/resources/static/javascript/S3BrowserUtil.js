@@ -641,63 +641,61 @@ S3BrowserUtil.prototype.moveObject=function(existingPath, newPath, callback) {
     console.trace();
     var file=util.s3.headAnything(params,function(err,data) {
         util.hideStatus('Checking for existing object...');
-        if(err != null){
-            if(err.statusCode==404){
-                var newParams={Bucket:bucketName,CopySource:existingPath,Key:newPath1};
-                util.s3.copyObject(newParams,function(err,data){
-                    if(err != null){
-                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
-                        console.log(err);
-                    } else{
-                        var deletePath=existingPath.split("/");
-                        var deleteBucketName=deletePath[0];
-                        var detectPath=deletePath.splice(1, deletePath.length).join('/');
-                        var deleteParams={Bucket:deleteBucketName,Key:detectPath};
-                        util.s3.deleteObject(deleteParams,function(err,data){
-                            if(err != null){
-                                if(err.statusCode==403){
-                                    alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                                }else{
-                                    alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
-                                }
-                                console.log(err);
-                            }else{
-                                util.hideStatus('Renaming object...');
-                                callback();
+        if ( err != null ) {
+            console.log(err);
+        } else if (data.statusCode == 404) {
+            var newParams={Bucket:bucketName,CopySource:existingPath,Key:newPath1};
+            util.s3.copyObject(newParams,function(err,data){
+                if (err != null) {
+                    alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                    console.log(err);
+                } else {
+                    var deletePath=existingPath.split("/");
+                    var deleteBucketName=deletePath[0];
+                    var detectPath=deletePath.splice(1, deletePath.length).join('/');
+                    var deleteParams={Bucket:deleteBucketName,Key:detectPath};
+                    util.s3.deleteObject(deleteParams,function(err,data){
+                        if (err != null) {
+                            if (err.statusCode==403) {
+                                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
+                            } else {
+                                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
                             }
-                        });
-                    }
-                });
-            } else{
-                console.log(err);
-            }
-        } else{
+                            console.log(err);
+                        } else {
+                            util.hideStatus('Renaming object...');
+                            callback();
+                        }
+                    });
+                }
+            });
+        } else {
             overwrite = confirm(util.templates.get('itemExistsPrompt').render({
                 name : newPath
             }));
-            if (!overwrite){
+            if (!overwrite) {
                 util.hideStatus('Renaming object...');
                 return;
-            } else{
+            } else {
                 util.hideStatus('Renaming object...');
-                if(existingPath==newPath1){
+                if (existingPath==newPath1) {
                     alert("Source and target are the same file");
-                } else{
+                } else {
                     var newParams={Bucket:bucketName,CopySource:existingPath,Key:newPath1};
                     util.s3.copyObject(newParams,function(err,data){
                         if(err != null) {
                             alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
                             console.log(err);
-                        }else{
+                        } else {
                             var deletePath=existingPath.split("/");
                             var deleteBucketName=deletePath[0];
                             var detectPath=deletePath.splice(1, deletePath.length).join('/');
                             var deleteParams={Bucket:deleteBucketName,Key:detectPath};
                             util.s3.deleteObject(deleteParams,function(err,data){
-                                if(err != null){
+                                if (err != null) {
                                     alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
                                     console.log(err);
-                                } else{
+                                } else {
                                     util.hideStatus('Renaming object...');
                                     callback();
                                 }
