@@ -589,7 +589,27 @@ S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, compl
     var splits = newpath.split("/");
     var bucketName = splits[0];
     var prefix = splits.splice(1, splits.length).join('/');
-    var params={Bucket:bucketName,Key:prefix + key,Body:data};
+    var headers = {};
+    if ( !bucketName ) {
+        var addMetadataSearch = confirm(util.templates.get('addMetadataSearchPrompt').render({
+            name : key.substring(0, key.length - 1)
+        }));
+        if ( addMetadataSearch ) {
+          var key1 = 'x-amz-meta-key1';
+          var type1 = 'string';
+          var firstItem;
+          if ( key1 ) {
+            firstItem = key1;
+            if ( type1 ) {
+              firstItem = firstItem + ';' + type1;
+            }
+          }
+          if ( firstItem ) {
+            headers['X-emc-metadata-search'] = firstItem;
+          }
+        }
+    }
+    var params={Bucket:bucketName,Key:prefix + key,Body:data,Headers:headers};
     util.s3.putObject(params,function(err,data){
     if(err != null){
         if (err.status==403) {

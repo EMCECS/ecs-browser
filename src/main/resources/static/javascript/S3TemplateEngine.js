@@ -72,6 +72,7 @@ S3TemplateEngine.HTML_TEMPLATES = [
 S3TemplateEngine.MESSAGE_TEMPLATES = {
     functionNotSupportedError: 'This function is not currently supported',
     newDirectoryNamePrompt: 'What would you like to name the new directory?',
+    addMetadataSearchPrompt: 'Would you like to enable metadata search for the bucket %{name}?',
     validNameError: '%{name} is not a valid name.\nNote: the characters "?" and "@" cannot be used in a name.',
     validPathError: "%{path} is not a valid path",
     nothingSelectedError: "Please select an item first",

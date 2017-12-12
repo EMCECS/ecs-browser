@@ -248,7 +248,11 @@ EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
 EcsS3.prototype.putObject = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
     var headers = this.getHeaders('PUT');
-    
+    if (objectParams.Headers) {
+      for (var key in objectParams.Headers) {
+        headers[key] = objectParams.Headers[key];
+      }
+    }
     var data = objectParams.Body ? objectParams.Body : '';
     var contentType = objectParams.Body ? data.type : 'application/octet-stream';
     if (!isNonEmptyString(contentType)) {
