@@ -1,9 +1,9 @@
-<div class="panel panel-primary"  ng-if="menu=='s3-extensions' && main.s3extensions.response['code'] > 0">
+<div class="panel panel-primary"  ng-if="menu=='s3-extensions' && main.s3extensions.response['status'] > 0">
   <div class="panel-heading">Response</div>
   <div class="modal-body">
     <h2>Response code</h2>
     <h3>
-      <span class="label label-default" ng-bind-html="main.s3extensions.response['code']"></span>
+      <span class="label label-default" ng-bind-html="main.s3extensions.response['status']"></span>
     </h3>
     <h2>Response headers</h2>
     <table class="table">

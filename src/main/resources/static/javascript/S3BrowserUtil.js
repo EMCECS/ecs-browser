@@ -300,7 +300,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                             callback(entries);
                         }
                     }else{
-                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                         util.s3Error(result);
                         callback(null);
                     }
@@ -337,7 +337,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                         }
                         callback(entries);
                     }else{
-                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                         util.s3Error(result);
                         callback(null);
                     }
@@ -369,7 +369,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                             callback(entries);
                         }
                     }else{
-                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                         util.s3Error(result);
                         callback(null);
                     }
@@ -434,7 +434,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                         }
                         callback(entries);
                     }else{
-                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                         util.s3Error(result);
                         callback(null);
                     }
@@ -466,7 +466,7 @@ S3BrowserUtil.prototype.getAcl = function(id,location, callback) {
         var params={Bucket:bucketName,Key:id};
         util.s3.getObjectAcl(params,function(err,data){
             if(err != null){
-                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                 util.s3Error(err);
             } else{
                 util.hideStatus('Retrieving ACL...');
@@ -499,10 +499,10 @@ S3BrowserUtil.prototype.setAcl = function(id, acl, callback) {
     this.s3.putObjectAcl(params, function(err,result) {
         util.hideStatus('Setting ACL...');
         if (err != null) {
-            if(err.statusCode==403){
+            if(err.status==403){
                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
             }else{
-                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
             callback();
         }else{
@@ -522,10 +522,10 @@ S3BrowserUtil.prototype.getSystemMetadata = function(id, callback) {
     util.s3.headAnything(params,function(err,data){
         util.hideStatus('Retrieving system metadata...');
         if(err != null){
-            if(err.statusCode==404){
+            if(err.status==404){
                 callback(null);
             } else{
-                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                 util.s3Error(result);
             }
         }else{
@@ -542,7 +542,7 @@ S3BrowserUtil.prototype.getUserMetadata = function(entry,location, callback) {
     util.s3.headAnything(params,function(err,data){
         util.hideStatus('Retrieving system metadata...');
         if(err != null){
-            alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+            alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             util.s3Error(err);
         }else{
             if(data.Metadata!=null){
@@ -570,10 +570,10 @@ S3BrowserUtil.prototype.setUserMetadata = function(id, userMeta, callback) {
     this.s3.copyObject(params,function(err,data){
         util.hideStatus('Saving metadata...');
         if (err != null) {
-            if(err.statusCode==403){
+            if(err.status==403){
                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
             }else{
-                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
             callback();
         }else{
@@ -592,10 +592,10 @@ S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, compl
     var params={Bucket:bucketName,Key:prefix + key,Body:data};
     util.s3.putObject(params,function(err,data){
     if(err != null){
-        if (err.statusCode==403) {
+        if (err.status==403) {
             alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
         } else {
-            alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+            alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
         }
         completeCallback(false);
         util.hideStatus('Creating object...');
@@ -622,7 +622,7 @@ S3BrowserUtil.prototype.overwriteObject = function(id, form, data, mimeType, com
             if (result.successful) {
                 completeCallback(true);
             }else{
-                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                 util.s3Error(result);
                 completeCallback(false);
             }
@@ -641,13 +641,13 @@ S3BrowserUtil.prototype.moveObject=function(existingPath, newPath, callback) {
     console.trace();
     var file=util.s3.headAnything(params,function(err,data) {
         util.hideStatus('Checking for existing object...');
-        if ( err != null ) {
+        if ( ( err != null ) && ( err.status != 404 ) ) {
             console.log(err);
-        } else if (data.statusCode == 404) {
+        } else if ( err.status == 404 ) {
             var newParams={Bucket:bucketName,CopySource:existingPath,Key:newPath1};
             util.s3.copyObject(newParams,function(err,data){
                 if (err != null) {
-                    alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                    alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                     console.log(err);
                 } else {
                     var deletePath=existingPath.split("/");
@@ -655,11 +655,11 @@ S3BrowserUtil.prototype.moveObject=function(existingPath, newPath, callback) {
                     var detectPath=deletePath.splice(1, deletePath.length).join('/');
                     var deleteParams={Bucket:deleteBucketName,Key:detectPath};
                     util.s3.deleteObject(deleteParams,function(err,data){
-                        if (err != null) {
-                            if (err.statusCode==403) {
+                        if ( err != null ) {
+                            if ( err.status==403 ) {
                                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
                             } else {
-                                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                             }
                             console.log(err);
                         } else {
@@ -684,7 +684,7 @@ S3BrowserUtil.prototype.moveObject=function(existingPath, newPath, callback) {
                     var newParams={Bucket:bucketName,CopySource:existingPath,Key:newPath1};
                     util.s3.copyObject(newParams,function(err,data){
                         if(err != null) {
-                            alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                            alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                             console.log(err);
                         } else {
                             var deletePath=existingPath.split("/");
@@ -693,7 +693,7 @@ S3BrowserUtil.prototype.moveObject=function(existingPath, newPath, callback) {
                             var deleteParams={Bucket:deleteBucketName,Key:detectPath};
                             util.s3.deleteObject(deleteParams,function(err,data){
                                 if (err != null) {
-                                    alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                                    alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                                     console.log(err);
                                 } else {
                                     util.hideStatus('Renaming object...');
@@ -720,26 +720,26 @@ S3BrowserUtil.prototype.renameObject = function(existingPath, newPath, callback)
     var params={Bucket:bucketName,Key:newPath1};
     var file=util.s3.headAnything(params,function(err,data){
         util.hideStatus('Checking for existing object...');
-        if( err != null ){
+        if( ( err != null ) && ( err.status != 404 )  ){
             console.log(err);
-        } else if (data.statusCode == 404) {
+        } else if ( err.status == 404 ) {
             var newParams={Bucket:bucketName,CopySource:bucketName+"/"+existingPath,Key:newPath1};
             util.s3.copyObject(newParams,function(err,data){
                 if(err != null){
-                    if(err.statusCode==403){
+                    if ( err.status==403 ) {
                         alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                    }else{
-                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                    } else {
+                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                     }
                     console.log(err);
                 }else{
                     var deleteParams={Bucket:bucketName,Key:existingPath};
                     util.s3.deleteObject(deleteParams,function(err,data){
                         if(err != null){
-                            if(err.statusCode==403){
+                            if(err.status==403){
                                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
                             }else{
-                                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                             }
                             console.log(err);
                         }else{
@@ -764,20 +764,20 @@ S3BrowserUtil.prototype.renameObject = function(existingPath, newPath, callback)
                     var newParams={Bucket:bucketName,CopySource:bucketName+"/"+existingPath,Key:newPath1};
                     util.s3.copyObject(newParams,function(err,data){
                         if(err != null){
-                            if(err.statusCode==403){
+                            if(err.status==403){
                                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
                             }else{
-                                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                             }
                             console.log(err);
                         }else{
                             var deleteParams={Bucket:bucketName,Key:existingPath};
                             util.s3.deleteObject(deleteParams,function(err,data){
                                 if(err != null){
-                                    if(err.statusCode==403){
+                                    if(err.status==403){
                                         alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
                                     }else{
-                                        alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                                     }
                                     console.log(err);
                                 }else{
@@ -806,10 +806,10 @@ S3BrowserUtil.prototype.deleteObject = function(id, currentLocation, callback) {
     util.s3.deleteObject(params,function(err,data){
         util.hideStatus('Deleting object...');
         if(err!=null){
-            if(err.statusCode==403){
+            if(err.status==403){
                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
             }else{
-                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
             //util.s3Error(err);
         }else{
@@ -844,10 +844,10 @@ S3BrowserUtil.prototype.listVersions = function(id, currentLocation, callback) {
     util.s3.listObjectVersions(params,function(err,data){
         util.showStatus('Listing versions...');
         if(err!=null){
-            if(err.statusCode==403){
+            if(err.status==403){
                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
             }else{
-                alert(util.templates.get('errorMessage').render({statusCode:err.statusCode,message:err.message}));
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
             //util.s3Error(err);
         }else{

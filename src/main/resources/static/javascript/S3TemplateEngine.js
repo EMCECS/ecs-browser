@@ -107,7 +107,7 @@ S3TemplateEngine.MESSAGE_TEMPLATES = {
     objectInfoPageTitle: 'Storage info for %{name}',
     directoryPageTitle: 'Select target directory',
     versionsPageTitle: 'Snapshots of %{name}',
-    errorMessage:'Error Occured with status Code %{statusCode} and message %{message}',
+    errorMessage:'Error Occured with status Code %{status} and message %{message}',
 
     's3Error.403': 'You are not authorized to perform this action',
     's3Error.404': 'The item you\'ve requested cannot be found',

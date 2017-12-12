@@ -158,7 +158,7 @@ ConfigPage.prototype.showUidPage = function() {
         var s3 = new EcsS3({endpoint: $endpoint.val(), accessKeyId: $uid.val(),secretAccessKey:  $secret.val(), s3ForcePathStyle: true});
         var params={Bucket: '',Key:'/haha'};
         s3.headAnything(params,function(err,data){
-            if((!err) && (data.statusCode == 404)) {
+            if( err && ( err.status == 404 ) ) {
                 alert( page.templates.get( 'uidSuccessPrompt' ).render() );
             } else {
                 alert( page.templates.get( 'uidFailurePrompt' ).render() );

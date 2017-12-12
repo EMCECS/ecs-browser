@@ -35,7 +35,7 @@ function combineWithSlash( part1, part2 ) {
 };
 
 function handleData( data, callback, dataProcessor ) {
-  if ((!data.code) || (( data.code >= 200 ) && ( data.code < 300 ))) {
+  if ( data.status && ( ( data.status >= 200 ) && ( data.status < 300 ) ) ) {
     if (dataProcessor) {
       data = dataProcessor( data );
     }
@@ -46,57 +46,59 @@ function handleData( data, callback, dataProcessor ) {
 };
 
 function handleError ( callback, data, errorThrown, textStatus ) {
-  if (!data.status) {
-    data.statusText = "Server not running";
-    data.status = "REJECTED";
+  if ( !data.status ) {
+    data = {
+      status: 418,
+      statusText: "No server found"
+    };
   }
-  callback( { statusCode: data.status, errorThrown: errorThrown, message: data.statusText }, null );
+  callback( { status: data.status, errorThrown: errorThrown, message: data.statusText }, null );
 };
 
 var _metadataStart = 'x-amz-meta-';
 
-function getErrorMessage( code ) {
-  if (( code >= 200 ) && ( code < 300 )) {
+function getErrorMessage( status ) {
+  if ( ( status >= 200 ) && ( status < 300 ) ) {
     return "Success!";
-  } else if ( code == 400 ) {
+  } else if ( status == 400 ) {
     return "Bad Request";
-  } else if ( code == 401 ) {
+  } else if ( status == 401 ) {
     return "Unauthorized";
-  } else if ( code == 402 ) {
+  } else if ( status == 402 ) {
     return "Payment Required";
-  } else if ( code == 403 ) {
+  } else if ( status == 403 ) {
     return "Forbidden";
-  } else if ( code == 404 ) {
+  } else if ( status == 404 ) {
     return "Not Found";
-  } else if ( code == 405 ) {
+  } else if ( status == 405 ) {
     return "Method Not Allowed";
-  } else if ( code == 406 ) {
+  } else if ( status == 406 ) {
     return "Not Acceptable";
-  } else if ( code == 407 ) {
+  } else if ( status == 407 ) {
     return "Proxy Authentication Required";
-  } else if ( code == 408 ) {
+  } else if ( status == 408 ) {
     return "Request Timeout";
-  } else if ( code == 409 ) {
+  } else if ( status == 409 ) {
     return "Conflict";
-  } else if ( code == 410 ) {
+  } else if ( status == 410 ) {
     return "Gone";
-  } else if ( code == 413 ) {
+  } else if ( status == 413 ) {
     return "Payload Too Large";
-  } else if ( code == 500 ) {
+  } else if ( status == 500 ) {
     return "Internal Server Error";
-  } else if ( code == 501 ) {
+  } else if ( status == 501 ) {
     return "Not Implemented";
-  } else if ( code == 502 ) {
+  } else if ( status == 502 ) {
     return "Bad Gateway";
-  } else if ( code == 503 ) {
+  } else if ( status == 503 ) {
     return "Service Unavailable";
-  } else if ( code == 504 ) {
+  } else if ( status == 504 ) {
     return "Gateway Timeout";
-  } else if ( code == 505 ) {
+  } else if ( status == 505 ) {
     return "HTTP Version Not Supported";
-  } else if ( code == 507 ) {
+  } else if ( status == 507 ) {
     return "Insufficient Storage";
-  } else if ( code == 511 ) {
+  } else if ( status == 511 ) {
     return "Network Authentication Required";
   } else {
     return "Failure";

@@ -165,11 +165,11 @@ public class ServiceController {
         RestTemplate client = new RestTemplate();
         Object dataToReturn = null;
         try {
-            dataToReturn = client.exchange(requestEntity, responseClass);
+            dataToReturn = new WrappedResponseEntity( client.exchange(requestEntity, responseClass) );
         } catch (HttpClientErrorException e) {
             dataToReturn = new ErrorData(e); // handle and display on the other end
         }
-        return ResponseEntity.ok(dataToReturn);
+        return ResponseEntity.ok( dataToReturn );
     } 
 
     /**
@@ -246,7 +246,7 @@ public class ServiceController {
 
     private static class ErrorData {
 
-        final public int statusCode;
+        final public int status;
         final public String statusText;
         final public String message;
         final public String responseBody;
@@ -255,14 +255,14 @@ public class ServiceController {
          * @param e
          */
         public ErrorData(HttpClientErrorException e) {
-            statusCode = e.getStatusCode().value();
+            status = e.getStatusCode().value();
             statusText = e.getStatusText();
             message = e.getMessage();
             responseBody = e.getResponseBodyAsString();
         }
 
-        public int getStatusCode() {
-            return statusCode;
+        public int getStatus() {
+            return status;
         }
 
         public String getStatusText() {
