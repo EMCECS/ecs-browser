@@ -116,35 +116,21 @@ S3BrowserUtil.prototype.updateServiceInfo = function(serviceInfo) {
     this.s3.s3Config.utf8Support = serviceInfo.utf8;
 };
 
-S3BrowserUtil.prototype.createBucketOrDirectory = function(parentDirectory, callback) {
-    var name = this.prompt('newDirectoryNamePrompt', {}, this.validName, 'validNameError');
-    if (name == null || name.length == 0)
-        return;
-    var directoryObjectName = this.endWithSlash(name);
-    var path = parentDirectory + directoryObjectName;
+S3BrowserUtil.prototype.createBucketOrDirectory = function(directoryObjectName, functionUpdateGui, currentLocation, functionAddProperties) {
     var util = this;
-    this.showStatus('Checking for existing object...');
-    util.getSystemMetadata(path, function(result) {
-        util.hideStatus('Checking for existing object...');
-        if (result) {
-            alert(util.templates.get('itemExistsError').render({
-                name : path
-            }));
-            return;
+    util.showStatus('Creating bucket or directory...');
+    functionAddProperties(
+        function(headers) {
+            util.createObject(directoryObjectName, null, null, null,
+                function(result) {
+                    util.hideStatus('Creating bucket or directory...');
+                    if (result) {
+                        functionUpdateGui();
+                    }
+                }, null, currentLocation, headers);
         }
-        util.showStatus('Creating bucket or directory...');
-        util.createObject(directoryObjectName, null, null, null,
-            function(result) {
-                util.hideStatus('Creating bucket or directory...');
-                if (result) {
-                    callback(name);
-                }else{
-                    util.s3Error(result);
-                    callback(null);
-                }
-            }, null, parentDirectory);
-    });
-};
+    );
+}
 
 S3BrowserUtil.prototype.showStatus = function(message) {
     if (this.$statusMessage) {
@@ -582,33 +568,13 @@ S3BrowserUtil.prototype.setUserMetadata = function(id, userMeta, callback) {
     });
 };
 
-S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, completeCallback, progressCallback, currentLocation) {
+S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, completeCallback, progressCallback, currentLocation, headers) {
     var util = this;
     this.showStatus('Creating object...');
     var newpath = currentLocation.substring(1, currentLocation.length);
     var splits = newpath.split("/");
     var bucketName = splits[0];
     var prefix = splits.splice(1, splits.length).join('/');
-    var headers = {};
-    if ( !bucketName ) {
-        var addMetadataSearch = confirm(util.templates.get('addMetadataSearchPrompt').render({
-            name : key.substring(0, key.length - 1)
-        }));
-        if ( addMetadataSearch ) {
-          var key1 = 'x-amz-meta-key1';
-          var type1 = 'string';
-          var firstItem;
-          if ( key1 ) {
-            firstItem = key1;
-            if ( type1 ) {
-              firstItem = firstItem + ';' + type1;
-            }
-          }
-          if ( firstItem ) {
-            headers['X-emc-metadata-search'] = firstItem;
-          }
-        }
-    }
     var params={Bucket:bucketName,Key:prefix + key,Body:data,Headers:headers};
     util.s3.putObject(params,function(err,data){
     if(err != null){
@@ -924,6 +890,24 @@ S3BrowserUtil.prototype.getFileName = function(path) {
         return name.substr(1);
     }
     return path;
+};
+
+S3BrowserUtil.prototype.addKey = function( keys, newKey, newType, isUserMetadata ) {
+  if ( newKey ) {
+    if ( keys ) {
+      keys = keys + ',';
+    } else {
+      keys = '';
+    }
+    if ( isUserMetadata ) {
+      keys = keys + 'x-amz-meta-';
+    }
+    keys = keys + newKey;
+    if ( newType ) {
+      keys = keys + ';' + newType;
+    }
+  }
+  return keys;
 };
 
 S3BrowserUtil.prototype.downloadFile = function(id, index, downloadName) {

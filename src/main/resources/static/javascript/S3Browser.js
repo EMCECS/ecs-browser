@@ -247,18 +247,60 @@ S3Browser.prototype.showConfig = function( init ) {
 };
 
 S3Browser.prototype.createBucketOrDirectory = function() {
-  var browser = this;
-  var fileType = (this.currentLocation === '/') ? FileRow.ENTRY_TYPE.BUCKET : FileRow.ENTRY_TYPE.DIRECTORY;
-  this.util.createBucketOrDirectory( this.currentLocation, function( name ) {
-    var path = browser.util.endWithSlash( browser.currentLocation + name );
-    var fileRow = browser.addRow( { id: path, name: name, type: fileType } );
-    browser.$fileTable.append( fileRow.$root );
-  } );
+    var browser = this;
+    var name = browser.util.prompt('newDirectoryNamePrompt', {}, browser.util.validName, 'validNameError');
+    if ( ( name == null ) || ( name.length == 0 ) ) {
+        return;
+    }
+    var directoryObjectName = browser.util.endWithSlash( name );
+    var path = browser.currentLocation + directoryObjectName;
+    var fileType = ( browser.currentLocation === '/' ) ? FileRow.ENTRY_TYPE.BUCKET : FileRow.ENTRY_TYPE.DIRECTORY;
+    browser.util.showStatus('Checking for existing object...');
+    browser.util.getSystemMetadata(path, function(result) {
+        browser.util.hideStatus('Checking for existing object...');
+        if ( result ) {
+            alert(browser.util.templates.get('itemExistsError').render({
+                name : path
+            }));
+            return;
+        }
+        var functionUpdateGui = function() {
+            var prefixKey;
+            var bucketName;
+            if ( browser.currentLocation === '/' ) {
+                prefixKey = path;
+            } else {
+                var prefixKeyStart = path.indexOf('/', 1) + 1;
+                prefixKey = path.substring(prefixKeyStart);
+                bucketName = path.substring(1, prefixKeyStart - 1);
+            }
+            var fileRow = browser.addRow( { bucket: bucketName, id: path, name: name, type: fileType, prefixKey: prefixKey } );
+            browser.$fileTable.append( fileRow.$root );
+        }
+        var functionAddProperties = function( createObjectCallback ) {
+            var headers = {};
+            if ( browser.currentLocation == '/' ) {
+                var addMetadataSearch = confirm(browser.util.templates.get('addMetadataSearchPrompt').render({
+                    name : name
+                }));
+                if ( addMetadataSearch ) {
+                    var keys = '';
+                    keys = browser.util.addKey( keys, 'LastModified' );
+                    keys = browser.util.addKey( keys, 'Size' );
+                    keys = browser.util.addKey( keys, 'key1', 'string', true );
+                    if ( keys ) {
+                      headers['X-emc-metadata-search'] = keys;
+                    }
+                }
+            }
+            createObjectCallback( headers );
+        }
+        browser.util.createBucketOrDirectory( directoryObjectName, functionUpdateGui, browser.currentLocation, functionAddProperties );
+    });
 };
 
-S3Browser.getCurrentLocation=function(){
-
-  return browser.currentLocation;
+S3Browser.getCurrentLocation = function() {
+    return browser.currentLocation;
 }
 
 S3Browser.prototype.list = function( id ) {
