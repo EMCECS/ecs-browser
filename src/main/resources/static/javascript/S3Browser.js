@@ -278,22 +278,11 @@ S3Browser.prototype.createBucketOrDirectory = function() {
             browser.$fileTable.append( fileRow.$root );
         }
         var functionAddProperties = function( createObjectCallback ) {
-            var headers = {};
             if ( browser.currentLocation == '/' ) {
-                var addMetadataSearch = confirm(browser.util.templates.get('addMetadataSearchPrompt').render({
-                    name : name
-                }));
-                if ( addMetadataSearch ) {
-                    var keys = '';
-                    keys = browser.util.addKey( keys, 'LastModified' );
-                    keys = browser.util.addKey( keys, 'Size' );
-                    keys = browser.util.addKey( keys, 'key1', 'string', true );
-                    if ( keys ) {
-                      headers['X-emc-metadata-search'] = keys;
-                    }
-                }
+                new BucketCreationPage( path, browser.util, browser.templates, createOjectCallback );
+            } else {
+                createObjectCallback( {} );
             }
-            createObjectCallback( headers );
         }
         browser.util.createBucketOrDirectory( directoryObjectName, functionUpdateGui, browser.currentLocation, functionAddProperties );
     });

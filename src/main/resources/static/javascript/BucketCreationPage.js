@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2017, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,51 +12,43 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-PropertiesPage = function( entry, util, templateEngine ) {
-    this.entry = entry;
+BucketCreationPage = function( name, util, templateEngine, bucketCreateFunction ) {
+    this.name = name;
     this.util = util;
     this.templates = templateEngine;
+    this.bucketCreateFunction = bucketCreateFunction;
     var requiredSelectors = [
         '.s3AddUserMetadataButton',
         '.s3UserMetadataTable',
-
         '.s3SystemMetadataTable',
         '.s3SaveButton',
         '.s3CancelButton'
     ];
     console.trace();
-    this.$root = jQuery( templateEngine.get( 'propertiesPage' ).render( {}, requiredSelectors ) );
+    this.$root = jQuery( templateEngine.get( 'bucketCreationPage' ).render( {}, requiredSelectors ) );
     var $addUserMetaButton = this.$root.find( '.s3AddUserMetadataButton' );
     this.$userMetaTable = this.$root.find( '.s3UserMetadataTable' ).empty();
     var $systemMetaTable = this.$root.find( '.s3SystemMetadataTable' ).empty();
     var $saveButton = this.$root.find( '.s3SaveButton' );
     var $cancelButton = this.$root.find( '.s3CancelButton' );
 
-    var prop;
-    for ( prop in entry.userMeta ) {
-        if ( !entry.userMeta.hasOwnProperty( prop ) ) continue;
-        this.addTag( this.$userMetaTable, prop, entry.userMeta[prop], true );
-    }
-    for ( prop in entry.systemMeta ) {
-        if ( !entry.systemMeta.hasOwnProperty( prop ) ) continue;
-        this.addTag( $systemMetaTable, prop, entry.systemMeta[prop], false );
-    }
-
-    this.modalWindow = new ModalWindow( templateEngine.get( 'propertiesPageTitle' ).render( {name: entry.name || entry.id} ), this.$root, templateEngine );
+    this.modalWindow = new ModalWindow( templateEngine.get( 'bucketCreationPageTitle' ).render( { name: name } ), this.$root, templateEngine );
 
     var page = this;
     $addUserMetaButton[0].onclick = function() {
         page.createTag();
     };
+
     $saveButton[0].onclick = function() {
         page.save();
     };
+
     $cancelButton[0].onclick = function() {
         page.modalWindow.remove();
     };
 };
 
-PropertiesPage.prototype.addTag = function( $table, name, value, editable ) {
+BucketCreationPage.prototype.addTag = function( $table, name, value, editable ) {
     var $propertyRow;
     if ( editable ) $propertyRow = jQuery( this.templates.get( 'editablePropertyRow' ).render( {name: name, value: value}, ['.s3PropertyName', 'input.s3PropertyValue', '.s3DeleteButton'] ) );
     else $propertyRow = jQuery( this.templates.get( 'readonlyPropertyRow' ).render( {name: name, value: value}, ['.s3PropertyName', '.s3PropertyValue'] ) );
@@ -66,7 +58,8 @@ PropertiesPage.prototype.addTag = function( $table, name, value, editable ) {
     };
     $table.append( $propertyRow );
 };
-PropertiesPage.prototype.createTag = function() {
+
+BucketCreationPage.prototype.createTag = function() {
     var tag = prompt( this.templates.get( 'tagPrompt' ).render(), '' );
     while ( tag != null && tag.length > 0 && !this._validTag( tag ) ) {
         tag = prompt( this.templates.get( 'tagPrompt' ).render(), tag );
@@ -75,38 +68,24 @@ PropertiesPage.prototype.createTag = function() {
         this.addTag( this.$userMetaTable, tag, '', true );
     }
 };
-PropertiesPage.prototype.save = function() {
+
+BucketCreationPage.prototype.save = function() {
     var page = this;
-
-    var meta = this._getProperties( this.$userMetaTable );
-    var allTags = Object.keys( meta );
-    var existingTags = Object.keys( page.entry.userMeta || {} );
-
-    var deletedTags = [];
-    for ( var i = 0; i < existingTags.length; i++ ) {
-        var p = existingTags[i];
-        if ( allTags.indexOf( p ) == -1 ) deletedTags.push( p );
+    var headers = {};
+    var keys = '';
+    keys = this.util.addKey( keys, 'LastModified' );
+    keys = this.util.addKey( keys, 'Size' );
+    keys = this.util.addKey( keys, 'date' );
+    keys = this.util.addKey( keys, 'contentlength' );
+    keys = this.util.addKey( keys, 'contentmd5' );
+    keys = this.util.addKey( keys, 'key1', 'string', true );
+    if ( keys ) {
+      headers['X-emc-metadata-search'] = keys;
     }
-
-    var metaSaved = false, metaDeleted = false;
-    var callComplete = function() {
-        if ( metaSaved && metaDeleted ) page.modalWindow.remove();
-    };
-    if ( allTags.length > 0 ) {
-        page.util.setUserMetadata( page.entry.prefixKey, meta, function() {
-            metaSaved = true;
-            callComplete();
-        } );
-    } else metaSaved = true;
-    if ( deletedTags.length > 0 ) {
-        page.util.setUserMetadata( page.entry.prefixKey, meta, function() {
-            metaDeleted = true;
-            callComplete();
-        } );
-    } else metaDeleted = true;
-    callComplete(); // in case there's no metadata and no deletes
+    this.bucketCreateFunction( headers );
 };
-PropertiesPage.prototype._getProperties = function( $table ) {
+
+BucketCreationPage.prototype._getProperties = function( $table ) {
     var properties = {};
     $table.find( '.row' ).each( function() {
         var $this = jQuery( this );
@@ -117,7 +96,8 @@ PropertiesPage.prototype._getProperties = function( $table ) {
     } );
     return properties;
 };
-PropertiesPage.prototype._validTag = function( tag ) {
+
+BucketCreationPage.prototype._validTag = function( tag ) {
     if ( !tag || tag.trim().length == 0 ) {
         alert( this.templates.get( 'tagEmpty' ).render() );
         return false;

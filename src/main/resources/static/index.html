@@ -83,6 +83,7 @@ Redistribution and use in source and binary forms, with or without modification,
 <script type="text/javascript" src="javascript/S3BrowserUtil.js"></script>
 <script type="text/javascript" src="javascript/S3Template.js"></script>
 <script type="text/javascript" src="javascript/S3TemplateEngine.js"></script>
+<script type="text/javascript" src="javascript/BucketCreationPage.js"></script>
 <script type="text/javascript" src="javascript/ConfigPage.js"></script>
 <script type="text/javascript" src="javascript/ContextMenu.js"></script>
 <script type="text/javascript" src="javascript/DirectoryPage.js"></script>
@@ -341,6 +342,25 @@ Redistribution and use in source and binary forms, with or without modification,
         <div class="s3ContextMenuOption versionsOption">Snapshots</div>
     </div>
 </script>
+<script id="template.s3.bucketCreationPage" type="text/html">
+    <div class="s3BucketCreationPage">
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3SaveButton" title="Save">Save</span>
+            <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
+        </div>
+        <div class="s3TableWrapper">
+            <span class="s3TableTitle">User Metadata</span>
+            <span class="s3Button s3AddUserMetadataButton" title="Add a tag">Add</span>
+            <table class="table s3UserMetadataTable">
+            </table>
+        </div>
+        <div class="s3TableWrapper">
+            <span class="s3TableTitle">System Metadata</span>
+            <table class="table s3SystemMetadataTable">
+            </table>
+        </div>
+    </div>
+</script>
 <script id="template.s3.propertiesPage" type="text/html">
     <div class="s3PropertiesPage">
         <div unselectable="on" class="s3ButtonBar">
@@ -353,12 +373,6 @@ Redistribution and use in source and binary forms, with or without modification,
             <table class="table s3UserMetadataTable">
             </table>
         </div>
-     <!--  <div class="s3TableWrapper">
-            <span class="s3TableTitle">Listable Metadata</span>
-            <span class="s3Button s3AddListableMetadataButton" title="Add a tag">Add</span>
-            <table class="table s3ListableMetadataTable">
-            </table>
-        </div>-->
         <div class="s3TableWrapper">
             <span class="s3TableTitle">System Metadata</span>
             <table class="table s3SystemMetadataTable">
