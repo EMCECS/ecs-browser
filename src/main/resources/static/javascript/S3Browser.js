@@ -279,7 +279,7 @@ S3Browser.prototype.createBucketOrDirectory = function() {
         }
         var functionAddProperties = function( createObjectCallback ) {
             if ( browser.currentLocation == '/' ) {
-                new BucketCreationPage( path, browser.util, browser.templates, createOjectCallback );
+                new BucketCreationPage( path, browser.util, browser.templates, createObjectCallback );
             } else {
                 createObjectCallback( {} );
             }

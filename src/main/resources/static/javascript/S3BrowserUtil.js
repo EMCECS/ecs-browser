@@ -119,17 +119,16 @@ S3BrowserUtil.prototype.updateServiceInfo = function(serviceInfo) {
 S3BrowserUtil.prototype.createBucketOrDirectory = function(directoryObjectName, functionUpdateGui, currentLocation, functionAddProperties) {
     var util = this;
     util.showStatus('Creating bucket or directory...');
-    functionAddProperties(
-        function(headers) {
-            util.createObject(directoryObjectName, null, null, null,
+    var createObjectCallback = function( headers ) {
+        util.createObject(directoryObjectName, null, null, null,
                 function(result) {
                     util.hideStatus('Creating bucket or directory...');
                     if (result) {
                         functionUpdateGui();
                     }
                 }, null, currentLocation, headers);
-        }
-    );
+    }
+    functionAddProperties( createObjectCallback );
 }
 
 S3BrowserUtil.prototype.showStatus = function(message) {
