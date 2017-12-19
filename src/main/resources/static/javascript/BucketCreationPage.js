@@ -73,16 +73,17 @@ BucketCreationPage.prototype.save = function() {
     var page = this;
     var headers = {};
     var keys = '';
-    keys = this.util.addKey( keys, 'LastModified' );
-    keys = this.util.addKey( keys, 'Size' );
-    keys = this.util.addKey( keys, 'date' );
-    keys = this.util.addKey( keys, 'contentlength' );
-    keys = this.util.addKey( keys, 'contentmd5' );
-    keys = this.util.addKey( keys, 'key1', 'string', true );
+    keys = page.util.addKey( keys, 'CreateTime' );
+    keys = page.util.addKey( keys, 'LastModified' );
+    keys = page.util.addKey( keys, 'ObjectName' );
+    keys = page.util.addKey( keys, 'Owner' );
+    keys = page.util.addKey( keys, 'Size' );
+//    keys = this.util.addKey( keys, 'key1', 'string', true );
     if ( keys ) {
       headers['X-emc-metadata-search'] = keys;
     }
-    this.bucketCreateFunction( headers );
+    page.modalWindow.remove();
+    page.bucketCreateFunction( headers );
 };
 
 BucketCreationPage.prototype._getProperties = function( $table ) {
