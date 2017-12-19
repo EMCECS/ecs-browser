@@ -200,8 +200,12 @@ S3BrowserUtil.prototype.futureDate = function(howMany, ofWhat) {
 
 S3BrowserUtil.prototype.validTag = function(tag) {
     // cannot be null or empty, cannot start or end with a slash
-    return !(!tag || tag.trim().length == 0 || /^\//.test(tag) || /\/$/
-            .test(tag));
+    return tag && ( tag.trim().length != 0 ) && this.validMetadataName( tag );
+};
+
+S3BrowserUtil.prototype.validMetadataName = function(name) {
+    // cannot start or end with a slash
+    return !( /^\//.test( name ) || /\/$/.test( name ) );
 };
 
 S3BrowserUtil.prototype.validPath = function(path) {
@@ -891,15 +895,12 @@ S3BrowserUtil.prototype.getFileName = function(path) {
     return path;
 };
 
-S3BrowserUtil.prototype.addKey = function( keys, newKey, newType, isUserMetadata ) {
+S3BrowserUtil.prototype.addKey = function( keys, newKey, newType ) {
   if ( newKey ) {
     if ( keys ) {
       keys = keys + ',';
     } else {
       keys = '';
-    }
-    if ( isUserMetadata ) {
-      keys = keys + 'x-amz-meta-';
     }
     keys = keys + newKey;
     if ( newType ) {

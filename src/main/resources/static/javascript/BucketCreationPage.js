@@ -26,17 +26,22 @@ BucketCreationPage = function( name, util, templateEngine, bucketCreateFunction 
     ];
     console.trace();
     this.$root = jQuery( templateEngine.get( 'bucketCreationPage' ).render( {}, requiredSelectors ) );
-    var $addUserMetaButton = this.$root.find( '.s3AddUserMetadataButton' );
-    this.$userMetaTable = this.$root.find( '.s3UserMetadataTable' ).empty();
-    var $systemMetaTable = this.$root.find( '.s3SystemMetadataTable' ).empty();
+    var $addUserMetadataButton = this.$root.find( '.s3AddUserMetadataButton' );
+    this.$userMetadataTable = this.$root.find( '.s3UserMetadataTable' ).empty();
+    this.$systemMetadataTable = this.$root.find( '.s3SystemMetadataTable' ).empty();
+    this.addSystemMetadataRow( 'CreateTime', '' );
+    this.addSystemMetadataRow( 'LastModified', '' );
+    this.addSystemMetadataRow( 'ObjectName', '' );
+    this.addSystemMetadataRow( 'Owner', '' );
+    this.addSystemMetadataRow( 'Size', '' );
     var $saveButton = this.$root.find( '.s3SaveButton' );
     var $cancelButton = this.$root.find( '.s3CancelButton' );
 
     this.modalWindow = new ModalWindow( templateEngine.get( 'bucketCreationPageTitle' ).render( { name: name } ), this.$root, templateEngine );
 
     var page = this;
-    $addUserMetaButton[0].onclick = function() {
-        page.createTag();
+    $addUserMetadataButton[0].onclick = function() {
+        page.addUserMetadata();
     };
 
     $saveButton[0].onclick = function() {
@@ -48,69 +53,88 @@ BucketCreationPage = function( name, util, templateEngine, bucketCreateFunction 
     };
 };
 
-BucketCreationPage.prototype.addTag = function( $table, name, value, editable ) {
-    var $propertyRow;
-    if ( editable ) $propertyRow = jQuery( this.templates.get( 'editablePropertyRow' ).render( {name: name, value: value}, ['.s3PropertyName', 'input.s3PropertyValue', '.s3DeleteButton'] ) );
-    else $propertyRow = jQuery( this.templates.get( 'readonlyPropertyRow' ).render( {name: name, value: value}, ['.s3PropertyName', '.s3PropertyValue'] ) );
-    var $deleteButton = $propertyRow.find( '.s3DeleteButton' );
+BucketCreationPage.prototype.addUserMetadataRow = function( name, type ) {
+    var $metadataRow;
+    $metadataRow = jQuery( this.templates.get( 'userMetadataRow' ).render( {name: name, type: type}, ['.s3MetadataName', 'select.s3MetadataType', '.s3DeleteButton'] ) );
+    var $deleteButton = $metadataRow.find( '.s3DeleteButton' );
     if ( $deleteButton.length > 0 ) $deleteButton[0].onclick = function() {
-        $propertyRow.remove();
+    	$metadataRow.remove();
     };
-    $table.append( $propertyRow );
+    this.$userMetadataTable.append( $metadataRow );
 };
 
-BucketCreationPage.prototype.createTag = function() {
-    var tag = prompt( this.templates.get( 'tagPrompt' ).render(), '' );
-    while ( tag != null && tag.length > 0 && !this._validTag( tag ) ) {
-        tag = prompt( this.templates.get( 'tagPrompt' ).render(), tag );
+BucketCreationPage.prototype.addSystemMetadataRow = function( name, type ) {
+    var $metadataRow;
+    $metadataRow = jQuery( this.templates.get( 'systemMetadataRow' ).render( {name: name, type: type}, ['.s3MetadataName', 'select.s3MetadataType', 'input.s3MetadataSelected'] ) );
+    this.$systemMetadataTable.append( $metadataRow );
+};
+
+BucketCreationPage.prototype.addUserMetadata = function() {
+    var metadataName = prompt( this.templates.get( 'metadataNamePrompt' ).render(), '' );
+    while ( metadataName != null && metadataName.length > 0 && !this._validMetadataName( metadataName ) ) {
+        metadataName = prompt( this.templates.get( 'metadataNamePrompt' ).render(), metadataName );
     }
-    if ( tag != null && tag.length > 0 ) {
-        this.addTag( this.$userMetaTable, tag, '', true );
+    if ( metadataName != null && metadataName.length > 0 ) {
+        this.addUserMetadataRow( metadataName, 'string' );
     }
 };
 
 BucketCreationPage.prototype.save = function() {
     var page = this;
-    var headers = {};
-    var keys = '';
-    keys = page.util.addKey( keys, 'CreateTime' );
-    keys = page.util.addKey( keys, 'LastModified' );
-    keys = page.util.addKey( keys, 'ObjectName' );
-    keys = page.util.addKey( keys, 'Owner' );
-    keys = page.util.addKey( keys, 'Size' );
+    var metadata = page._getAllMetadata();
+    var keys;
+    for (var metadataName in metadata ) {
+        keys = page.util.addKey( keys, metadataName, metadata[metadataName] );
+    }
 //    keys = this.util.addKey( keys, 'key1', 'string', true );
+    var headers = {};
     if ( keys ) {
-      headers['X-emc-metadata-search'] = keys;
+      headers['x-emc-metadata-search'] = keys;
     }
     page.modalWindow.remove();
     page.bucketCreateFunction( headers );
 };
 
-BucketCreationPage.prototype._getProperties = function( $table ) {
-    var properties = {};
-    $table.find( '.row' ).each( function() {
+BucketCreationPage.prototype._getAllMetadata = function() {
+    var allMetadata = {};
+    var page = this;
+    page.$userMetadataTable.find( '.row' ).each( function() {
         var $this = jQuery( this );
-        var prop = $this.find( '.s3PropertyName' ).text();
-        var $val = $this.find( '.s3PropertyValue' );
-        var val = $val.is( 'input' ) ? $val.val() : $val.text();
-        if ( prop ) properties[prop] = val;
+        page._getMetadata( allMetadata, $this, 'x-amz-meta-' );
     } );
-    return properties;
+    page.$systemMetadataTable.find( '.row' ).each( function() {
+        var $this = jQuery( this );
+        var $selected = $this.find( '.s3MetadataSelected' );
+        var selected = $selected[0].checked;
+        if (selected) {
+            page._getMetadata( allMetadata, $this );
+        }
+    } );
+    return allMetadata;
 };
 
-BucketCreationPage.prototype._validTag = function( tag ) {
-    if ( !tag || tag.trim().length == 0 ) {
-        alert( this.templates.get( 'tagEmpty' ).render() );
+BucketCreationPage.prototype._getMetadata = function( allMetadata, $row, metaPrefix ) {
+    var metadata = $row.find( '.s3MetadataName' ).text();
+    if ( metadata ) {
+        if (metaPrefix ) {
+            metadata = metaPrefix + metadata;
+        }
+        var type =  $row.find( '.s3MetadataType' ).val();
+        allMetadata[metadata] = type;
+    }
+};
+
+BucketCreationPage.prototype._validMetadataName = function( metadataName ) {
+    if ( !metadataName || metadataName.trim().length == 0 ) {
+        alert( this.templates.get( 'metadataNameEmpty' ).render() );
         return false;
     }
-    var properties = {};
-    jQuery.extend( properties, this._getProperties( this.$userMetaTable ));
-    if ( properties.hasOwnProperty( tag ) ) {
-        alert( this.templates.get( 'tagExists' ).render( {tag: tag} ) );
+    if ( this._getAllMetadata().hasOwnProperty( metadataName ) ) {
+        alert( this.templates.get( 'metadataNameExists' ).render( {metadataName: metadataName} ) );
         return false;
     }
-    if ( !this.util.validTag( tag ) ) {
-        alert( this.templates.get( 'validNameError' ).render( {name: tag} ) );
+    if ( !this.util.validMetadataName( metadataName ) ) {
+        alert( this.templates.get( 'validNameError' ).render( {name: metadataName} ) );
         return false;
     }
     return true;

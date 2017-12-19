@@ -345,12 +345,12 @@ Redistribution and use in source and binary forms, with or without modification,
 <script id="template.s3.bucketCreationPage" type="text/html">
     <div class="s3BucketCreationPage">
         <div unselectable="on" class="s3ButtonBar">
-            <span class="s3Button s3SaveButton" title="Save">Save</span>
+            <span class="s3Button s3SaveButton" title="Create">Create</span>
             <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
         </div>
         <div class="s3TableWrapper">
-            <span class="s3TableTitle">User Metadata</span>
-            <span class="s3Button s3AddUserMetadataButton" title="Add a tag">Add</span>
+            <span class="s3TableTitle">Searchable User Metadata</span>
+            <span class="s3Button s3AddUserMetadataButton" title="Add user metadata">Add</span>
             <table class="table s3UserMetadataTable">
             </table>
         </div>
@@ -360,6 +360,22 @@ Redistribution and use in source and binary forms, with or without modification,
             </table>
         </div>
     </div>
+</script>
+<script id="template.s3.userMetadataRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3MetadataName">%{name}</td>
+        <td class="cell"><select class="s3MetadataType" value="${type}" ><option>string</option><option>integer</option><option>datetime</option><option>decimal</option></select></td>
+        <td class="s3ButtonCell cell">
+            <span class="s3Button s3DeleteButton" title="Remove this user metadata">Delete</span>
+        </td>
+    </tr>
+</script>
+<script id="template.s3.systemMetadataRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3MetadataName">%{name}</td>
+        <td class="cell"><select class="s3MetadataType" value="${type}" ><option></option><option>string</option><option>integer</option><option>datetime</option><option>decimal</option></select></td>
+        <td class="cell">Searchable? <input type="checkbox" value="false" class="s3MetadataSelected" ></input></td>
+    </tr>
 </script>
 <script id="template.s3.propertiesPage" type="text/html">
     <div class="s3PropertiesPage">
