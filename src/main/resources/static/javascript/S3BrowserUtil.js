@@ -264,6 +264,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
     var win = window;
     var util = this;
     var options = new ListOptions(0, null, true, null, null);
+    var isMetadataList = extraQueryParameters && ( extraQueryParameters.indexOf( 'query=' ) >= 0 );
     this.showStatus('Listing directory...');
     // Flat mode
     if (!this.useHierarchicalMode) {
@@ -315,12 +316,21 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                         var entries = [];
                         for (var i = 0; i < files.length; i++) {
                             var values = files[i];
+                            var entryKey;
+                            var entrySystemMeta;
+                            if ( isMetadataList ) {
+                                entryKey = values.objectName;
+                                entrySystemMeta = values.queryMds[0].mdMap;
+                            } else {
+                                entryKey = values.key
+                                entrySystemMeta = values;
+                            }
                             var entry = {
-                                name : values.key,
-                                systemMeta : values,
+                                name : entryKey,
+                                systemMeta : entrySystemMeta,
                                 type : FileRow.ENTRY_TYPE.REGULAR,
-                                id : values.key,
-                                prefixKey: values.key,
+                                id : entryKey,
+                                prefixKey: entryKey,
                                 bucket: bucketName
                             };
                             entries.push(entry);
@@ -407,16 +417,23 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                         if (files) {
                             for (var i = 0; i < files.length; i++) {
                                 var values = files[i];
-                                var fileName = values.key;
-                                var fileNameVariable=fileName.split('/');
-                                fileName=fileNameVariable[fileNameVariable.length-1];
-                                if(fileName != "") {
+                                if ( isMetadataList ) {
+                                    entryPrefixKey = values.objectName;
+                                    entryKey = entryPrefixKey;
+                                    entrySystemMeta = values.queryMds[0].mdMap;
+                                } else {
+                                    entryPrefixKey = values.key
+                                    var fileNameVariable = entryPrefixKey.split('/');
+                                    entryKey = fileNameVariable[fileNameVariable.length-1];
+                                    entrySystemMeta = values;
+                                }
+                                if(entryKey != "") {
                                     var entry = {
-                                        name : fileName,
-                                        systemMeta : values,
+                                        name : entryKey,
+                                        systemMeta : entrySystemMeta,
                                         type : FileRow.ENTRY_TYPE.REGULAR,
-                                        id : fileName,
-                                        prefixKey: values.key,
+                                        id : entryKey,
+                                        prefixKey: entryPrefixKey,
                                         bucket: bucketName
                                     };
                                     entries.push(entry);
