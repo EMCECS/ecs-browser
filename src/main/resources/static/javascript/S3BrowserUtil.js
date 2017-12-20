@@ -260,7 +260,7 @@ S3BrowserUtil.prototype.parentDirectory = function(path) {
 
 ListOptions=function(a,b,c,d,e){this.limit=a;this.token=b;this.includeMeta=c;this.userMetaTags=d;this.systemMetaTags=e};
 
-S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
+S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQueryParameters) {
     var win = window;
     var util = this;
     var options = new ListOptions(0, null, true, null, null);
@@ -305,6 +305,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
             var list_call = function(util, options, entries) {
                 var par = {
                     Bucket : bucketName,
+                    ExtraQueryParameters: extraQueryParameters
                 };
                 util.s3.listObjects(par, function(err, data) {
                     util.hideStatus('Listing directory...');
@@ -375,7 +376,8 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback) {
                 var par = {
                     Bucket : bucketName,
                     Delimiter : '/',
-                    Prefix : prefix
+                    Prefix : prefix,
+                    ExtraQueryParameters: extraQueryParameters
                 };
                 util.s3.listObjects(par, function(err, data) {
                     util.hideStatus('Listing directory...');

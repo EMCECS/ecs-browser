@@ -83,6 +83,7 @@ Redistribution and use in source and binary forms, with or without modification,
 <script type="text/javascript" src="javascript/S3BrowserUtil.js"></script>
 <script type="text/javascript" src="javascript/S3Template.js"></script>
 <script type="text/javascript" src="javascript/S3TemplateEngine.js"></script>
+<script type="text/javascript" src="javascript/MetadataSearchPage.js"></script>
 <script type="text/javascript" src="javascript/BucketCreationPage.js"></script>
 <script type="text/javascript" src="javascript/ConfigPage.js"></script>
 <script type="text/javascript" src="javascript/ContextMenu.js"></script>
@@ -206,6 +207,7 @@ Redistribution and use in source and binary forms, with or without modification,
                     <input type="text" class="s3FilterField"/>
                     <span class="s3Button s3DisableFilterButton" title="Remove filter">X</span>
                 </span>
+                <span class="s3Button s3MetadataSearchButton" title="Filter by metadata">Filter by metadata</span>
             </div>
         </div>
         <div class="s3FileList">
@@ -340,6 +342,15 @@ Redistribution and use in source and binary forms, with or without modification,
         <div class="s3ContextMenuOption aclOption">ACL</div>
         <div class="s3ContextMenuOption infoOption">Info</div>
         <div class="s3ContextMenuOption versionsOption">Snapshots</div>
+    </div>
+</script>
+<script id="template.s3.metadataSearchPage" type="text/html">
+    <div class="s3MetadataSearchPage">
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3ClearButton" title="Create">Clear</span>
+            <span class="s3Button s3ListButton" title="List">List</span>
+            <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
+        </div>
     </div>
 </script>
 <script id="template.s3.bucketCreationPage" type="text/html">

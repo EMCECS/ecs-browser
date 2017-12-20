@@ -91,6 +91,7 @@ S3Browser.prototype._init = function() {
   this.$uploadField = $main.find( 'input.s3UploadField' );
   this.$filterField = $main.find( 'input.s3FilterField' );
   this.$filterContainer = $main.find( '.s3FilterContainer' );
+  this.$metadataSearchButton = $main.find( '.s3MetadataSearchButton' );
 
   // write main template
   if ( this.$parent ) this.$parent.append( $main );
@@ -153,6 +154,13 @@ S3Browser.prototype._init = function() {
   if ( this.$disableFilterButton.length > 0 ) this.$disableFilterButton[0].onclick = function() {
     browser.disableFilter();
   };
+  if ( this.$metadataSearchButton.length > 0 ) {
+    this.$metadataSearchButton[0].onclick = function() {
+      if ( browser.currentLocation && ( browser.currentLocation != '/' ) ) {
+        new MetadataSearchPage( browser, browser.templates );
+      }
+    };
+  }
 
   // quick-filter
   if ( this.$filterField.length > 0 ) {
@@ -292,7 +300,7 @@ S3Browser.getCurrentLocation = function() {
     return browser.currentLocation;
 }
 
-S3Browser.prototype.list = function( id ) {
+S3Browser.prototype.list = function( id, extraQueryParameters ) {
 
   if ( !id || id === '' ) id = '/';
   if ( this.util.useNamespace && !this.util.validPath( id ) ) {
@@ -304,9 +312,9 @@ S3Browser.prototype.list = function( id ) {
   this.$fileTable.html( this.templates.get( 'fileRowLoading' ).render() );
 
   var browser = this;
-  this.util.list( id, true, function( entries ) {
+  this.util.list( id, true, function( entries, extraQueryParameters ) {
     console.log(entries);
-    if ( entries ) {
+    if ( entries || extraQueryParameters ) {
       browser.currentLocation = id;
       browser.fileRows = [];
       browser.$locationField.val( id );
@@ -326,7 +334,7 @@ S3Browser.prototype.list = function( id ) {
     }
     browser.util.sort( browser.$fileTable, '.s3FileName', false );
     browser.filterRows();
-  } );
+  }, extraQueryParameters );
 };
 S3Browser.prototype.refresh = function() {
   this.list( this.currentLocation );

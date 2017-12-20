@@ -205,6 +205,10 @@ EcsS3.prototype.listObjects = function( bucketParams, callback ) {
       apiUrl = apiUrl + separatorChar + 'prefix=' + bucketParams.Prefix;
       separatorChar = '&';
     };
+    if (isNonEmptyString(bucketParams.ExtraQueryParameters)) {
+      apiUrl = apiUrl + separatorChar + bucketParams.ExtraQueryParameters;
+      separatorChar = '&';
+    };
     var headers = this.getHeaders('GET');
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
