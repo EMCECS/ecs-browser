@@ -24,6 +24,7 @@ MetadataSearchPage = function( browser ) {
     console.trace();
     this.$root = jQuery( this.templateEngine.get( 'metadataSearchPage' ).render( {}, requiredSelectors ) );
     this.modalWindow = new ModalWindow( this.templateEngine.get( 'metadataSearchPageTitle' ).render( { name: this.name } ), this.$root, this.templateEngine );
+    this.$queryTable = this.$root.find('.s3QueryParameterTable');
 
     var page = this;
     var $clearButton = page.$root.find( '.s3ClearButton' );
@@ -46,10 +47,26 @@ MetadataSearchPage = function( browser ) {
 
 MetadataSearchPage.prototype.clear = function() {
     var page = this;
+    page.$queryTable.find( '.s3QueryParameterValue' ).each( function() {
+        jQuery( this ).val('');
+    } );
 };
 
 MetadataSearchPage.prototype.getMetadataSearchParameters = function() {
-    var metadataSearchParameters;
+    var page = this;
+    var metadataSearchParameters = '';
+    var separator = '';
+    page.$queryTable.find( '.s3QueryParameter' ).each( function() {
+        $this = jQuery( this );
+        var value = $this.find( '.s3QueryParameterValue' ).val();
+        if (value) {
+            metadataSearchParameters = metadataSearchParameters + separator + $this.find( '.s3QueryParameterName' ).text() + '=' + value;
+            separator = '&';
+        }
+    } );
+    if ( metadataSearchParameters.indexOf( 'query=' ) < 0 ) {
+        metadataSearchParameters = '';
+    }
     return metadataSearchParameters;
 };
 

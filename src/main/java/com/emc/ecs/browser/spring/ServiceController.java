@@ -44,6 +44,7 @@ import com.emc.object.s3.S3SignerV2;
 import com.emc.object.s3.bean.AccessControlList;
 import com.emc.object.s3.bean.ListBucketsResult;
 import com.emc.object.s3.bean.ListObjectsResult;
+import com.emc.object.s3.bean.QueryObjectsResult;
 import com.emc.object.s3.bean.SlimCopyObjectResult;
 import com.emc.object.util.RestUtil;
 
@@ -132,6 +133,8 @@ public class ServiceController {
         if (resource.length() > 1) { // bucket name exists
             if (parameters.containsKey("acl")) {
                 responseClass = AccessControlList.class;
+            } else if (parameters.containsKey("query")) {
+                responseClass = QueryObjectsResult.class;
             } else {
                 int firstSlash = resource.indexOf('/', 2);
                 if (firstSlash < 0) { // no object name exists

@@ -86,7 +86,6 @@ BucketCreationPage.prototype.save = function() {
     for (var metadataName in metadata ) {
         keys = page.util.addKey( keys, metadataName, metadata[metadataName] );
     }
-//    keys = this.util.addKey( keys, 'key1', 'string', true );
     var headers = {};
     if ( keys ) {
       headers['x-emc-metadata-search'] = keys;
