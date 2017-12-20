@@ -321,6 +321,9 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                             if ( isMetadataList ) {
                                 entryKey = values.objectName;
                                 entrySystemMeta = values.queryMds[0].mdMap;
+                                if ( !entrySystemMeta.lastModified ) {
+                                    entrySystemMeta.lastModified = new Date(+entrySystemMeta.createtime);
+                                }
                             } else {
                                 entryKey = values.key
                                 entrySystemMeta = values;
@@ -421,6 +424,9 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                                     entryPrefixKey = values.objectName;
                                     entryKey = entryPrefixKey;
                                     entrySystemMeta = values.queryMds[0].mdMap;
+                                     if ( !entrySystemMeta.lastModified ) {
+                                         entrySystemMeta.lastModified = new Date(+entrySystemMeta.createtime);
+                                     }
                                 } else {
                                     entryPrefixKey = values.key
                                     var fileNameVariable = entryPrefixKey.split('/');
