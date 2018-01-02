@@ -158,18 +158,24 @@ ConfigPage.prototype.showUidPage = function() {
         var s3 = new EcsS3({endpoint: $endpoint.val(), accessKeyId: $uid.val(),secretAccessKey:  $secret.val(), s3ForcePathStyle: true});
         var params={Bucket: '',Key:'/haha'};
         s3.headAnything(params,function(err,data){
+            var messageKey;
             if( err && ( err.status == 404 ) ) {
-                alert( page.templates.get( 'uidSuccessPrompt' ).render() );
+                messageKey = 'uidSuccessPrompt';
             } else {
-                alert( page.templates.get( 'uidFailurePrompt' ).render() );
+                messageKey = 'uidFailurePrompt';
             }
+            alert( page.templates.get( messageKey ).render() );
         });
 
-        
-//        s3.getServiceInformation( function( result ) {
-//            if ( result.successful ) alert( page.templates.get( 'uidSuccessPrompt' ).render() );
-//            else alert( page.templates.get( 'uidFailurePrompt' ).render() );
-//        } );
+        s3.getServiceInformation( function( result ) {
+            var messageKey;
+            if ( result.successful ) {
+                messageKey = 'uidSuccessPrompt';
+            } else {
+                messageKey = 'uidFailurePrompt';
+            }
+            alert( page.templates.get( messageKey ).render() );
+        } );
     };
     $saveButton[0].onclick = function() {
         page.addUid( { uid: $uid.val(), secret: $secret.val(), endpoint: $endpoint.val()} );

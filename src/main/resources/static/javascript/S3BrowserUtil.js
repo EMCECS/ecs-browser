@@ -104,8 +104,8 @@ S3BrowserUtil.prototype.getS3Info = function(callback) {
     var util = this;
     util.s3.getServiceInformation(function(result) {
         if (result.successful) {
-            util.updateServiceInfo(result.value);
-            callback(result.value)
+//            util.updateServiceInfo(result);
+            callback(result)
         }else{
             util.s3Error(result);
         }

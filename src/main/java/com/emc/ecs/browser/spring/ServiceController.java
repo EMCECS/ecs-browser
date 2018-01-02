@@ -43,6 +43,7 @@ import com.emc.object.s3.S3Config;
 import com.emc.object.s3.S3SignerV2;
 import com.emc.object.s3.bean.AccessControlList;
 import com.emc.object.s3.bean.ListBucketsResult;
+import com.emc.object.s3.bean.ListDataNode;
 import com.emc.object.s3.bean.ListObjectsResult;
 import com.emc.object.s3.bean.QueryObjectsResult;
 import com.emc.object.s3.bean.SlimCopyObjectResult;
@@ -129,8 +130,14 @@ public class ServiceController {
         sign(method.toString(), resource, parameters, headers, request.getHeader("X-Passthrough-Key"),
                 request.getHeader("X-Passthrough-Secret"));
 
-        Class<?> responseClass = ListBucketsResult.class;
-        if (resource.length() > 1) { // bucket name exists
+        Class<?> responseClass = null;
+        if (resource.length() <= 1) { // no bucket name exists
+            if (parameters.containsKey("endpoint")) {
+                responseClass = ListDataNode.class;
+            } else {
+                responseClass = ListBucketsResult.class;
+            }
+        } else {
             if (parameters.containsKey("acl")) {
                 responseClass = AccessControlList.class;
             } else if (parameters.containsKey("query")) {
@@ -141,6 +148,8 @@ public class ServiceController {
                     responseClass = ListObjectsResult.class;
                 } else if (copySource) {
                     responseClass = SlimCopyObjectResult.class;
+                } else { // ugly hack, fix this
+                    responseClass = ListBucketsResult.class;
                 }
             }
         }

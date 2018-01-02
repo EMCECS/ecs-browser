@@ -316,6 +316,29 @@ EcsS3.prototype.deleteObject = function( objectParams, callback ) {
     });
 };
 
+EcsS3.prototype.getServiceInformation = function( callback ) {
+    var apiUrl = this.getSystemApiUrl() + '?endpoint';
+    var headers = this.getHeaders('GET');
+    function wrappedCallback( error, data ) {
+        callback( data );
+    };
+
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, wrappedCallback, makeEcsServiceInformation );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( wrappedCallback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
+function makeEcsServiceInformation( data ) {
+    return { successful: true,
+        object: true,
+        version: data.body.versionInfo };
+};
+
 EcsS3.prototype.getHeaders = function( passthroughMethod ) {
     var headers = {
         'X-Passthrough-Endpoint': this.endpoint,

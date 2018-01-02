@@ -225,9 +225,9 @@ S3Browser.prototype._init = function() {
   var $statusMessage = $main.find( '.s3StatusMessage' );
   this.util = new S3BrowserUtil( this.settings.uid, this.settings.secret, this.settings.endpoint, this.templates, $statusMessage );
   this.list( this.settings.location );
-  //    this.util.getS3Info( function( serviceInfo ) {
-  //        browser.s3Info = serviceInfo;
-  //    } )
+  this.util.getS3Info( function( serviceInfo ) {
+      browser.s3Info = serviceInfo;
+  } )
 };
 S3Browser.prototype.enableFilter = function() {
   this.$filterButton.hide();
