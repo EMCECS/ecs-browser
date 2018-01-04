@@ -47,6 +47,7 @@ import com.emc.object.s3.bean.ListDataNode;
 import com.emc.object.s3.bean.ListObjectsResult;
 import com.emc.object.s3.bean.ListVersionsResult;
 import com.emc.object.s3.bean.QueryObjectsResult;
+import com.emc.object.s3.bean.VersioningConfiguration;
 import com.emc.object.s3.bean.SlimCopyObjectResult;
 import com.emc.object.util.RestUtil;
 
@@ -143,6 +144,8 @@ public class ServiceController {
                 responseClass = AccessControlList.class;
             } else if (parameters.containsKey("query")) {
                 responseClass = QueryObjectsResult.class;
+            } else if (parameters.containsKey("versioning")) {
+                responseClass = VersioningConfiguration.class;
             } else if (parameters.containsKey("versions")) {
                 responseClass = ListVersionsResult.class;
             } else {

@@ -606,7 +606,7 @@ permissions and limitations under the License.
 <script id="template.s3.versionsPage" type="text/html">
     <div class="s3VersionsPage">
         <div unselectable="on" class="s3ButtonBar">
-            <span class="s3Button s3CreateButton" title="Create">Create Snapshot</span>
+            <span class="s3Button s3CloseButton" title="Close">Close</span>
         </div>
         <div class="s3TableWrapper">
             <form>
@@ -614,22 +614,19 @@ permissions and limitations under the License.
                 </table>
             </form>
         </div>
-        <div unselectable="on" class="s3ButtonBar">
-            <span class="s3Button s3CloseButton" title="Close">Close</span>
-        </div>
     </div>
 </script>
 <script id="template.s3.versionRow" type="text/html">
     <tr class="row">
         <td class="cell s3VersionDate">D{version.dateCreated}</td>
         <td class="s3ButtonCell cell">
-            <div class="s3Button s3DownloadButton" title="Download this snapshot">Download</div>
+            <div class="s3Button s3DownloadButton" title="Download this version">Download</div>
         </td>
         <td class="s3ButtonCell cell">
-            <div class="s3Button s3RestoreButton" title="Restore this snapshot">Restore</div>
+            <div class="s3Button s3RestoreButton" title="Restore this version">Restore</div>
         </td>
         <td class="s3ButtonCell cell">
-            <div class="s3Button s3DeleteButton" title="Delete this snapshot">Delete</div>
+            <div class="s3Button s3DeleteButton" title="Delete this version">Delete</div>
         </td>
     </tr>
 </script>

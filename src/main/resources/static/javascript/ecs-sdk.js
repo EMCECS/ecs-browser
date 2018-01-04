@@ -249,6 +249,20 @@ EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
     });
 };
 
+EcsS3.prototype.getBucketVersioning = function( bucketParams, callback ) {
+    var apiUrl = this.getBucketApiUrl(bucketParams) + '?versioning';
+    var headers = this.getHeaders('GET');
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback, getEcsBody );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
 EcsS3.prototype.listObjectVersions = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams) + '?versions';
     var headers = this.getHeaders('GET');

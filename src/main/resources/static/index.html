@@ -89,6 +89,7 @@ permissions and limitations under the License.
 <script type="text/javascript" src="javascript/ObjectInfoPage.js"></script>
 <script type="text/javascript" src="javascript/PropertiesPage.js"></script>
 <script type="text/javascript" src="javascript/SharePage.js"></script>
+<script type="text/javascript" src="javascript/VersioningPage.js"></script>
 <script type="text/javascript" src="javascript/VersionsPage.js"></script>
 <script type="text/javascript">
     function getHashParameterByName( name ) {
@@ -197,7 +198,7 @@ permissions and limitations under the License.
                 <span class="s3Button s3PropertiesButton" title="Properties of selected item">Properties</span>
                 <span class="s3Button s3AclButton" title="ACL of selected item">ACL</span>
                 <!-- <span class="s3Button s3InfoButton" title="Storage information of selected item">Info</span>-->
-                <span class="s3Button s3VersionsButton" title="Snapshots of selected object">Snapshots</span>
+                <span class="s3Button s3VersionsButton" title="Versions of selected object">Versions</span>
                 <span class="s3Button s3FilterButton s3NamespaceButton" title="Filter results">Filter</span>
                 <span class="s3FilterContainer hidden">
                     <input type="text" class="s3FilterField"/>
@@ -334,7 +335,7 @@ permissions and limitations under the License.
         <div class="s3ContextMenuOption propertiesOption">Properties</div>
         <div class="s3ContextMenuOption aclOption">ACL</div>
         <div class="s3ContextMenuOption infoOption">Info</div>
-        <div class="s3ContextMenuOption versionsOption">Snapshots</div>
+        <div class="s3ContextMenuOption versionsOption">Versions</div>
     </div>
 </script>
 <script id="template.s3.metadataSearchPage" type="text/html">
@@ -644,10 +645,26 @@ permissions and limitations under the License.
 <script id="template.s3.directoryItem" type="text/html">
     <li class="s3DirectoryItem">%{name}</li>
 </script>
+<script id="template.s3.versioningPage" type="text/html">
+    <div class="s3VersioningPage">
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3SaveButton" title="Save">Save</span>
+            <span class="s3Button s3CancelButton" title="Cancel">Cancel</span>
+        </div>
+        <div class="s3TableWrapper">
+            <table class="table">
+                <tr class="row">
+                    <td class="cell s3PropertyName">Versioning Status</td>
+                    <td class="cell"><select class="s3VersioningStatus" value="${versioning.status}" ><option></option><option>Enabled</option><option>Suspended</option></select></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</script>
 <script id="template.s3.versionsPage" type="text/html">
     <div class="s3VersionsPage">
         <div unselectable="on" class="s3ButtonBar">
-            <span class="s3Button s3CreateButton" title="Create">Create Snapshot</span>
+            <span class="s3Button s3CloseButton" title="Close">Close</span>
         </div>
         <div class="s3TableWrapper">
             <form>
@@ -655,22 +672,19 @@ permissions and limitations under the License.
                 </table>
             </form>
         </div>
-        <div unselectable="on" class="s3ButtonBar">
-            <span class="s3Button s3CloseButton" title="Close">Close</span>
-        </div>
     </div>
 </script>
 <script id="template.s3.versionRow" type="text/html">
     <tr class="row">
         <td class="cell s3VersionDate">D{version.dateCreated}</td>
         <td class="s3ButtonCell cell">
-            <div class="s3Button s3DownloadButton" title="Download this snapshot">Download</div>
+            <div class="s3Button s3DownloadButton" title="Download this version">Download</div>
         </td>
         <td class="s3ButtonCell cell">
-            <div class="s3Button s3RestoreButton" title="Restore this snapshot">Restore</div>
+            <div class="s3Button s3RestoreButton" title="Restore this version">Restore</div>
         </td>
         <td class="s3ButtonCell cell">
-            <div class="s3Button s3DeleteButton" title="Delete this snapshot">Delete</div>
+            <div class="s3Button s3DeleteButton" title="Delete this version">Delete</div>
         </td>
     </tr>
 </script>
@@ -695,7 +709,7 @@ permissions and limitations under the License.
         <li class="feature-utf8 disabledFeature">UTF-8 Extended Character Support</li>
         <li class="feature-browsercompat disabledFeature">Browser Compatibility</li>
          -->
-        <li class="feature-versioning disabledFeature">Object Snapshots</li>
+        <li class="feature-versioning disabledFeature">Object Versions</li>
     </ul>
     <br/>
     <a href="https://github.com/EMCECS/ecs-browser" target="_blank">Website</a>

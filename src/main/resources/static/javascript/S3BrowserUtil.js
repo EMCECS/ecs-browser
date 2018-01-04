@@ -528,6 +528,48 @@ S3BrowserUtil.prototype.setAcl = function(id, acl, callback) {
     });
 };
 
+S3BrowserUtil.prototype.getVersioning = function( id, location, callback ) {
+    if( location == "/" ) {
+        var util = this;
+        this.showStatus('Retrieving Versioning...');
+        var path = id.split("/");
+        var bucketName = path[1];
+        var params = {Bucket:bucketName};
+        util.s3.getBucketVersioning( params, function( err, data ) {
+            util.hideStatus('Retrieving Versioning...');
+            if( err != null ){
+                util.s3Error( err );
+            } else {
+                callback( data );
+            }
+        });
+    }
+};
+
+S3BrowserUtil.prototype.setVersioning = function(id, versioning, callback) {
+    console.trace();
+    var util = this;
+    var currentLocation = S3Browser.getCurrentLocation();
+    this.showStatus('Setting Versioning...');
+    var location = currentLocation;
+    var path = location.split("/");
+    var bucketName = path[1];
+    var params = {Bucket:bucketName, Key:id, Versioning:versioning};
+    this.s3.putBucketVersioning( params, function( err, result ) {
+        util.hideStatus('Setting Versioning...');
+        if ( err != null ) {
+            if ( err.status==403 ) {
+                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
+            } else {
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
+            }
+            callback();
+        } else {
+            callback( true );
+        }
+    });
+};
+
 S3BrowserUtil.prototype.getSystemMetadata = function(id, callback) {
     var util = this;
     var newpath = id.substring(1, id.length);
@@ -831,19 +873,6 @@ S3BrowserUtil.prototype.deleteObject = function(id, currentLocation, callback) {
             //util.s3Error(err);
         }else{
             callback();
-        }
-    });
-};
-
-S3BrowserUtil.prototype.createVersion = function(id, callback) {
-    var util = this;
-    this.showStatus('Creating version...');
-    this.s3.versionObject(id, function(result) {
-        util.hideStatus('Creating version...');
-        if (result.successful) {
-            callback();
-        }else{
-            util.s3Error(result);
         }
     });
 };

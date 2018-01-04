@@ -20,11 +20,9 @@ VersionsPage = function( entry, currentLocation, util, templateEngine ) {
     this.templates = templateEngine;
     var requiredSelectors = [
         '.s3VersionTable',
-        '.s3CreateButton',
         '.s3CloseButton'
     ];
     this.$root = jQuery( templateEngine.get( 'versionsPage' ).render( {}, requiredSelectors ) );
-    var $createButton = this.$root.find( '.s3CreateButton' );
     this.$versionTable = this.$root.find( '.s3VersionTable' ).empty();
     var $closeButton = this.$root.find( '.s3CloseButton' );
 
@@ -33,11 +31,6 @@ VersionsPage = function( entry, currentLocation, util, templateEngine ) {
     this.refresh();
 
     var page = this;
-    $createButton[0].onclick = function() {
-        page.util.createVersion( page.oid, function() {
-            page.refresh();
-        } );
-    };
     $closeButton[0].onclick = function() {
         page.modalWindow.remove();
     };

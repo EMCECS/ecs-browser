@@ -397,8 +397,15 @@ S3Browser.prototype.showObjectInfo = function( entry ) {
   } );
 };
 
-S3Browser.prototype.showVersions = function( entry) {
-  new VersionsPage( entry, this.currentLocation, this.util, this.templates );
+S3Browser.prototype.showVersions = function( entry ) {
+    if (this.util.isBucket( entry.type ) ) {
+        var browser = this;
+        this.util.getVersioning( entry.prefixKey, this.currentLocation, function( versioning ) {
+            new VersioningPage( entry, versioning, browser.util, browser.templates );
+        } );
+    } else {
+        new VersionsPage( entry, this.currentLocation, this.util, this.templates );
+    }
 };
 
 S3Browser.prototype.shareEntry = function( entry ) {

@@ -69,6 +69,7 @@ S3TemplateEngine.HTML_TEMPLATES = [
     "objectInfoReplica",
     "directoryPage",
     "directoryItem",
+    "versioningPage",
     "versionsPage",
     "versionRow"
 ];
@@ -97,9 +98,9 @@ S3TemplateEngine.MESSAGE_TEMPLATES = {
     invalidNumberError: '#{value} is not a valid number',
     userAclNamePrompt: 'What user name would you like to add?',
     groupAclNamePrompt: 'What group name would you like to add?',
-    restoreVersionPrompt: 'Restoring this snapshot will revert the object to\nthe state it was at D{version.dateCreated}.\nAre you sure you want to do this?',
-    restoreVersionSuccessPrompt: 'Successfully restored this object from the snapshot\ncreated D{version.dateCreated}.',
-    deleteVersionPrompt: 'Are you sure you want to delete the snapshot\ntaken at D{version.dateCreated}?',
+    restoreVersionPrompt: 'Restoring this version will revert the object to\nthe state it was at D{version.dateCreated}.\nAre you sure you want to do this?',
+    restoreVersionSuccessPrompt: 'Successfully restored this object from the version\ncreated D{version.dateCreated}.',
+    deleteVersionPrompt: 'Are you sure you want to delete the version\ntaken at D{version.dateCreated}?',
     uidSuccessPrompt: 'These credentials appear to be correct.',
     uidFailurePrompt: 'These credentials are invalid!',
     configDataCorruptPrompt: 'Your configuration data has been corrupted and will be reset.',
@@ -115,7 +116,8 @@ S3TemplateEngine.MESSAGE_TEMPLATES = {
     aclPageTitle: 'ACL for %{name}',
     objectInfoPageTitle: 'Storage info for %{name}',
     directoryPageTitle: 'Select target directory',
-    versionsPageTitle: 'Snapshots of %{name}',
+    versioningPageTitle: 'Versioning Status for %{name}',
+    versionsPageTitle: 'Versions of %{name}',
     errorMessage:'Error Occured with status Code %{status} and message %{message}',
 
     's3Error.403': 'You are not authorized to perform this action',
