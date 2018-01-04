@@ -197,7 +197,7 @@ permissions and limitations under the License.
                 <span class="s3Button s3PropertiesButton" title="Properties of selected item">Properties</span>
                 <span class="s3Button s3AclButton" title="ACL of selected item">ACL</span>
                 <!-- <span class="s3Button s3InfoButton" title="Storage information of selected item">Info</span>-->
-                <!--<span class="s3Button s3VersionsButton" title="Snapshots of selected object">Snapshots</span>-->
+                <span class="s3Button s3VersionsButton" title="Snapshots of selected object">Snapshots</span>
                 <span class="s3Button s3FilterButton s3NamespaceButton" title="Filter results">Filter</span>
                 <span class="s3FilterContainer hidden">
                     <input type="text" class="s3FilterField"/>
@@ -214,7 +214,6 @@ permissions and limitations under the License.
                         <th data-sort-class="s3FileName" class="cell s3FileName">Name</th>
                         <th data-sort-class="s3FileSize" class="cell s3FileSize">Size</th>
                         <th data-sort-class="s3FileDate" class="cell s3FileDate">Date</th>
-                        <th class="cell s3HeaderSpacer"></th>
                     </tr>
                 </table>
             </div>
@@ -298,9 +297,7 @@ permissions and limitations under the License.
         <td class="s3Icon cell"><span class="s3FileIcon icon"></span></td>
         <td class="s3FileName cell"></td>
         <td class="s3FileSize cell"></td>
-        <td data-raw-value="${entry.systemMeta.lastModified}" class="s3FileDate cell" title="D{entry.systemMeta.lastModified}">
-            D{entry.systemMeta.lastModified}
-        </td>
+        <td class="s3FileDate cell"></td>
     </tr>
 </script>
 <script id="template.s3.fileRowLoading" type="text/html">
@@ -693,9 +690,11 @@ permissions and limitations under the License.
         <li class="feature-object disabledFeature">Object API</li>
         <li class="feature-metadata disabledFeature">Metadata Search API</li>
         <li class="feature-namespace disabledFeature">Namespace API</li>
+<!-- 
         <li class="feature-keyvalue disabledFeature">Key-Pool API</li>
         <li class="feature-utf8 disabledFeature">UTF-8 Extended Character Support</li>
         <li class="feature-browsercompat disabledFeature">Browser Compatibility</li>
+         -->
         <li class="feature-versioning disabledFeature">Object Snapshots</li>
     </ul>
     <br/>
@@ -711,7 +710,7 @@ permissions and limitations under the License.
     You may not use this file except in compliance with the License.
     A copy of the License is located at<br/>
     <br/>
-    <a href="http://www.apache.org/licenses/LICENSE-2.0.txt">http://www.apache.org/licenses/LICENSE-2.0.txt</a><br/>
+    <a href="http://www.apache.org/licenses/LICENSE-2.0.txt" target="_blank">http://www.apache.org/licenses/LICENSE-2.0.txt</a><br/>
     <br/>
     or in the "license" file accompanying this file. This file is distributed
     on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either

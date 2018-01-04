@@ -104,16 +104,11 @@ S3BrowserUtil.prototype.getS3Info = function(callback) {
     var util = this;
     util.s3.getServiceInformation(function(result) {
         if (result.successful) {
-//            util.updateServiceInfo(result);
             callback(result)
         }else{
             util.s3Error(result);
         }
     });
-};
-
-S3BrowserUtil.prototype.updateServiceInfo = function(serviceInfo) {
-    this.s3.s3Config.utf8Support = serviceInfo.utf8;
 };
 
 S3BrowserUtil.prototype.createBucketOrDirectory = function(directoryObjectName, functionUpdateGui, currentLocation, functionAddProperties) {
@@ -285,6 +280,9 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                                 prefixKey: path + values.name,
                                 bucket: bucketName
                             };
+                            if (values.creationDate) {
+                                values.creationDate = new Date(+values.creationDate);
+                            }
                             entry.systemMeta.lastModified = values.creationDate;
                             entries.push(entry);
                             callback(entries);
@@ -327,6 +325,7 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                             } else {
                                 entryKey = values.key
                                 entrySystemMeta = values;
+                                entrySystemMeta.lastModified = new Date(+entrySystemMeta.lastModified);
                             }
                             var entry = {
                                 name : entryKey,
@@ -367,6 +366,9 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                                 prefixKey: path + values.name,
                                 bucket: bucketName
                             };
+                            if (values.creationDate) {
+                                values.creationDate = new Date(+values.creationDate);
+                            }
                             entry.systemMeta.lastModified = values.creationDate;
                             entries.push(entry);
                             callback(entries);
@@ -424,14 +426,15 @@ S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQu
                                     entryPrefixKey = values.objectName;
                                     entryKey = entryPrefixKey;
                                     entrySystemMeta = values.queryMds[0].mdMap;
-                                     if ( !entrySystemMeta.lastModified ) {
-                                         entrySystemMeta.lastModified = new Date(+entrySystemMeta.createtime);
-                                     }
+                                    if ( !entrySystemMeta.lastModified ) {
+                                        entrySystemMeta.lastModified = new Date(+entrySystemMeta.createtime);
+                                    }
                                 } else {
                                     entryPrefixKey = values.key
                                     var fileNameVariable = entryPrefixKey.split('/');
                                     entryKey = fileNameVariable[fileNameVariable.length-1];
                                     entrySystemMeta = values;
+                                    entrySystemMeta.lastModified = new Date(+entrySystemMeta.lastModified);
                                 }
                                 if(entryKey != "") {
                                     var entry = {
@@ -865,7 +868,7 @@ S3BrowserUtil.prototype.listVersions = function(id, currentLocation, callback) {
             }
             //util.s3Error(err);
         }else{
-            callback();
+            callback( data.versions );
         }
     });
 };

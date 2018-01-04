@@ -77,7 +77,8 @@ FileRow.prototype.updateEntry = function( entry ) {
   var requiredSelectors = [
     '.s3FileIcon',
     '.s3FileName',
-    '.s3FileSize'
+    '.s3FileSize',
+    '.s3FileDate'
   ];
   var $tempRow = jQuery( this.browser.templates.get( 'fileRowContents' ).render( {entry: entry, size: this.Size}, requiredSelectors ) );
   this.$root.html( $tempRow.html() );
@@ -86,6 +87,7 @@ FileRow.prototype.updateEntry = function( entry ) {
   console.log(this.$icon);
   this.$name = this.$root.find( '.s3FileName' );
   this.$Size = this.$root.find( '.s3FileSize' );
+  this.$Date = this.$root.find( '.s3FileDate' );
 
   // classify icon for ease of styling
   this.$icon.addClass( entry.type );
@@ -96,6 +98,7 @@ FileRow.prototype.updateEntry = function( entry ) {
 
   this.$name.text( entry.name || entry.id ).attr( 'title', entry.name || entry.id );
   this.$Size.text( this.Size ).attr( 'title', this.Size );
+  this.$Date.text( entry.systemMeta.lastModified ).attr( 'title', entry.systemMeta.lastModified );
 };
 FileRow.prototype.dragStart = function( event ) {
   if ( this.entry.systemMeta ) {
