@@ -513,6 +513,7 @@ permissions and limitations under the License.
         </div>
         <div class="s3TableWrapper">
             <div class="s3TableTitle">Group ACLs</div>
+            <span class="s3Button s3AddGroupAclButton" title="Give a group access">Add</span>
             <table class="table">
                 <tr class="row">
                     <th class="cell s3AclName s3AclNameHeader">Group Name</th>
@@ -524,23 +525,11 @@ permissions and limitations under the License.
             </table>
             <form>
                 <table class="table s3AclTable s3GroupAclTable">
-                    <tr class="row">
-                        <td class="cell s3AclName">other</td>
-                        <td class="cell s3AclFC">
-                            <input type="radio" name="group" value="FULL_CONTROL" class="s3AclValue"/>
-                        </td>
-                        <td class="cell s3AclWRITE">
-                            <input type="radio" name="group" value="WRITE" class="s3AclValue"/>
-                        </td>
-                        <td class="cell s3AclREAD">
-                            <input type="radio" name="group" value="READ" class="s3AclValue"/>
-                        </td>
-                        <td class="cell s3AclNONE">
-                            <input type="radio" name="group" value="NONE" class="s3AclValue"/>
-                        </td>
-                    </tr>
                 </table>
             </form>
+        </div>
+        <div class="s3TableCaption">
+            To remove a group, select "None" for their permission level
         </div>
     </div>
 </script>
