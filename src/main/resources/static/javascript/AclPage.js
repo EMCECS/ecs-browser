@@ -58,8 +58,9 @@ AclPage = function( entry, acl, util, templateEngine ) {
 
     this.$root.find( '.s3SaveButton' )[0].onclick = function() {
         var newAcl = {
-            grants: []
-        }
+            grants: [],
+            owner: acl.owner
+        };
         page.$userAclTable.find( '.row' ).each( function() {
             var $this = jQuery( this );
             var name = $this.find( '.s3AclName' ).text();
@@ -72,7 +73,7 @@ AclPage = function( entry, acl, util, templateEngine ) {
             var permission = $this.find( '.s3AclValue:checked' ).val();
             newAcl.grants.push( new AclEntry( null, name, permission ) );
         } );
-        page.util.setAcl( entry.prefixKey, newAcl, function() {
+        page.util.setAcl( entry, newAcl, function() {
             modalWindow.remove();
         } );
     };
@@ -90,10 +91,18 @@ AclPage.prototype.addAclEntry = function( $table, name, access ) {
 };
 
 AclEntry = function ( id, uri, permission ) {
-    this.grantee = {};
-    this.grantee.id = id;
-    this.grantee.uri = uri;
     this.permission = permission;
-}
+    this.grantee = {
+        id: id,
+        type: id ? "CanonicalUser" : "Group",
+        uri: uri
+    };
+};
 
-AclEntry.ACL_PERMISSIONS={READ:"READ",WRITE:"WRITE",FULL_CONTROL:"FULL_CONTROL",NONE:"NONE"};
+AclEntry.ACL_PERMISSIONS = {
+    READ: "READ",
+    WRITE: "WRITE",
+    FULL_CONTROL: "FULL_CONTROL",
+    NONE: "NONE"
+};
+

@@ -14,8 +14,11 @@
  */
 package com.emc.ecs.browser.spring;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -25,6 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.bind.JAXBContext;
 
 import org.eclipse.jetty.util.StringUtil;
 import org.springframework.http.HttpHeaders;
@@ -42,6 +46,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import com.emc.object.s3.S3Config;
 import com.emc.object.s3.S3SignerV2;
 import com.emc.object.s3.bean.AccessControlList;
+import com.emc.object.s3.bean.ConcreteAccessControlList;
 import com.emc.object.s3.bean.ListBucketsResult;
 import com.emc.object.s3.bean.ListDataNode;
 import com.emc.object.s3.bean.ListObjectsResult;
@@ -50,6 +55,8 @@ import com.emc.object.s3.bean.QueryObjectsResult;
 import com.emc.object.s3.bean.VersioningConfiguration;
 import com.emc.object.s3.bean.SlimCopyObjectResult;
 import com.emc.object.util.RestUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author seibed
@@ -103,34 +110,11 @@ public class ServiceController {
             }
         }
 
-        byte[] data = null;
-        if (HttpMethod.POST.equals(method)) {
-            data = readBody(request);
-        } else if (HttpMethod.PUT.equals(method) && (!copySource)) {
-            if (!(request instanceof MultipartHttpServletRequest)) {
-                data = readBody(request);
-            } else {
-                MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
-                Iterator<String> itr = multipartRequest.getFileNames();
-                MultipartFile file = multipartRequest.getFile(itr.next());
-                InputStream inputStream = file.getInputStream();
-                try {
-                    data = new byte[inputStream.available()];
-                    inputStream.read(data);
-                } finally {
-                    inputStream.close();
-                }
-            }
-        }
-
         String passthroughNamespace = request.getHeader("X-Passthrough-Namespace");
         if (StringUtil.isNotBlank(passthroughNamespace)) {
             RestUtil.putSingle(headers, RestUtil.EMC_NAMESPACE, passthroughNamespace);
             // TODO: handle namespace in URL
         }
-
-        sign(method.toString(), resource, parameters, headers, request.getHeader("X-Passthrough-Key"),
-                request.getHeader("X-Passthrough-Secret"));
 
         Class<?> responseClass = null;
         if (resource.length() <= 1) { // no bucket name exists
@@ -159,6 +143,33 @@ public class ServiceController {
                 }
             }
         }
+
+        byte[] data = null;
+        if (HttpMethod.POST.equals(method)) {
+            data = readBody(request);
+        } else if (HttpMethod.PUT.equals(method) && (!copySource)) {
+            if (!(request instanceof MultipartHttpServletRequest)) {
+                data = readBody(request);
+                if (parameters.containsKey("acl")) {
+                    data = convertToXml(data, parameters);
+                    RestUtil.putSingle(headers, "Content-Type", "application/xml");
+                }
+            } else {
+                MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+                Iterator<String> itr = multipartRequest.getFileNames();
+                MultipartFile file = multipartRequest.getFile(itr.next());
+                InputStream inputStream = file.getInputStream();
+                try {
+                    data = new byte[inputStream.available()];
+                    inputStream.read(data);
+                } finally {
+                    inputStream.close();
+                }
+            }
+        }
+
+        sign(method.toString(), resource, parameters, headers, request.getHeader("X-Passthrough-Key"),
+                request.getHeader("X-Passthrough-Secret"));
 
         HttpHeaders newHeaders = new HttpHeaders();
         for (Entry<String, List<Object>> header : headers.entrySet()) {
@@ -189,6 +200,23 @@ public class ServiceController {
         }
         return ResponseEntity.ok( dataToReturn );
     } 
+
+    /**
+     * @param data
+     * @param parameters 
+     * @param responseClass
+     * @return
+     * @throws Exception
+     */
+    private byte[] convertToXml(byte[] data, Map<String, String> parameters) throws Exception {
+        Class<?> outputClass = AccessControlList.class;
+        System.out.println(outputClass.getName() + ": \"" + new String(data, StandardCharsets.UTF_8) + "\"");
+        ConcreteAccessControlList jsonObject = new ObjectMapper().readerFor(ConcreteAccessControlList.class).readValue(data);
+        JAXBContext context = JAXBContext.newInstance(outputClass);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        context.createMarshaller().marshal(jsonObject.toAccessControlList(), outputStream);
+        return outputStream.toByteArray();
+    }
 
     /**
      * @param request

@@ -493,36 +493,33 @@ S3BrowserUtil.prototype.getAcl = function(id,location, callback) {
     }
 };
 
-S3BrowserUtil.prototype.setAcl = function(id, acl, callback) {
+S3BrowserUtil.prototype.setAcl = function(entry, acp, callback) {
     console.trace();
     var util = this;
-    var currentLocation=S3Browser.getCurrentLocation();
+    var currentLocation = S3Browser.getCurrentLocation();
     this.showStatus('Setting ACL...');
-    var location=currentLocation;
-    var path=location.split("/");
-    var bucketName=path[1];
-    var Grants=[];
-    var owner=acl.Owner;
-    var userEntries=acl.userEntries;
-    for(var i=0;i<userEntries.length;i++){
-        if(userEntries[i].value != "NONE") {
-            var grantee={DisplayName:userEntries[i].key,ID:userEntries[i].key,Type: "CanonicalUser"};
-            var newgrants={Grantee:grantee,Permission:userEntries[i].value};
-            Grants.push(newgrants);
+    var location = currentLocation;
+    var path = location.split("/");
+    var bucketName = path[1];
+    var grants = [];
+    for ( var i = 0; i < acp.grants.length; i++ ){
+        var grant = acp.grants[i];
+        if ( grant.permission != "NONE" ) {
+            grants.push( grant );
         }
     }
-    var AccessControlPolicy={Grants:Grants,Owner:owner};
-    var params={Bucket:bucketName,Key:id,AccessControlPolicy:AccessControlPolicy};
-    this.s3.putObjectAcl(params, function(err,result) {
+    var accessControlPolicy = { grants: grants, owner: { id: acp.owner.id } };
+    var params = { Bucket: bucketName, Key: entry.prefixKey, AccessControlPolicy: accessControlPolicy };
+    this.s3.putAcl( params, function( err, result ) {
         util.hideStatus('Setting ACL...');
-        if (err != null) {
-            if(err.status==403){
+        if ( err != null ) {
+            if ( err.status == 403 ){
                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-            }else{
+            } else {
                 alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
             callback();
-        }else{
+        } else {
             callback(true);
         }
     });
