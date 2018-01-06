@@ -150,10 +150,7 @@ public class ServiceController {
         } else if (HttpMethod.PUT.equals(method) && (!copySource)) {
             if (!(request instanceof MultipartHttpServletRequest)) {
                 data = readBody(request);
-                if (parameters.containsKey("acl")) {
-                    data = convertToXml(data, parameters);
-                    RestUtil.putSingle(headers, "Content-Type", "application/xml");
-                }
+                data = convertToXml( data, parameters, headers );
             } else {
                 MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
                 Iterator<String> itr = multipartRequest.getFileNames();
@@ -204,18 +201,43 @@ public class ServiceController {
     /**
      * @param data
      * @param parameters 
+     * @param headers 
      * @param responseClass
      * @return
      * @throws Exception
      */
-    private byte[] convertToXml(byte[] data, Map<String, String> parameters) throws Exception {
-        Class<?> outputClass = AccessControlList.class;
+    private byte[] convertToXml(byte[] data, Map<String, String> parameters, Map<String, List<Object>> headers) throws Exception {
+        Class<?> outputClass = null;
+        if (parameters.containsKey("acl")) {
+            outputClass = AccessControlList.class;
+        } else if (parameters.containsKey("versioning")) {
+            outputClass = VersioningConfiguration.class;
+        }
+
+        if (outputClass == null) { // do nothing
+            return data;
+        }
+
+        RestUtil.putSingle(headers, "Content-Type", "application/xml");
+
         System.out.println(outputClass.getName() + ": \"" + new String(data, StandardCharsets.UTF_8) + "\"");
-        ConcreteAccessControlList jsonObject = new ObjectMapper().readerFor(ConcreteAccessControlList.class).readValue(data);
+
+        Object outputObject;
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (outputClass == AccessControlList.class) {
+            ConcreteAccessControlList jsonObject = objectMapper.readValue(data, ConcreteAccessControlList.class);
+            outputObject = jsonObject.toAccessControlList();
+        } else {
+            outputObject = objectMapper.readValue(data, outputClass);
+        }
         JAXBContext context = JAXBContext.newInstance(outputClass);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        context.createMarshaller().marshal(jsonObject.toAccessControlList(), outputStream);
-        return outputStream.toByteArray();
+        context.createMarshaller().marshal(outputObject, outputStream);
+        data =  outputStream.toByteArray();
+
+        System.out.println(outputClass.getName() + ": \"" + new String(data, StandardCharsets.UTF_8) + "\"");
+
+        return data;
     }
 
     /**

@@ -268,8 +268,24 @@ EcsS3.prototype.putAcl = function( params, callback ) {
 EcsS3.prototype.getBucketVersioning = function( bucketParams, callback ) {
     var apiUrl = this.getBucketApiUrl(bucketParams) + '?versioning';
     var headers = this.getHeaders('GET');
-    
+
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback, getEcsBody );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
+EcsS3.prototype.putBucketVersioning = function( params, callback ) {
+    var apiUrl = this.getBucketApiUrl(params) + '?versioning';
+    var headers = this.getHeaders('PUT');
+    headers['ContentType'] = 'application/json';
+    var data = JSON.stringify(params.versioning);
+
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers, data: data, contentType: "application/json",
         success: function(data, textStatus, jqHXR) {
             handleData( data, callback, getEcsBody );
         },

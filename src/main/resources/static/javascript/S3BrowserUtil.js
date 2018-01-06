@@ -543,7 +543,7 @@ S3BrowserUtil.prototype.getVersioning = function( id, location, callback ) {
     }
 };
 
-S3BrowserUtil.prototype.setVersioning = function(id, versioning, callback) {
+S3BrowserUtil.prototype.setVersioning = function(entry, versioning, callback) {
     console.trace();
     var util = this;
     var currentLocation = S3Browser.getCurrentLocation();
@@ -551,18 +551,18 @@ S3BrowserUtil.prototype.setVersioning = function(id, versioning, callback) {
     var location = currentLocation;
     var path = location.split("/");
     var bucketName = path[1];
-    var params = {Bucket:bucketName, Key:id, Versioning:versioning};
+    var params = { Bucket: bucketName, Key: entry.prefixKey, versioning: versioning };
     this.s3.putBucketVersioning( params, function( err, result ) {
         util.hideStatus('Setting Versioning...');
         if ( err != null ) {
-            if ( err.status==403 ) {
+            if ( err.status == 403 ){
                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
             } else {
                 alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
             callback();
         } else {
-            callback( true );
+            callback(true);
         }
     });
 };

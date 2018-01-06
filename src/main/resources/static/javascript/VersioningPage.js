@@ -27,7 +27,7 @@ VersioningPage = function( entry, versioning, util, templateEngine ) {
 
     this.$root.find( '.s3SaveButton' )[0].onclick = function() {
         versioning.status = page.$root.find( '.s3VersioningStatus' ).val();
-        page.util.setVersioning( entry.prefixKey, versioning, function() {
+        page.util.setVersioning( entry, versioning, function() {
             modalWindow.remove();
         } );
     };
