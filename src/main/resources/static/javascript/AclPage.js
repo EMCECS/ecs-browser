@@ -19,25 +19,13 @@ AclPage = function( entry, acl, util, templateEngine ) {
     this.$userAclTable = this.$root.find( '.s3UserAclTable' ).empty();
     this.$groupAclTable = this.$root.find( '.s3GroupAclTable' ).empty();
 
-    var entries=acl.grants;
-    var userEntries=[];
-    var groupEntries=[];
-
-    for (i=0;i<entries.length;i++) {
-        if (entries[i].grantee.uri) {
-            groupEntries.push(entries[i]);
+    for ( i = 0; i < acl.grants.length ; i++ ) {
+        var grant = acl.grants[i];
+        if ( grant.grantee.uri ) {
+            this.addAclEntry( this.$groupAclTable, grant.grantee.uri, grant.permission );
         } else {
-            userEntries.push(entries[i]);
+            this.addAclEntry( this.$userAclTable, grant.grantee.id, grant.permission );
         }
-    }
-    // var userEntries = acl.userEntries, groupEntries = acl.groupEntries, i;
-    for ( i = 0; i < userEntries.length; i++ ) {
-        this.addAclEntry( this.$userAclTable, userEntries[i].grantee.id, userEntries[i].permission );
-    }
-
-    if ( groupEntries.length > 0 ) {
-        var access = groupEntries[0].value;
-        this.$groupAclTable.find( 'input[value="' + access + '"]' ).prop( 'checked', true );
     }
 
     var modalWindow = new ModalWindow( templateEngine.get( 'aclPageTitle' ).render( {name: entry.name || entry.id} ), this.$root, templateEngine );
