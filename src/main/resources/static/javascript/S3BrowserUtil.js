@@ -927,12 +927,17 @@ S3BrowserUtil.prototype.deleteVersion = function(vId, callback) {
     });
 };
 
-S3BrowserUtil.prototype.getShareableUrl = function(id,bucketName, date, asAttachment,    attachmentName) {
+S3BrowserUtil.prototype.getShareableUrl = function( entry, date, callback ) {
     console.trace();
-    var fileName=this.getFileName(id);
     var expires = Math.floor( date.getTime() / 1000 );
-    var params = {Bucket: bucketName, Key: id, Expires:expires};
-    return this.s3.getSignedUrl('getObject',params);
+    var params = { entry: entry, expires: date.getTime(), method: 'GET' };
+    return this.s3.getPresignedUrl( params, function( error, data ) {
+        if ( error != null ) {
+            alert( util.templates.get('errorMessage').render( { status:error.status, message:error.message } ) );
+        } else {
+            callback( data );
+        }
+    });
 };
 
 S3BrowserUtil.prototype.createAttachmentDisposition=function(fileName){
@@ -981,8 +986,9 @@ S3BrowserUtil.prototype.downloadFile = function(id, index, downloadName) {
     if (prefix) {
         id = prefix + '/' + id;
     }
-    iframe.prop('src', this.getShareableUrl(id,bucketName, this.futureDate(1, 'hours'),
-    true, downloadName));
+    this.getShareableUrl( { bucket: bucketName, prefixKey: id }, this.futureDate(1, 'hours'), function( data ) {
+        iframe.prop( 'src', data );
+    });
 };
 
 S3BrowserUtil.prototype.sort = function($table, subSelector, inverse) {

@@ -179,6 +179,22 @@ EcsS3.prototype.headAnything = function( objectParams, callback ) {
     });
 };
 
+EcsS3.prototype.getPresignedUrl = function( objectParams, callback ) {
+    var apiUrl = this.getObjectOrVersionApiUrl(objectParams.entry);
+    var headers = this.getHeaders(objectParams.method);
+    headers['X-Passthrough-Type'] = 'presign';
+    headers['X-Passthrough-Expires'] = objectParams.expires;
+
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback, null );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
 EcsS3.prototype.listBuckets = function(callback ) {
     var apiUrl = this.getSystemApiUrl();
     var headers = this.getHeaders('GET');
@@ -426,5 +442,13 @@ EcsS3.prototype.getBucketApiUrl = function( params ) {
 
 EcsS3.prototype.getObjectApiUrl = function( params ) {
     return combineWithSlash( this.getBucketApiUrl( params ), params.Key );
+};
+
+EcsS3.prototype.getObjectOrVersionApiUrl = function( entry ) {
+    var url = combineWithSlash( combineWithSlash( this.getSystemApiUrl(), entry.bucket ), entry.prefixKey );
+    if ( entry.versionId ) {
+        url = url + '?versionId=' + entry.versionId;
+    }
+    return url;
 };
 

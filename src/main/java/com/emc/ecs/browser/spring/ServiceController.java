@@ -158,7 +158,7 @@ public class ServiceController {
                 }
             }
             Date expirationTime = new Date();
-            expirationTime.setTime(expirationTime.getTime() + 3600000);
+            expirationTime.setTime(Long.parseLong(request.getHeader("X-Passthrough-Expires")));
             PresignedUrlRequest presignedUrlRequest = new PresignedUrlRequest(Method.valueOf(getMethodName(request)), bucketName, key, expirationTime);
             presignedUrlRequest.setVersionId(parameters.get("versionId"));
             presignedUrlRequest.setNamespace(s3Config.getNamespace());

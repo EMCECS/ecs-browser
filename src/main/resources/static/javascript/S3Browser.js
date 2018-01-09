@@ -344,7 +344,9 @@ S3Browser.prototype.openFile = function( id ) {
   var newpath = mainPath.substring(1, mainPath.length);
   var splits = newpath.split("/");
   var bucketName = splits[0];
-  window.open( this.util.getShareableUrl( id,bucketName, this.util.futureDate( 1, 'hours' ), false ) );
+  this.util.getShareableUrl( { bucket: bucketName, prefixKey: id }, this.util.futureDate( 1, 'hours' ), function( data ) {
+    window.open( data );
+  } );
 };
 S3Browser.prototype.openSelectedItems = function() {
   console.trace();
