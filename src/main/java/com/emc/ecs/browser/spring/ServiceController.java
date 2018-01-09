@@ -72,7 +72,7 @@ public class ServiceController {
 
     private static final String PROXY_PATH = SERVLET_PATH + PROXY_SUBPATH;
 
-    @RequestMapping(value = PROXY_SUBPATH + "/**", method = RequestMethod.POST, produces="application/json", consumes="*/*")
+    @RequestMapping(value = PROXY_SUBPATH + "/**", method = RequestMethod.POST, produces="*/*", consumes="*/*")
     public ResponseEntity<?> postProxy(HttpServletRequest request) throws Exception {
         S3Config s3Config = getS3Config(request);
         HttpMethod method = getMethod(request);

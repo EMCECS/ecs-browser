@@ -931,6 +931,7 @@ S3BrowserUtil.prototype.getShareableUrl = function( entry, date, callback ) {
     console.trace();
     var expires = Math.floor( date.getTime() / 1000 );
     var params = { entry: entry, expires: date.getTime(), method: 'GET' };
+    var util = this;
     return this.s3.getPresignedUrl( params, function( error, data ) {
         if ( error != null ) {
             alert( util.templates.get('errorMessage').render( { status:error.status, message:error.message } ) );

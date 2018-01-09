@@ -184,13 +184,21 @@ EcsS3.prototype.getPresignedUrl = function( objectParams, callback ) {
     var headers = this.getHeaders(objectParams.method);
     headers['X-Passthrough-Type'] = 'presign';
     headers['X-Passthrough-Expires'] = objectParams.expires;
+    headers['Content-Type'] = 'text/plain';
+    headers['Accept'] = 'text/plain';
 
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
-            handleData( data, callback, null );
+            callback( null, data );
         },
         error: function(jqHXR, textStatus, errorThrown) {
-            handleError( callback,  jqHXR, errorThrown, textStatus );
+            if ( !jqHXR.status ) {
+                jqHXR = {
+                    status: 418,
+                    statusText: "No server found"
+                };
+            }
+            callback( { status: jqHXR.status, errorThrown: errorThrown, message: jqHXR.statusText }, null );
         },
     });
 };
