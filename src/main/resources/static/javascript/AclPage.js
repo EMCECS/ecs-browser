@@ -39,8 +39,8 @@ AclPage = function( entry, acl, util, templateEngine ) {
     };
 
     this.$root.find( '.s3AddGroupAclButton' )[0].onclick = function() {
-        var name = page.util.prompt( 'groupAclNamePrompt', {}, page.util.validName, 'validNameError' );
-        if ( name == null || name.length == 0 ) return;
+        var uri = page.util.prompt( 'groupAclUriPrompt', {}, page.util.validName, 'validNameError' );
+        if ( uri == null || uri.length == 0 ) return;
         page.addAclEntry( page.$groupAclTable, name );
     };
 

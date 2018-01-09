@@ -15,11 +15,10 @@
 package com.emc.ecs.browser.spring;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,6 +42,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import com.emc.object.Method;
 import com.emc.object.s3.S3Config;
 import com.emc.object.s3.S3SignerV2;
 import com.emc.object.s3.bean.AccessControlList;
@@ -53,9 +53,9 @@ import com.emc.object.s3.bean.ListObjectsResult;
 import com.emc.object.s3.bean.ListVersionsResult;
 import com.emc.object.s3.bean.QueryObjectsResult;
 import com.emc.object.s3.bean.VersioningConfiguration;
+import com.emc.object.s3.request.PresignedUrlRequest;
 import com.emc.object.s3.bean.SlimCopyObjectResult;
 import com.emc.object.util.RestUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -74,6 +74,7 @@ public class ServiceController {
 
     @RequestMapping(value = PROXY_SUBPATH + "/**", method = RequestMethod.POST, produces="application/json", consumes="*/*")
     public ResponseEntity<?> postProxy(HttpServletRequest request) throws Exception {
+        S3Config s3Config = getS3Config(request);
         HttpMethod method = getMethod(request);
 
         String resource = request.getRequestURI();
@@ -110,38 +111,9 @@ public class ServiceController {
             }
         }
 
-        String passthroughNamespace = request.getHeader("X-Passthrough-Namespace");
-        if (StringUtil.isNotBlank(passthroughNamespace)) {
-            RestUtil.putSingle(headers, RestUtil.EMC_NAMESPACE, passthroughNamespace);
+        if (StringUtil.isNotBlank(s3Config.getNamespace())) {
+            RestUtil.putSingle(headers, RestUtil.EMC_NAMESPACE, s3Config.getNamespace());
             // TODO: handle namespace in URL
-        }
-
-        Class<?> responseClass = null;
-        if (resource.length() <= 1) { // no bucket name exists
-            if (parameters.containsKey("endpoint")) {
-                responseClass = ListDataNode.class;
-            } else {
-                responseClass = ListBucketsResult.class;
-            }
-        } else {
-            if (parameters.containsKey("acl")) {
-                responseClass = AccessControlList.class;
-            } else if (parameters.containsKey("query")) {
-                responseClass = QueryObjectsResult.class;
-            } else if (parameters.containsKey("versioning")) {
-                responseClass = VersioningConfiguration.class;
-            } else if (parameters.containsKey("versions")) {
-                responseClass = ListVersionsResult.class;
-            } else {
-                int firstSlash = resource.indexOf('/', 2);
-                if (firstSlash < 0) { // no object name exists
-                    responseClass = ListObjectsResult.class;
-                } else if (copySource) {
-                    responseClass = SlimCopyObjectResult.class;
-                } else { // ugly hack, fix this
-                    responseClass = ListBucketsResult.class;
-                }
-            }
         }
 
         byte[] data = null;
@@ -150,7 +122,7 @@ public class ServiceController {
         } else if (HttpMethod.PUT.equals(method) && (!copySource)) {
             if (!(request instanceof MultipartHttpServletRequest)) {
                 data = readBody(request);
-                data = convertToXml( data, parameters, headers );
+                data = convertToXmlAsNeeded( data, parameters, headers );
             } else {
                 MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
                 Iterator<String> itr = multipartRequest.getFileNames();
@@ -164,39 +136,116 @@ public class ServiceController {
                 }
             }
         }
+        int dataLength = ( data == null ) ? 0 : data.length;
+        RestUtil.putSingle(headers, "Content-Length", Integer.toString(dataLength));
 
-        sign(method.toString(), resource, parameters, headers, request.getHeader("X-Passthrough-Key"),
-                request.getHeader("X-Passthrough-Secret"));
-
-        HttpHeaders newHeaders = new HttpHeaders();
-        for (Entry<String, List<Object>> header : headers.entrySet()) {
-            List<String> headerValue = new ArrayList<String>(header.getValue().size());
-            for (Object value : header.getValue()) {
-                headerValue.add((String) value);
-            }
-            newHeaders.put(header.getKey(), headerValue);
-        }
-
-        String queryString = RestUtil.generateRawQueryString(parameters);
-        if (StringUtil.isNotBlank(queryString)) {
-            resource = resource + "?" + queryString;
-        }
-        String endpoint = request.getHeader("X-Passthrough-Endpoint");
-        while (endpoint.endsWith("/")) {
-            endpoint = endpoint.substring(0,  endpoint.length() - 1);
-        }
-        resource = endpoint + resource;
-
-        RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
-        RestTemplate client = new RestTemplate();
         Object dataToReturn = null;
-        try {
-            dataToReturn = new WrappedResponseEntity( client.exchange(requestEntity, responseClass) );
-        } catch (HttpClientErrorException e) {
-            dataToReturn = new ErrorData(e); // handle and display on the other end
+        if ("presign".equals(request.getHeader("X-Passthrough-Type"))) {
+            String bucketName = null;
+            String key = null;
+            String[] resourceChunks = resource.split("/");
+            for ( String resourceChunk : resourceChunks ) {
+                resourceChunk = ( resourceChunk == null ) ? "" : resourceChunk.trim();
+                if ( !resourceChunk.isEmpty() ) {
+                    if ( bucketName == null ) {
+                        bucketName = resourceChunk;
+                    } else if ( key == null ) {
+                        key = resourceChunk;
+                    }
+                }
+                if ( key != null ) {
+                    break;
+                }
+            }
+            Date expirationTime = new Date();
+            expirationTime.setTime(expirationTime.getTime() + 3600000);
+            PresignedUrlRequest presignedUrlRequest = new PresignedUrlRequest(Method.valueOf(getMethodName(request)), bucketName, key, expirationTime);
+            presignedUrlRequest.setVersionId(parameters.get("versionId"));
+            presignedUrlRequest.setNamespace(s3Config.getNamespace());
+            S3SignerV2 s3Signer = new S3SignerV2(s3Config);
+            dataToReturn = s3Signer.generatePresignedUrl(presignedUrlRequest).toString();
+        } else {
+            sign(method.toString(), resource, parameters, headers, s3Config);
+    
+            HttpHeaders newHeaders = new HttpHeaders();
+            for (Entry<String, List<Object>> header : headers.entrySet()) {
+                List<String> headerValue = new ArrayList<String>(header.getValue().size());
+                for (Object value : header.getValue()) {
+                    headerValue.add((String) value);
+                }
+                newHeaders.put(header.getKey(), headerValue);
+            }
+    
+            Class<?> responseClass = null;
+            if (resource.length() <= 1) { // no bucket name exists
+                if (parameters.containsKey("endpoint")) {
+                    responseClass = ListDataNode.class;
+                } else {
+                    responseClass = ListBucketsResult.class;
+                }
+            } else {
+                if (parameters.containsKey("acl")) {
+                    responseClass = AccessControlList.class;
+                } else if (parameters.containsKey("query")) {
+                    responseClass = QueryObjectsResult.class;
+                } else if (parameters.containsKey("versioning")) {
+                    responseClass = VersioningConfiguration.class;
+                } else if (parameters.containsKey("versions")) {
+                    responseClass = ListVersionsResult.class;
+                } else {
+                    int firstSlash = resource.indexOf('/', 2);
+                    if (firstSlash < 0) { // no object name exists
+                        responseClass = ListObjectsResult.class;
+                    } else if (copySource) {
+                        responseClass = SlimCopyObjectResult.class;
+                    } else { // ugly hack, fix this
+                        responseClass = ListBucketsResult.class;
+                    }
+                }
+            }
+
+            String queryString = RestUtil.generateRawQueryString(parameters);
+            if (StringUtil.isNotBlank(queryString)) {
+                resource = resource + "?" + queryString;
+            }
+            String endpoint = request.getHeader("X-Passthrough-Endpoint");
+            while (endpoint.endsWith("/")) {
+                endpoint = endpoint.substring(0, endpoint.length() - 1);
+            }
+            resource = endpoint + resource;
+    
+            RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
+            RestTemplate client = new RestTemplate();
+            try {
+                dataToReturn = new WrappedResponseEntity( client.exchange(requestEntity, responseClass) );
+            } catch (HttpClientErrorException e) {
+                dataToReturn = new ErrorData(e); // handle and display on the other end
+            }
         }
         return ResponseEntity.ok( dataToReturn );
     } 
+
+    /**
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    private S3Config getS3Config(HttpServletRequest request) throws Exception {
+        String passthroughNamespace = request.getHeader("X-Passthrough-Namespace");
+        String passthroughEndpoint = request.getHeader("X-Passthrough-Endpoint");
+        String passthroughAccessKey = request.getHeader("X-Passthrough-Key");
+        String passthroughSecretKey = request.getHeader("X-Passthrough-Secret");
+        while (passthroughEndpoint.endsWith("/")) {
+            passthroughEndpoint = passthroughEndpoint.substring(0,  passthroughEndpoint.length() - 1);
+        }
+        S3Config s3Config = new S3Config(new URI(passthroughEndpoint));
+        s3Config.setIdentity(passthroughAccessKey);
+        s3Config.setSecretKey(passthroughSecretKey);
+        if (StringUtil.isNotBlank(passthroughNamespace)) {
+            s3Config.setNamespace(passthroughNamespace);
+        }
+        return s3Config;
+    }
 
     /**
      * @param data
@@ -206,7 +255,7 @@ public class ServiceController {
      * @return
      * @throws Exception
      */
-    private byte[] convertToXml(byte[] data, Map<String, String> parameters, Map<String, List<Object>> headers) throws Exception {
+    private byte[] convertToXmlAsNeeded(byte[] data, Map<String, String> parameters, Map<String, List<Object>> headers) throws Exception {
         Class<?> outputClass = null;
         if (parameters.containsKey("acl")) {
             outputClass = AccessControlList.class;
@@ -217,10 +266,6 @@ public class ServiceController {
         if (outputClass == null) { // do nothing
             return data;
         }
-
-        RestUtil.putSingle(headers, "Content-Type", "application/xml");
-
-        System.out.println(outputClass.getName() + ": \"" + new String(data, StandardCharsets.UTF_8) + "\"");
 
         Object outputObject;
         ObjectMapper objectMapper = new ObjectMapper();
@@ -235,7 +280,19 @@ public class ServiceController {
         context.createMarshaller().marshal(outputObject, outputStream);
         data =  outputStream.toByteArray();
 
-        System.out.println(outputClass.getName() + ": \"" + new String(data, StandardCharsets.UTF_8) + "\"");
+        RestUtil.putSingle(headers, "Content-Type", "application/xml");
+
+//        System.out.println(outputClass.getName() + ": \"" + new String(data, StandardCharsets.UTF_8) + "\"");
+//        System.out.println("Headers:");
+//        for (Entry<String, List<Object>> header : headers.entrySet()) {
+//            String allValues = "";
+//            String separator = "";
+//            for (Object value : header.getValue()) {
+//                allValues = allValues + separator + value.toString();
+//                separator = ",";
+//            }
+//            System.out.println(">> " + header.getKey() + ": " + allValues);
+//        }
 
         return data;
     }
@@ -256,23 +313,17 @@ public class ServiceController {
      * @param resource
      * @param parameters
      * @param headers
-     * @param passthroughAccessKey
-     * @param passthroughSecretKey
+     * @param s3Config
      */
     private void sign(String method, String resource, Map<String, String> parameters, Map<String, List<Object>> headers,
-            String passthroughAccessKey, String passthroughSecretKey) {
-        if (StringUtil.isBlank(passthroughSecretKey)) {
+            S3Config s3Config) {
+        if (StringUtil.isBlank(s3Config.getSecretKey())) {
             // no auth secret; skip signing, e.g. for public read-only buckets.
             return;
         }
 
-        S3Config s3Config = new S3Config();
-        s3Config.setIdentity(passthroughAccessKey);
-        s3Config.setSecretKey(passthroughSecretKey);
         S3SignerV2 s3Signer = new S3SignerV2(s3Config);
-
         s3Signer.sign(method, resource, parameters, headers);
-
     }
 
     /**
@@ -280,29 +331,16 @@ public class ServiceController {
      * @return
      */
     private static final HttpMethod getMethod(HttpServletRequest request) {
-        return HttpMethod.valueOf(request.getHeader("X-Passthrough-Method"));
+        return HttpMethod.valueOf(getMethodName(request));
     }
 
-    // /**
-    // * @param request
-    // * @return
-    // * @throws Exception
-    // */
-    // private static final S3JerseyClient getClient(HttpServletRequest request)
-    // throws Exception {
-    // String passthroughNamespace =
-    // request.getHeader("X-Passthrough-Namespace");
-    // String passthroughEndpoint = request.getHeader("X-Passthrough-Endpoint");
-    // String passthroughAccessKey = request.getHeader("X-Passthrough-Key");
-    // String passthroughSecretKey = request.getHeader("X-Passthrough-Secret");
-    // S3Config s3Config = new S3Config(new URI(passthroughEndpoint));
-    // s3Config.setIdentity(passthroughAccessKey);
-    // s3Config.setSecretKey(passthroughSecretKey);
-    // if (StringUtil.isNotBlank(passthroughNamespace)) {
-    // s3Config.setNamespace(passthroughNamespace);
-    // }
-    // return new S3JerseyClient(s3Config);
-    // }
+    /**
+     * @param request
+     * @return
+     */
+    private static String getMethodName(HttpServletRequest request) {
+        return request.getHeader("X-Passthrough-Method");
+    }
 
     /**
      * @param list

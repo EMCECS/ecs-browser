@@ -53,7 +53,6 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-actuator:${springBootVersion}")
     compile("org.slf4j:slf4j-api:1.7.21")
     compile("com.emc.ecs:object-client:3.0.3") {
-        exclude group: 'com.emc.ecs', module: 'smart-client'
         exclude group: 'com.emc.ecs', module: 'object-transform'
         exclude group: 'org.jdom', module: 'jdom2'
         exclude group: 'org.slf4j', module: 'slf4j-api'

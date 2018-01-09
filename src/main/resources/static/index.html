@@ -643,8 +643,18 @@ permissions and limitations under the License.
         <div class="s3TableWrapper">
             <table class="table">
                 <tr class="row">
-                    <td class="cell s3PropertyName">Versioning Status</td>
-                    <td class="cell"><select class="s3VersioningStatus" value="${versioning.status}" ><option></option><option>Enabled</option><option>Suspended</option></select></td>
+                    <th class="cell s3PropertyName">Versioning Status:</th>
+                    <th class="cell s3VersioningStatusEnabledHeader">Enabled</th>
+                    <th class="cell s3VersioningStatusSuspendedHeader">Suspended</th>
+                </tr>
+                <tr class="row">
+                    <td class="cell">&nbsp;</td>
+                    <td class="cell s3VersioningStatusEnabled">
+                        <input type="radio" name="VersioningStatus" value="Enabled" class="s3VersioningStatusValue"/>
+                    </td>
+                    <td class="cell s3VersioningStatusSuspended">
+                        <input type="radio" name="VersioningStatus" value="Suspended" class="s3VersioningStatusValue"/>
+                    </td>
                 </tr>
             </table>
         </div>
@@ -665,7 +675,8 @@ permissions and limitations under the License.
 </script>
 <script id="template.s3.versionRow" type="text/html">
     <tr class="row">
-        <td class="cell s3VersionDate">D{version.dateCreated}</td>
+        <td class="cell s3VersionId">%{version.versionId}</td>
+        <td class="cell s3VersionDate">D{version.lastModified}</td>
         <td class="s3ButtonCell cell">
             <div class="s3Button s3DownloadButton" title="Download this version">Download</div>
         </td>

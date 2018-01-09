@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2011-2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 VersionsPage = function( entry, currentLocation, util, templateEngine ) {
     this.entry = entry;
     this.currentLocation = currentLocation;
-    this.oid = entry.objectId || entry.id;
+    this.name = entry.name || entry.id;
     this.util = util;
     this.templates = templateEngine;
     var requiredSelectors = [
@@ -26,7 +26,7 @@ VersionsPage = function( entry, currentLocation, util, templateEngine ) {
     this.$versionTable = this.$root.find( '.s3VersionTable' ).empty();
     var $closeButton = this.$root.find( '.s3CloseButton' );
 
-    this.modalWindow = new ModalWindow( templateEngine.get( 'versionsPageTitle' ).render( {name: entry.name || entry.id} ), this.$root, templateEngine );
+    this.modalWindow = new ModalWindow( templateEngine.get( 'versionsPageTitle' ).render( {name: this.name} ), this.$root, templateEngine );
 
     this.refresh();
 
@@ -40,7 +40,9 @@ VersionsPage.prototype.refresh = function() {
     var page = this;
     this.util.listVersions( this.oid, this.currentLocation, function( versions ) {
         versions.forEach( function( version ) {
-            page.addVersion( version );
+            if ( page.name == version.key ) {
+                page.addVersion( version );
+            }
         } );
     } );
 };
@@ -51,19 +53,18 @@ VersionsPage.prototype.addVersion = function( version ) {
     var $deleteButton = $versionRow.find( '.s3DeleteButton' );
     var page = this;
     if ( $downloadButton.length > 0 ) $downloadButton[0].onclick = function() {
-        var versionName = (page.entry.name || page.entry.id) + ' at ' + version.dateCreated.toLocaleString();
-        page.util.downloadFile( version.oid, 0, versionName );
+        page.util.downloadFile( page.name, version.versionId );
     };
     if ( $restoreButton.length > 0 ) $restoreButton[0].onclick = function() {
         if ( confirm( page.templates.get( 'restoreVersionPrompt' ).render( {version: version} ) ) ) {
-            page.util.restoreVersion( page.oid, version.oid, function() {
+            page.util.restoreVersion( page.name, version.versionId, function() {
                 alert( page.templates.get( 'restoreVersionSuccessPrompt' ).render( {version: version} ) );
             } );
         }
     };
     if ( $deleteButton.length > 0 ) $deleteButton[0].onclick = function() {
         if ( confirm( page.templates.get( 'deleteVersionPrompt' ).render( {version: version} ) ) ) {
-            page.util.deleteVersion( version.oid, function() {
+            page.util.deleteVersion( version.versionId, function() {
                 $versionRow.remove();
             } );
         }

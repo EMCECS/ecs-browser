@@ -95,9 +95,11 @@ S3BrowserUtil.prototype.prompt = function(templateName, model, validatorFunction
         }));
         value = prompt(promptString, value);
     }
-    if (value == null || value.length == 0)
-    return null;
-    return value;
+    if (value == null || value.length == 0) {
+        return null;
+    } else {
+        return value;
+    }
 };
 
 S3BrowserUtil.prototype.getS3Info = function(callback) {

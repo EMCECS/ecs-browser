@@ -280,7 +280,7 @@ EcsS3.prototype.getBucketVersioning = function( bucketParams, callback ) {
 };
 
 EcsS3.prototype.putBucketVersioning = function( params, callback ) {
-    var apiUrl = this.getBucketApiUrl(params) + '?versioning';
+    var apiUrl = this.getObjectApiUrl(params) + '?versioning';
     var headers = this.getHeaders('PUT');
     headers['ContentType'] = 'application/json';
     var data = JSON.stringify(params.versioning);

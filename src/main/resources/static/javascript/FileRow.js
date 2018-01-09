@@ -98,7 +98,9 @@ FileRow.prototype.updateEntry = function( entry ) {
 
   this.$name.text( entry.name || entry.id ).attr( 'title', entry.name || entry.id );
   this.$Size.text( this.Size ).attr( 'title', this.Size );
-  this.$Date.text( entry.systemMeta.lastModified ).attr( 'title', entry.systemMeta.lastModified );
+  if (entry.systemMeta) {
+    this.$Date.text( entry.systemMeta.lastModified ).attr( 'title', entry.systemMeta.lastModified );
+  }
 };
 FileRow.prototype.dragStart = function( event ) {
   if ( this.entry.systemMeta ) {

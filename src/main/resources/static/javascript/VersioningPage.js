@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 EMC Corporation. All Rights Reserved.
+ * Copyright 2017-2018 EMC Corporation. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,21 +19,32 @@ VersioningPage = function( entry, versioning, util, templateEngine ) {
         versioning.status = '';
     }
 
-    this.$root = jQuery( templateEngine.get( 'versioningPage' ).render( {}, ['.s3VersioningStatus', '.s3SaveButton', '.s3CancelButton'] ) );
+    this.$root = jQuery( templateEngine.get( 'versioningPage' ).render( {}, ['.s3VersioningStatusEnabled', '.s3VersioningStatusSuspended', '.s3SaveButton', '.s3CancelButton'] ) );
 
     var modalWindow = new ModalWindow( templateEngine.get( 'versioningPageTitle' ).render( {name: entry.name || entry.id} ), this.$root, templateEngine );
 
     var page = this;
 
+    this.$root.find( 'input[value="' + versioning.status + '"]' ).prop( 'checked', true );
+
     this.$root.find( '.s3SaveButton' )[0].onclick = function() {
-        versioning.status = page.$root.find( '.s3VersioningStatus' ).val();
-        page.util.setVersioning( entry, versioning, function() {
+        versioning.status = '';
+        var checkedElement = page.$root.find( '.s3VersioningStatusValue:checked' );
+        if (checkedElement) {
+            versioning.status = checkedElement.val();
+        }
+        if (!versioning.status) {
             modalWindow.remove();
-        } );
+        } else {
+            page.util.setVersioning( entry, versioning, function() {
+                modalWindow.remove();
+            } );
+        }
     };
 
     this.$root.find( '.s3CancelButton' )[0].onclick = function() {
         modalWindow.remove();
     };
+
 };
 
