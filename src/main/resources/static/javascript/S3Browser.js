@@ -372,7 +372,7 @@ S3Browser.prototype.downloadSelectedItems = function() {
   if ( selectedRows.length == 0 ) this.util.error( this.templates.get( 'nothingSelectedError' ).render() );
   if ( !this._checkNoDirectories( selectedRows ) ) return;
   for ( i = 0; i < selectedRows.length; i++ ) {
-    this.util.downloadFile( selectedRows[i].entry.prefixKey, i , this.currentLocation);
+    this.util.downloadFile( this.currentLocation, selectedRows[i].entry.prefixKey );
   }
 };
 
