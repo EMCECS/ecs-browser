@@ -42,27 +42,10 @@ SharePage = function( entry, currentLocation,util, templateEngine, s3Info ) {
     };
     $generateButton[0].onclick = function() {
         var date = page.util.futureDate( $expirationCount.val(), $expirationUnit.val() );
-        if ( $downloadCount.val().length > 0
-            || $allowTable.find( '.row' ).length > 0
-            || $denyTable.find( '.row' ).length > 0 ) { // need to create an access token for these features
-            var policy = new AccessTokenPolicy( date, null, parseInt( $downloadCount.val() ), [], [] );
-            $allowTable.find( '.row' ).each( function() {
-                policy.sourceAllowList.push( jQuery( this ).find( '.s3IpSubnet' ).val() );
-            } );
-            $denyTable.find( '.row' ).each( function() {
-                policy.sourceDenyList.push( jQuery( this ).find( '.s3IpSubnet' ).val() );
-            } );
-            page.util.createAccessToken( policy, entry.id, function( tokenUrl ) {
-                $shareUrl.text( tokenUrl );
-                $shareUrl.selectText();
-            } )
-
-        } else { // just use a shareable URL
-        	var bucketName=currentLocation.split("/");
-        	
-            $shareUrl.text( page.util.getShareableUrl( entry.prefixKey,bucketName[1], date ) );
+        page.util.getShareableUrl( entry, date, function( data ) {
+            $shareUrl.text( data );
             $shareUrl.selectText();
-        }
+        });
     };
 };
 SharePage.prototype.addIp = function( $table ) {

@@ -54,7 +54,7 @@ FileRow = function( entry, browser ) {
     if ( fileRow.interactive ) {
       console.log(browser.util.isListable( fileRow.entry.type ));
       if ( browser.util.isListable( fileRow.entry.type ) ) browser.list( fileRow.entry.id );
-      else browser.openFile( fileRow.entry.id );
+      else browser.openFile( fileRow.entry );
     }
   } );
   // drag-off behavior (drag-and-drop to local filesystem - HTML5)
@@ -115,7 +115,7 @@ FileRow.prototype.dragStart = function( event ) {
 };
 FileRow.prototype.setDragData = function( event ) {
   if ( this.$root[0].dataset && event.dataTransfer && this.entry.systemMeta ) {
-    var fileInfo = this.entry.systemMeta.mimeType + ':' + (this.entry.name || this.entry.id) + ':' + this.browser.util.getShareableUrl( this.entry.id, this.browser.util.futureDate( 1, 'hours' ) );
+    var fileInfo = this.entry.systemMeta.mimeType + ':' + (this.entry.name || this.entry.id) + ':' + this.browser.util.getShareableUrl( this.entry, this.browser.util.futureDate( 1, 'hours' ) );
     event.dataTransfer.setData( "DownloadURL", fileInfo );
   }
 };

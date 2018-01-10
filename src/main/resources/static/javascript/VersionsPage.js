@@ -53,7 +53,7 @@ VersionsPage.prototype.addVersion = function( version ) {
     var $deleteButton = $versionRow.find( '.s3DeleteButton' );
     var page = this;
     if ( $downloadButton.length > 0 ) $downloadButton[0].onclick = function() {
-        page.util.downloadFile( page.currentLocation, page.name, version.versionId );
+        page.util.downloadFile( { bucket: page.entry.bucket, prefixKey: page.entry.prefixKey, versionId: version.versionId } );
     };
     if ( $restoreButton.length > 0 ) $restoreButton[0].onclick = function() {
         if ( confirm( page.templates.get( 'restoreVersionPrompt' ).render( {version: version} ) ) ) {

@@ -972,21 +972,14 @@ S3BrowserUtil.prototype.addKey = function( keys, newKey, newType ) {
   return keys;
 };
 
-S3BrowserUtil.prototype.downloadFile = function( currentLocation, id, versionId ) {
+S3BrowserUtil.prototype.downloadFile = function( entry ) {
     console.trace();
     var iframe = $('iframe#s3Iframe');
     if (iframe.length == 0) {
         iframe = $('<iframe id="s3Iframe" style="display: none;" />');
         $('body').append(iframe);
     }
-    var newpath = currentLocation.substring(1, currentLocation.length);
-    var splits = newpath.split("/");
-    var bucketName = splits[0];
-    var prefix = splits.splice(1, splits.length).join('/');
-    if (prefix) {
-        id = prefix + '/' + id;
-    }
-    this.getShareableUrl( { bucket: bucketName, prefixKey: id, versionId: versionId }, this.futureDate(1, 'hours'), function( data ) {
+    this.getShareableUrl( entry, this.futureDate(1, 'hours'), function( data ) {
         iframe.prop( 'src', data );
     });
 };

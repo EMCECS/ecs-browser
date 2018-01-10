@@ -339,12 +339,8 @@ S3Browser.prototype.list = function( id, extraQueryParameters ) {
 S3Browser.prototype.refresh = function() {
   this.list( this.currentLocation );
 };
-S3Browser.prototype.openFile = function( id ) {
-  var mainPath=this.currentLocation;
-  var newpath = mainPath.substring(1, mainPath.length);
-  var splits = newpath.split("/");
-  var bucketName = splits[0];
-  this.util.getShareableUrl( { bucket: bucketName, prefixKey: id }, this.util.futureDate( 1, 'hours' ), function( data ) {
+S3Browser.prototype.openFile = function( entry ) {
+  this.util.getShareableUrl( entry, this.util.futureDate( 1, 'hours' ), function( data ) {
     window.open( data );
   } );
 };
@@ -357,7 +353,7 @@ S3Browser.prototype.openSelectedItems = function() {
   } else {
     if ( !this._checkNoDirectories( selectedRows ) ) return;
     for ( i = 0; i < selectedRows.length; i++ ) {
-      this.openFile( selectedRows[i].entry.prefixKey );
+      this.openFile( selectedRows[i].entry );
     }
   }
 };
@@ -372,7 +368,7 @@ S3Browser.prototype.downloadSelectedItems = function() {
   if ( selectedRows.length == 0 ) this.util.error( this.templates.get( 'nothingSelectedError' ).render() );
   if ( !this._checkNoDirectories( selectedRows ) ) return;
   for ( i = 0; i < selectedRows.length; i++ ) {
-    this.util.downloadFile( this.currentLocation, selectedRows[i].entry.prefixKey );
+    this.util.downloadFile( selectedRows[i].entry );
   }
 };
 
@@ -416,8 +412,9 @@ S3Browser.prototype.shareEntry = function( entry ) {
     return;
   }
 
-  new SharePage( entry, this.currentLocation,this.util, this.templates, this.s3Info );
+  new SharePage( entry, this.currentLocation, this.util, this.templates, this.s3Info );
 };
+
 S3Browser.prototype.moveSelectedItems = function() {
   var fileRows = this.getSelectedRows();
   if ( fileRows.length == 0 ) this.util.error( this.templates.get( 'nothingSelectedError' ).render() );
