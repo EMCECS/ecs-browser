@@ -21,7 +21,7 @@ VersioningPage = function( entry, versioning, util, templateEngine ) {
 
     this.$root = jQuery( templateEngine.get( 'versioningPage' ).render( {}, ['.s3VersioningStatusEnabled', '.s3VersioningStatusSuspended', '.s3SaveButton', '.s3CancelButton'] ) );
 
-    var modalWindow = new ModalWindow( templateEngine.get( 'versioningPageTitle' ).render( {name: entry.name || entry.id} ), this.$root, templateEngine );
+    var modalWindow = new ModalWindow( templateEngine.get( 'versioningPageTitle' ).render( entry ), this.$root, templateEngine );
 
     var page = this;
 

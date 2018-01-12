@@ -156,10 +156,10 @@ ConfigPage.prototype.showUidPage = function() {
     var page = this;
     if ( $testButton.length > 0 ) $testButton[0].onclick = function() {
         var s3 = new EcsS3({endpoint: $endpoint.val(), accessKeyId: $uid.val(),secretAccessKey:  $secret.val(), s3ForcePathStyle: true});
-        var params={Bucket: '',Key:'/haha'};
-        s3.headAnything(params,function(err,data){
+        var entry = { bucket: '', key:'/haha' };
+        s3.headAnything( entry, function( err, data ) {
             var messageKey;
-            if( err && ( err.status == 404 ) ) {
+            if ( err && ( err.status == 404 ) ) {
                 messageKey = 'uidSuccessPrompt';
             } else {
                 messageKey = 'uidFailurePrompt';

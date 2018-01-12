@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2011-2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,10 +12,9 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-SharePage = function( entry, currentLocation,util, templateEngine, s3Info ) {
+SharePage = function( entry, util, templateEngine, s3Info ) {
     this.entry = entry;
     this.util = util;
-    var currentLocation=currentLocation;
     this.templates = templateEngine;
     var requiredSelectors = ['input.s3ExpirationCount', 'select.s3ExpirationUnit', '.s3ShareUrl', '.s3GenerateButton'];
     var $sharePage = jQuery( this.templates.get( 'sharePage' ).render( {}, requiredSelectors ) );
@@ -31,7 +30,7 @@ SharePage = function( entry, currentLocation,util, templateEngine, s3Info ) {
 
 //    if ( '2.1'.localeCompare( s3Info.version ) < 0 ) $sharePage.find( '.s3TokenFeature' ).show();
 
-    new ModalWindow( this.templates.get( 'sharePageTitle' ).render( {name: entry.name || entry.id} ), $sharePage, this.templates );
+    new ModalWindow( this.templates.get( 'sharePageTitle' ).render( entry ), $sharePage, this.templates );
 
     var page = this;
     if ( $addAllowButton.length > 0 ) $addAllowButton[0].onclick = function() {

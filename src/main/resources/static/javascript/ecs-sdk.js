@@ -203,7 +203,7 @@ EcsS3.prototype.getPresignedUrl = function( objectParams, callback ) {
     });
 };
 
-EcsS3.prototype.listBuckets = function(callback ) {
+EcsS3.prototype.listBuckets = function( callback ) {
     var apiUrl = this.getSystemApiUrl();
     var headers = this.getHeaders('GET');
     
@@ -219,20 +219,34 @@ EcsS3.prototype.listBuckets = function(callback ) {
 };
 
 EcsS3.prototype.listObjects = function( bucketParams, callback ) {
-    var apiUrl = this.getBucketApiUrl(bucketParams);
+    var apiUrl = this.getBucketApiUrl( bucketParams.entry );
     var separatorChar = '?';
-    if (isNonEmptyString(bucketParams.Delimiter)) {
-      apiUrl = apiUrl + separatorChar + 'delimiter=' + bucketParams.Delimiter;
+    if (isNonEmptyString(bucketParams.delimiter)) {
+      apiUrl = apiUrl + separatorChar + 'delimiter=' + bucketParams.delimiter;
       separatorChar = '&';
     };
-    if (isNonEmptyString(bucketParams.Prefix)) {
-      apiUrl = apiUrl + separatorChar + 'prefix=' + bucketParams.Prefix;
+    if (isNonEmptyString(bucketParams.entry.key)) {
+      apiUrl = apiUrl + separatorChar + 'prefix=' + bucketParams.entry.key;
       separatorChar = '&';
     };
-    if (isNonEmptyString(bucketParams.ExtraQueryParameters)) {
-      apiUrl = apiUrl + separatorChar + bucketParams.ExtraQueryParameters;
+    if (isNonEmptyString(bucketParams.extraQueryParameters)) {
+      apiUrl = apiUrl + separatorChar + bucketParams.extraQueryParameters;
       separatorChar = '&';
     };
+    var headers = this.getHeaders('GET');
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback, getEcsBody );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
+EcsS3.prototype.listObjectVersions = function( entry, callback ) {
+    var apiUrl = this.getObjectApiUrl( entry ) + '?versions';
     var headers = this.getHeaders('GET');
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -260,6 +274,20 @@ EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {
 };
 
 EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
+    var apiUrl = this.getObjectApiUrl(objectParams) + '?acl';
+    var headers = this.getHeaders('GET');
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback, getEcsBody );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
+EcsS3.prototype.getAcl = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams) + '?acl';
     var headers = this.getHeaders('GET');
     
@@ -319,30 +347,16 @@ EcsS3.prototype.putBucketVersioning = function( params, callback ) {
     });
 };
 
-EcsS3.prototype.listObjectVersions = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl(objectParams) + '?versions';
-    var headers = this.getHeaders('GET');
-    
-    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
-        success: function(data, textStatus, jqHXR) {
-            handleData( data, callback, getEcsBody );
-        },
-        error: function(jqHXR, textStatus, errorThrown) {
-            handleError( callback,  jqHXR, errorThrown, textStatus );
-        },
-    });
-};
-
 EcsS3.prototype.putObject = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
     var headers = this.getHeaders('PUT');
-    if (objectParams.Headers) {
-      for (var key in objectParams.Headers) {
-        headers[key] = objectParams.Headers[key];
+    if (objectParams.headers) {
+      for (var key in objectParams.headers) {
+        headers[key] = objectParams.headers[key];
       }
     }
-    var data = objectParams.Body ? objectParams.Body : '';
-    var contentType = objectParams.Body ? data.type : 'application/octet-stream';
+    var data = objectParams.body ? objectParams.body : '';
+    var contentType = objectParams.body ? data.type : 'application/octet-stream';
     if (!isNonEmptyString(contentType)) {
        contentType = 'multipart/form-data';
     }
@@ -400,6 +414,35 @@ EcsS3.prototype.deleteObject = function( objectParams, callback ) {
     });
 };
 
+EcsS3.prototype.deleteVersion = function( entry, callback ) {
+    var apiUrl = this.getObjectOrVersionApiUrl( entry );
+    var headers = this.getHeaders('DELETE');
+    
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
+EcsS3.prototype.restoreVersion = function( entry, callback ) {
+    var apiUrl = this.getObjectApiUrl( entry );
+    var headers = this.getHeaders('DELETE');
+    headers['X-amz-copy-source'] = combineWithSlash( combineWithSlash( '', entry.bucket ), entry.key ) + '?versionId=' + entry.versionId;
+
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
 EcsS3.prototype.getServiceInformation = function( callback ) {
     var apiUrl = this.getSystemApiUrl() + '?endpoint';
     var headers = this.getHeaders('GET');
@@ -444,16 +487,16 @@ EcsS3.prototype.getSystemApiUrl = function() {
     return window.location.protocol + '//' + window.location.host + '/service/proxy';
 };
 
-EcsS3.prototype.getBucketApiUrl = function( params ) {
-    return combineWithSlash( this.getSystemApiUrl(), params.Bucket );
+EcsS3.prototype.getBucketApiUrl = function( entry ) {
+    return combineWithSlash( this.getSystemApiUrl(), entry.bucket );
 };
 
-EcsS3.prototype.getObjectApiUrl = function( params ) {
-    return combineWithSlash( this.getBucketApiUrl( params ), params.Key );
+EcsS3.prototype.getObjectApiUrl = function( entry ) {
+    return combineWithSlash( this.getBucketApiUrl( entry ), entry.key );
 };
 
 EcsS3.prototype.getObjectOrVersionApiUrl = function( entry ) {
-    var url = combineWithSlash( combineWithSlash( this.getSystemApiUrl(), entry.bucket ), entry.prefixKey );
+    var url = combineWithSlash( combineWithSlash( this.getSystemApiUrl(), entry.bucket ), entry.key );
     if ( entry.versionId ) {
         url = url + '?versionId=' + entry.versionId;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-BucketCreationPage = function( name, util, templateEngine, bucketCreateFunction ) {
-    this.name = name;
+BucketCreationPage = function( entry, util, templateEngine, bucketCreateFunction ) {
+    this.entry = entry;
     this.util = util;
     this.templates = templateEngine;
     this.bucketCreateFunction = bucketCreateFunction;
@@ -37,7 +37,7 @@ BucketCreationPage = function( name, util, templateEngine, bucketCreateFunction 
     var $saveButton = this.$root.find( '.s3SaveButton' );
     var $cancelButton = this.$root.find( '.s3CancelButton' );
 
-    this.modalWindow = new ModalWindow( templateEngine.get( 'bucketCreationPageTitle' ).render( { name: name } ), this.$root, templateEngine );
+    this.modalWindow = new ModalWindow( templateEngine.get( 'bucketCreationPageTitle' ).render( this.entry ), this.$root, templateEngine );
 
     var page = this;
     $addUserMetadataButton[0].onclick = function() {

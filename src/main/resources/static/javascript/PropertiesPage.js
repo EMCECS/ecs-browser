@@ -42,7 +42,7 @@ PropertiesPage = function( entry, util, templateEngine ) {
         this.addTag( $systemMetaTable, prop, entry.systemMeta[prop], false );
     }
 
-    this.modalWindow = new ModalWindow( templateEngine.get( 'propertiesPageTitle' ).render( {name: entry.name || entry.id} ), this.$root, templateEngine );
+    this.modalWindow = new ModalWindow( templateEngine.get( 'propertiesPageTitle' ).render( { name: entry.name } ), this.$root, templateEngine );
 
     var page = this;
     $addUserMetaButton[0].onclick = function() {
@@ -93,13 +93,13 @@ PropertiesPage.prototype.save = function() {
         if ( metaSaved && metaDeleted ) page.modalWindow.remove();
     };
     if ( allTags.length > 0 ) {
-        page.util.setUserMetadata( page.entry.prefixKey, meta, function() {
+        page.util.setUserMetadata( page.entry, meta, function() {
             metaSaved = true;
             callComplete();
         } );
     } else metaSaved = true;
     if ( deletedTags.length > 0 ) {
-        page.util.setUserMetadata( page.entry.prefixKey, meta, function() {
+        page.util.setUserMetadata( page.entry, meta, function() {
             metaDeleted = true;
             callComplete();
         } );

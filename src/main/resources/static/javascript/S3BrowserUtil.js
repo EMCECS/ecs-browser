@@ -113,20 +113,149 @@ S3BrowserUtil.prototype.getS3Info = function(callback) {
     });
 };
 
-S3BrowserUtil.prototype.createBucketOrDirectory = function(directoryObjectName, functionUpdateGui, currentLocation, functionAddProperties) {
+S3BrowserUtil.prototype.getLocationText = function( currentEntry ) {
+    var locationText = '/';
+    if ( currentEntry ) {
+        if ( currentEntry.bucket ) {
+            locationText = locationText + currentEntry.bucket + '/';
+        }
+        if ( currentEntry.key ) {
+            locationText = locationText + currentEntry.key;
+        }
+    }
+    return locationText;
+};
+
+S3BrowserUtil.prototype.getCurrentEntry = function( locationText ) {
+    var bucket;
+    var key;
+    var name;
+    var type;
+    if ( locationText ) {
+        var locationChunks = locationText.split('/');
+        if ( locationChunks ) {
+            for ( var i = 0; i < locationChunks.length; ++i ) {
+                var locationChunk = locationChunks[i];
+                if ( locationChunk ) {
+                    if ( !bucket ) {
+                        bucket = locationChunk;
+                        name = locationChunk;
+                        type = FileRow.ENTRY_TYPE.BUCKET;
+                    } else {
+                        name = locationChunk + '/';
+                        if ( !key ) {
+                            key = name;
+                        } else {
+                            key = key + name;
+                        }
+                        type = FileRow.ENTRY_TYPE.DIRECTORY;
+                    }
+                }
+            }
+        }
+    }
+    return {
+        bucket: bucket,
+        key: key,
+        name: name,
+        type: type
+    };
+};
+
+S3BrowserUtil.prototype.getParentEntry = function( entry ) {
+    var bucket;
+    var key;
+    var name;
+    var type;
+    if ( entry.key ) {
+        bucket = entry.bucket;
+        name = bucket;
+        type = FileRow.ENTRY_TYPE.BUCKET;
+        var keyChunks = entry.key.split('/');
+        if ( keyChunks ) {
+            var lastNonEmptyChunkIndex;
+            for ( lastNonEmptyChunkIndex = keyChunks.length - 1; lastNonEmptyChunkIndex >= 0; --lastNonEmptyChunkIndex ) {
+                if ( keyChunks[lastNonEmptyChunkIndex] ) {
+                    break;
+                }
+            }
+            for ( var i = 0; i < lastNonEmptyChunkIndex; ++i ) {
+                var keyChunk = keyChunks[i];
+                if ( keyChunk ) {
+                    name = keyChunk + '/';
+                    if ( !key ) {
+                        key = name;
+                    } else {
+                        key = key + name;
+                    }
+                    type = FileRow.ENTRY_TYPE.DIRECTORY;
+                }
+            }
+        }
+    }
+    return {
+        bucket: bucket,
+        key: key,
+        name: name,
+        type: type
+    };
+};
+
+S3BrowserUtil.prototype.getChildEntry = function( entry, childName, isFolder ) {
+    var bucket;
+    var key;
+    var name;
+    var type;
+    if ( entry.type ) {
+        bucket = entry.bucket;
+        name = childName;
+        key = (!entry.key) ? childName : entry.key + childName;
+        if ( isFolder ) {
+            key = this.endWithSlash( key );
+            type = FileRow.ENTRY_TYPE.DIRECTORY;
+        } else {
+            type = FileRow.ENTRY_TYPE.REGULAR;
+        }
+    } else {
+        bucket = childName;
+        name = childName;
+        type = FileRow.ENTRY_TYPE.BUCKET;
+    }
+    return {
+        bucket: bucket,
+        key: key,
+        name: name,
+        type: type
+    };
+};
+
+S3BrowserUtil.prototype.getName = function( path ) {
+    var pathChunks = path.split('/');
+    var pathChunk = '';
+    for ( var i = pathChunks.length - 1; i >= 0; --i ) {
+        pathChunk = pathChunks[i];
+        if ( pathChunk ) {
+            break;
+        }
+    }
+    return pathChunk;
+};
+
+S3BrowserUtil.prototype.createBucketOrDirectory = function( entry, functionUpdateGui, functionAddProperties) {
     var util = this;
     util.showStatus('Creating bucket or directory...');
     var createObjectCallback = function( headers ) {
-        util.createObject(directoryObjectName, null, null, null,
-                function(result) {
-                    util.hideStatus('Creating bucket or directory...');
-                    if (result) {
-                        functionUpdateGui();
-                    }
-                }, null, currentLocation, headers);
+        util.createObject( entry, null, null, null, headers,
+            function( result ) {
+                util.hideStatus('Creating bucket or directory...');
+                if ( result ) {
+                    functionUpdateGui();
+                }
+            }
+        );
     }
     functionAddProperties( createObjectCallback );
-}
+};
 
 S3BrowserUtil.prototype.showStatus = function(message) {
     if (this.$statusMessage) {
@@ -246,263 +375,124 @@ S3BrowserUtil.prototype.isBucket = function(entryType) {
     return entryType == FileRow.ENTRY_TYPE.BUCKET;
 };
 
-S3BrowserUtil.prototype.parentDirectory = function(path) {
-    path = path.substr(0, path.length - 1); // remove last character in case it's a slash
-    var lastSlashIndex = path.lastIndexOf('/');
-    if (lastSlashIndex === 0)
-    return '/';
-    else
-    return path.substr(0, lastSlashIndex);
-};
-
 ListOptions=function(a,b,c,d,e){this.limit=a;this.token=b;this.includeMeta=c;this.userMetaTags=d;this.systemMetaTags=e};
 
-S3BrowserUtil.prototype.list = function(path, includeMetadata, callback, extraQueryParameters) {
+S3BrowserUtil.prototype.list = function(entry, includeMetadata, callback, extraQueryParameters) {
     var win = window;
     var util = this;
     var options = new ListOptions(0, null, true, null, null);
     var isMetadataList = extraQueryParameters && ( extraQueryParameters.indexOf( 'query=' ) >= 0 );
+    var entries = [];
     this.showStatus('Listing directory...');
-    // Flat mode
-    if (!this.useHierarchicalMode) {
-        // List buckets
-        if (path == '/') {
-            var list_call = function(util, options, entries) {
-                util.s3.listBuckets(function(err, result) {
-                    util.hideStatus('Listing directory...');
-                    if (!err) {
-                        var buckets = result.buckets;
-                        for (var i = 0; i < buckets.length; i++) {
-                            var values = buckets[i];
-                            var entry = {
-                                name : values.name,
-                                systemMeta : values,
-                                type : FileRow.ENTRY_TYPE.BUCKET,
-                                id : path + values.name,
-                                prefixKey: path + values.name,
-                                bucket: bucketName
-                            };
-                            if (values.creationDate) {
-                                values.creationDate = new Date(+values.creationDate);
-                            }
-                            entry.systemMeta.lastModified = values.creationDate;
-                            entries.push(entry);
-                            callback(entries);
-                        }
-                    }else{
-                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                        util.s3Error(result);
-                        callback(null);
+    // List buckets
+    if ( !entry.type ) {
+        util.s3.listBuckets(function(err, result) {
+            util.hideStatus('Listing directory...');
+            if (!err) {
+                var buckets = result.buckets;
+                for (var i = 0; i < buckets.length; i++) {
+                    var bucket = buckets[i];
+                    var entry = {
+                        name : bucket.name,
+                        systemMeta : bucket,
+                        type : FileRow.ENTRY_TYPE.BUCKET,
+                        bucket: bucket.name
+                    };
+                    if (bucket.creationDate) {
+                        bucket.creationDate = new Date(+bucket.creationDate);
                     }
-                });
-            };
-            list_call(util, options, []);
-        // List objects
-        }else{
-            var newpath = path.substring(1, path.length);
-            var splits = newpath.split("/");
-            var bucketName = splits[0];
-            var prefix = splits.splice(1, splits.length).join('/');
-            var list_call = function(util, options, entries) {
-                var par = {
-                    Bucket : bucketName,
-                    ExtraQueryParameters: extraQueryParameters
-                };
-                util.s3.listObjects(par, function(err, data) {
-                    util.hideStatus('Listing directory...');
-                    if (!err) {
-                        var folders = data.commonPrefixes;
-                        var files = data.objects;
-                        var entries = [];
-                        for (var i = 0; i < files.length; i++) {
-                            var values = files[i];
-                            var entryKey;
-                            var entrySystemMeta;
-                            if ( isMetadataList ) {
-                                entryKey = values.objectName;
-                                entrySystemMeta = values.queryMds[0].mdMap;
-                                if ( !entrySystemMeta.lastModified ) {
-                                    entrySystemMeta.lastModified = new Date(+entrySystemMeta.createtime);
-                                }
-                            } else {
-                                entryKey = values.key
-                                entrySystemMeta = values;
-                                entrySystemMeta.lastModified = new Date(+entrySystemMeta.lastModified);
-                            }
+                    entry.systemMeta.lastModified = bucket.creationDate;
+                    entries.push(entry);
+                }
+                callback( entries );
+            } else {
+                alert( util.templates.get('errorMessage').render( {status: err.status, message: err.message } ) );
+                util.s3Error(result);
+                callback(null);
+            }
+        });
+    } else {
+        var parameters = {
+            entry: entry,
+            extraQueryParameters: extraQueryParameters
+        };
+        if ( this.useHierarchicalMode ) {
+            parameters.delimiter = '/';
+        }
+        util.s3.listObjects(parameters, function(err, data) {
+            util.hideStatus('Listing directory...');
+            if (!err) {
+                var folders = data.commonPrefixes;
+                var files = data.objects;
+                var entries = [];
+                if (folders) {
+                    for (var i = 0; i < folders.length; i++) {
+                        var folder = folders[i];
+                        if (folder != '/') {
                             var entry = {
-                                name : entryKey,
+                                bucket: data.bucketName,
+                                key: folder,
+                                name : util.getName(folder) + '/',
+                                type : FileRow.ENTRY_TYPE.DIRECTORY
+                            };
+                            entries.push(entry);
+                        }
+                    }
+                }
+                if (files) {
+                    for ( var i = 0; i < files.length; i++ ) {
+                        var file = files[i];
+                        if ( isMetadataList ) {
+                            entryKey = file.objectName;
+                            entrySystemMeta = file.queryMds[0].mdMap;
+                            if ( !entrySystemMeta.lastModified ) {
+                                entrySystemMeta.lastModified = new Date(+entrySystemMeta.createtime);
+                            }
+                        } else {
+                            entryKey = file.key;
+                            entrySystemMeta = file;
+                            entrySystemMeta.lastModified = new Date(+entrySystemMeta.lastModified);
+                        }
+                        if ( entryKey != parameters.entry.key ) {
+                            var entry = {
+                                bucket: data.bucketName,
+                                key: entryKey,
+                                name : util.getName(entryKey),
                                 systemMeta : entrySystemMeta,
                                 type : FileRow.ENTRY_TYPE.REGULAR,
-                                id : entryKey,
-                                prefixKey: entryKey,
-                                bucket: bucketName
                             };
                             entries.push(entry);
                         }
-                        callback(entries);
-                    }else{
-                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                        util.s3Error(result);
-                        callback(null);
                     }
-                });
-            };
-            list_call(util, options, []);
-        }
-    // Hierarchical mode
-    }else{
-        // List buckets
-        if (path == '/') {
-            var list_call = function(util, options, entries) {
-                util.s3.listBuckets(function(err, result) {
-                    util.hideStatus('Listing directory...');
-                    if (!err) {
-                        var buckets = result.buckets;
-                        for (var i = 0; i < buckets.length; i++) {
-                            var values = buckets[i];
-                            var entry = {
-                                name : values.name,
-                                systemMeta : values,
-                                type : FileRow.ENTRY_TYPE.BUCKET,
-                                id : path + values.name,
-                                prefixKey: path + values.name,
-                                bucket: bucketName
-                            };
-                            if (values.creationDate) {
-                                values.creationDate = new Date(+values.creationDate);
-                            }
-                            entry.systemMeta.lastModified = values.creationDate;
-                            entries.push(entry);
-                            callback(entries);
-                        }
-                    }else{
-                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                        util.s3Error(result);
-                        callback(null);
-                    }
-                });
-            };
-            list_call(util, options, []);
-        // List objects
-        }else{
-            var newpath = path.substring(1, path.length);
-            var splits = newpath.split("/");
-            var bucketName = splits[0];
-            var prefix = splits.splice(1, splits.length).join('/');
-            var list_call = function(util, options, entries) {
-                var par = {
-                    Bucket : bucketName,
-                    Delimiter : '/',
-                    Prefix : prefix,
-                    ExtraQueryParameters: extraQueryParameters
-                };
-                util.s3.listObjects(par, function(err, data) {
-                    util.hideStatus('Listing directory...');
-                    if (!err) {
-                        var folders = data.commonPrefixes;
-                        var files = data.objects;
-                        var entries = [];
-                        if (folders) {
-                            for (var i = 0; i < folders.length; i++) {
-                                var prefix = folders[i];
-                                if (prefix != '/') {
-                                    folderName = prefix.substring(0, prefix.length - 1);
-                                    var folderVariable = folderName.split('/');
-                                    folderName = folderVariable[folderVariable.length-1];
-                                    var entry = {
-                                        name : folderName,
-                                        systemMeta : values,
-                                        type : FileRow.ENTRY_TYPE.DIRECTORY,
-                                        id : path + folderName,
-                                        prefixKey: prefix,
-                                        bucket: bucketName
-                                    };
-                                    entries.push(entry);
-                                }
-                            }
-                        }
-                        if (files) {
-                            for (var i = 0; i < files.length; i++) {
-                                var values = files[i];
-                                if ( isMetadataList ) {
-                                    entryPrefixKey = values.objectName;
-                                    entryKey = entryPrefixKey;
-                                    entrySystemMeta = values.queryMds[0].mdMap;
-                                    if ( !entrySystemMeta.lastModified ) {
-                                        entrySystemMeta.lastModified = new Date(+entrySystemMeta.createtime);
-                                    }
-                                } else {
-                                    entryPrefixKey = values.key
-                                    var fileNameVariable = entryPrefixKey.split('/');
-                                    entryKey = fileNameVariable[fileNameVariable.length-1];
-                                    entrySystemMeta = values;
-                                    entrySystemMeta.lastModified = new Date(+entrySystemMeta.lastModified);
-                                }
-                                if(entryKey != "") {
-                                    var entry = {
-                                        name : entryKey,
-                                        systemMeta : entrySystemMeta,
-                                        type : FileRow.ENTRY_TYPE.REGULAR,
-                                        id : entryKey,
-                                        prefixKey: entryPrefixKey,
-                                        bucket: bucketName
-                                    };
-                                    entries.push(entry);
-                                }
-                            }
-                        }
-                        callback(entries);
-                    }else{
-                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                        util.s3Error(result);
-                        callback(null);
-                    }
-                });
-            };
-            list_call(util, options, []);
-        }
+                }
+                callback( entries );
+            } else {
+                alert( util.templates.get('errorMessage').render( {status: err.status, message: err.message } ) );
+                util.s3Error(result);
+                callback(null);
+            }
+        });
     }
 };
 
-S3BrowserUtil.prototype.getAcl = function(id,location, callback) {
+S3BrowserUtil.prototype.getAcl = function( entry, callback ) {
     var util = this;
     this.showStatus('Retrieving ACL...');
-    if(location=="/"){
-        var path=id.split("/");
-        var bucketName=path[1];
-        var params={Bucket:bucketName};
-        util.s3.getBucketAcl(params,function(err,data){
-            if(err != null){
-                util.s3Error(err);
-            }else{
-                util.hideStatus('Retrieving ACL...');
-                callback(data);
-            }
-        });
-    } else{
-        var path=location.split("/");
-        var bucketName=path[1];
-        var params={Bucket:bucketName,Key:id};
-        util.s3.getObjectAcl(params,function(err,data){
-            if(err != null){
-                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                util.s3Error(err);
-            } else{
-                util.hideStatus('Retrieving ACL...');
-                callback(data);
-            }
-        });
-    }
+    util.s3.getAcl( entry, function( error, data ) {
+        if ( error != null ) {
+            alert( util.templates.get('errorMessage').render( error ) );
+            util.s3Error(error);
+        } else {
+            util.hideStatus('Retrieving ACL...');
+            callback(data);
+        }
+    });
 };
 
 S3BrowserUtil.prototype.setAcl = function(entry, acp, callback) {
     console.trace();
     var util = this;
-    var currentLocation = S3Browser.getCurrentLocation();
     this.showStatus('Setting ACL...');
-    var location = currentLocation;
-    var path = location.split("/");
-    var bucketName = path[1];
     var grants = [];
     for ( var i = 0; i < acp.grants.length; i++ ){
         var grant = acp.grants[i];
@@ -511,7 +501,7 @@ S3BrowserUtil.prototype.setAcl = function(entry, acp, callback) {
         }
     }
     var accessControlPolicy = { grants: grants, owner: { id: acp.owner.id } };
-    var params = { Bucket: bucketName, Key: entry.prefixKey, AccessControlPolicy: accessControlPolicy };
+    var params = { entry: entry, accessControlPolicy: accessControlPolicy };
     this.s3.putAcl( params, function( err, result ) {
         util.hideStatus('Setting ACL...');
         if ( err != null ) {
@@ -527,14 +517,11 @@ S3BrowserUtil.prototype.setAcl = function(entry, acp, callback) {
     });
 };
 
-S3BrowserUtil.prototype.getVersioning = function( id, location, callback ) {
+S3BrowserUtil.prototype.getVersioning = function( entry, callback ) {
     if( location == "/" ) {
         var util = this;
         this.showStatus('Retrieving Versioning...');
-        var path = id.split("/");
-        var bucketName = path[1];
-        var params = {Bucket:bucketName};
-        util.s3.getBucketVersioning( params, function( err, data ) {
+        util.s3.getBucketVersioning( entry, function( err, data ) {
             util.hideStatus('Retrieving Versioning...');
             if( err != null ){
                 util.s3Error( err );
@@ -545,15 +532,11 @@ S3BrowserUtil.prototype.getVersioning = function( id, location, callback ) {
     }
 };
 
-S3BrowserUtil.prototype.setVersioning = function(entry, versioning, callback) {
+S3BrowserUtil.prototype.setVersioning = function( entry, versioning, callback ) {
     console.trace();
     var util = this;
-    var currentLocation = S3Browser.getCurrentLocation();
     this.showStatus('Setting Versioning...');
-    var location = currentLocation;
-    var path = location.split("/");
-    var bucketName = path[1];
-    var params = { Bucket: bucketName, Key: entry.prefixKey, versioning: versioning };
+    var params = { bucket: entry.bucket, key: entry.key, versioning: versioning };
     this.s3.putBucketVersioning( params, function( err, result ) {
         util.hideStatus('Setting Versioning...');
         if ( err != null ) {
@@ -564,308 +547,173 @@ S3BrowserUtil.prototype.setVersioning = function(entry, versioning, callback) {
             }
             callback();
         } else {
-            callback(true);
+            callback( true );
         }
     });
 };
 
-S3BrowserUtil.prototype.getSystemMetadata = function(id, callback) {
+S3BrowserUtil.prototype.getSystemMetadata = function( entry, callback ) {
     var util = this;
-    var newpath = id.substring(1, id.length);
-    var splits = newpath.split("/");
-    var bucketName = splits[0];
-    var key = splits.splice(1, splits.length).join('/');
     this.showStatus('Retrieving system metadata...');
-    var params={Bucket:bucketName,Key:key};
-    util.s3.headAnything(params,function(err,data){
+    util.s3.headAnything( entry, function( err, data ) {
         util.hideStatus('Retrieving system metadata...');
         if(err != null){
-            if(err.status==404){
-                callback(null);
-            } else{
+            if ( err.status == 404 ) {
+                callback( null );
+            } else {
                 alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                util.s3Error(result);
+                util.s3Error( result );
             }
-        }else{
-            callback(data);
+        } else {
+            callback( data );
         }
     });
 };
 
-S3BrowserUtil.prototype.getUserMetadata = function(entry,location, callback) {
+S3BrowserUtil.prototype.getUserMetadata = function( entry, callback ) {
     var util = this;
-    var path=location.split("/");
-    var bucketName=path[1];
-    var params={Bucket:bucketName,Key:entry.prefixKey};
-    util.s3.headAnything(params,function(err,data){
+    util.s3.headAnything( entry, function(err,data) {
         util.hideStatus('Retrieving system metadata...');
-        if(err != null){
-            alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
+        if ( err != null ) {
+            alert( util.templates.get('errorMessage').render( { status: err.status, message: err.message } ) );
             util.s3Error(err);
-        }else{
-            if(data.Metadata!=null){
-                entry.userMeta=data.Metadata;
+        } else {
+            if( data.Metadata ) {
+                entry.userMeta = data.Metadata;
             }
             callback(data);
         }
     });
 };
 
-S3BrowserUtil.prototype.setUserMetadata = function(id, userMeta, callback) {
+S3BrowserUtil.prototype.setUserMetadata = function(entry, userMeta, callback) {
     var util = this;
     this.showStatus('Saving metadata...');
-    var currentLocation=S3Browser.getCurrentLocation();
-    var location=currentLocation;
-    var path=location.split("/");
-    var bucketName=path[1];
     var params={
-        Bucket: bucketName,
-        CopySource: "/" + bucketName + "/" + id,
-        Key: id,
+        entry: entry,
+        entryToCopy: entry,
         Metadata: userMeta,
         MetadataDirective: "REPLACE"
     };
-    this.s3.copyObject(params,function(err,data){
+    this.s3.copyObject( params, function( err, data ) {
         util.hideStatus('Saving metadata...');
         if (err != null) {
-            if(err.status==403){
+            if ( err.status == 403 ) {
                 alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-            }else{
+            } else {
                 alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
             callback();
-        }else{
+        } else {
             callback(true);
         }
     });
 };
 
-S3BrowserUtil.prototype.createObject = function(key, form, data, mimeType, completeCallback, progressCallback, currentLocation, headers) {
+S3BrowserUtil.prototype.createObject = function(entry, form, data, mimeType, headers, callback) {
     var util = this;
     this.showStatus('Creating object...');
-    var newpath = currentLocation.substring(1, currentLocation.length);
-    var splits = newpath.split("/");
-    var bucketName = splits[0];
-    var prefix = splits.splice(1, splits.length).join('/');
-    var params={Bucket:bucketName,Key:prefix + key,Body:data,Headers:headers};
-    util.s3.putObject(params,function(err,data){
-    if(err != null){
-        if (err.status==403) {
-            alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
+    var params = { entry: entry, body: data, headers: headers };
+    this.s3.putObject( params, function( err, data ) {
+        util.hideStatus('Creating object...');
+        var success;
+        if ( err != null ) {
+            success = false;
+            if ( err.status == 403 ) {
+                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
+            } else {
+                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
+            }
         } else {
-            alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
+            success = true;
+            console.log("DATA: " + data);
+//            var status = { loaded: 1, totalSize = 1 };
         }
-        completeCallback(false);
-        util.hideStatus('Creating object...');
-    } else {
-        console.log("DATA: " + data);
-        var status = {};
-        status.loaded = 1;
-        status.totalSize = 1;
-        if (progressCallback) {
-            progressCallback( status );
-        };
-        completeCallback(true);
-        util.hideStatus('Creating object...');
-    }
-    }).on('httpUploadProgress',progressCallback);
+        callback( success );
+    } );
 };
 
-S3BrowserUtil.prototype.overwriteObject = function(id, form, data, mimeType, completeCallback, progressCallback) {
+S3BrowserUtil.prototype.overwriteObject = function(entry, form, data, mimeType, callback) {
     var util = this;
     this.showStatus('Overwriting object...');
-    this.s3.updateObject(id, null, null, null, form, data, null, mimeType,
+    this.s3.updateObject(entry, null, null, null, form, data, null, mimeType,
         function(result) {
             util.hideStatus('Overwriting object...');
             if (result.successful) {
-                completeCallback(true);
+                callback(true);
             }else{
                 alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
                 util.s3Error(result);
-                completeCallback(false);
+                callback(false);
             }
-        }, progressCallback);
+        }
+    );
 };
 
-S3BrowserUtil.prototype.moveObject=function(existingPath, newPath, callback) {
+S3BrowserUtil.prototype.moveObject = function( newEntry, existingEntry, callback ) {
     var util = this;
+    if ( ( newEntry.bucket == existingEntry.bucket )
+      && ( newEntry.key == existingEntry.key )
+      && ( newEntry.versionId == existingEntry.versionId ) ) {
+        alert("Source and target are the same file");
+        return;
+    }
+
     this.showStatus('Checking for existing object...');
     var overwrite = false;
-    util.showStatus('Renaming object...');
-    var updatedPath=newPath.split("/");
-    var bucketName=updatedPath[1];
-    var newPath1=updatedPath.splice(2, updatedPath.length).join('/');
-    var params={Bucket:bucketName,Key:newPath1};
     console.trace();
-    var file=util.s3.headAnything(params,function(err,data) {
+    var file=util.s3.headAnything( newEntry, function( err, data ) {
         util.hideStatus('Checking for existing object...');
         if ( ( err != null ) && ( err.status != 404 ) ) {
             console.log(err);
-        } else if ( err.status == 404 ) {
-            var newParams={Bucket:bucketName,CopySource:existingPath,Key:newPath1};
-            util.s3.copyObject(newParams,function(err,data){
-                if (err != null) {
-                    alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                    console.log(err);
+        } else {
+            if ( err.status != 404 ) {
+                var overwrite = confirm(util.templates.get('itemExistsPrompt').render({
+                    name : newEntry.key + ' in bucket ' + newEntry.bucket
+                }));
+                if (!overwrite) {
+                    return;
+                }
+            }
+            util.showStatus('Copying object...');
+            var params= {
+                entry: newEntry,
+                entryToCopy: existingEntry
+            };
+            util.s3.copyObject( params, function( err, data ){
+                util.hideStatus('Copying object...');
+                if ( err != null ) {
+                    alert( util.templates.get('errorMessage').render( { status: err.status, message: err.message } ) );
+                    console.log( err );
                 } else {
-                    var deletePath=existingPath.split("/");
-                    var deleteBucketName=deletePath[0];
-                    var detectPath=deletePath.splice(1, deletePath.length).join('/');
-                    var deleteParams={Bucket:deleteBucketName,Key:detectPath};
-                    util.s3.deleteObject(deleteParams,function(err,data){
+                    util.showStatus('Deleting old object...');
+                    util.s3.deleteObject( existingEntry, function( err, data ){
+                        util.hideStatus('Deleting old object...');
                         if ( err != null ) {
                             if ( err.status==403 ) {
-                                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
+                                alert( util.templates.get('bucketCors').render( { bucketName: existingEntry.bucket } ) );
                             } else {
-                                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
+                                alert( util.templates.get('errorMessage').render( { status: err.status, message: err.message } ) );
                             }
-                            console.log(err);
+                            console.log( err );
                         } else {
-                            util.hideStatus('Renaming object...');
                             callback();
                         }
                     });
                 }
             });
-        } else {
-            overwrite = confirm(util.templates.get('itemExistsPrompt').render({
-                name : newPath
-            }));
-            if (!overwrite) {
-                util.hideStatus('Renaming object...');
-                return;
-            } else {
-                util.hideStatus('Renaming object...');
-                if (existingPath==newPath1) {
-                    alert("Source and target are the same file");
-                } else {
-                    var newParams={Bucket:bucketName,CopySource:existingPath,Key:newPath1};
-                    util.s3.copyObject(newParams,function(err,data){
-                        if(err != null) {
-                            alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                            console.log(err);
-                        } else {
-                            var deletePath=existingPath.split("/");
-                            var deleteBucketName=deletePath[0];
-                            var detectPath=deletePath.splice(1, deletePath.length).join('/');
-                            var deleteParams={Bucket:deleteBucketName,Key:detectPath};
-                            util.s3.deleteObject(deleteParams,function(err,data){
-                                if (err != null) {
-                                    alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                                    console.log(err);
-                                } else {
-                                    util.hideStatus('Renaming object...');
-                                    callback();
-                                }
-                            });
-                        }
-                    });
-                }
-            }
         }
     });
 };
 
-S3BrowserUtil.prototype.renameObject = function(existingPath, newPath, callback) {
-    console.trace();
-    var util = this;
-    this.showStatus('Checking for existing object...');
-    var overwrite = false;
-    util.showStatus('Renaming object...');
-    var updatedPath=newPath.split("/");
-    var bucketName=updatedPath[1];
-    var newPath1=updatedPath.splice(2, updatedPath.length).join('/');
-    var params={Bucket:bucketName,Key:newPath1};
-    var file=util.s3.headAnything(params,function(err,data){
-        util.hideStatus('Checking for existing object...');
-        if( ( err != null ) && ( err.status != 404 )  ){
-            console.log(err);
-        } else if ( err.status == 404 ) {
-            var newParams={Bucket:bucketName,CopySource:bucketName+"/"+existingPath,Key:newPath1};
-            util.s3.copyObject(newParams,function(err,data){
-                if(err != null){
-                    if ( err.status==403 ) {
-                        alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                    } else {
-                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                    }
-                    console.log(err);
-                }else{
-                    var deleteParams={Bucket:bucketName,Key:existingPath};
-                    util.s3.deleteObject(deleteParams,function(err,data){
-                        if(err != null){
-                            if(err.status==403){
-                                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                            }else{
-                                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                            }
-                            console.log(err);
-                        }else{
-                            util.hideStatus('Renaming object...');
-                            callback();
-                        }
-                    });
-                }
-            });
-         } else {
-            overwrite = confirm(util.templates.get('itemExistsPrompt').render({
-                name : newPath
-            }));
-            if (!overwrite){
-                util.hideStatus('Renaming object...');
-                return;
-            }else{
-                util.hideStatus('Renaming object...');
-                if(existingPath==newPath1){
-                    alert("Source and target are the same file");
-                }else{
-                    var newParams={Bucket:bucketName,CopySource:bucketName+"/"+existingPath,Key:newPath1};
-                    util.s3.copyObject(newParams,function(err,data){
-                        if(err != null){
-                            if(err.status==403){
-                                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                            }else{
-                                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                            }
-                            console.log(err);
-                        }else{
-                            var deleteParams={Bucket:bucketName,Key:existingPath};
-                            util.s3.deleteObject(deleteParams,function(err,data){
-                                if(err != null){
-                                    if(err.status==403){
-                                        alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-                                    }else{
-                                        alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
-                                    }
-                                    console.log(err);
-                                }else{
-                                    util.hideStatus('Renaming object...');
-                                    callback();
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-        }
-    });
-};
-
-S3BrowserUtil.prototype.deleteObject = function(id, currentLocation, callback) {
+S3BrowserUtil.prototype.deleteObject = function(entry, callback) {
     var util = this;
     this.showStatus('Deleting object...');
-    var newpath = currentLocation.substring(1, currentLocation.length);
-    var splits = newpath.split("/");
-    var bucketName = splits[0];
-    var params={
-        Bucket: bucketName, /* required */
-        Key: id,
-    };
-    util.s3.deleteObject(params,function(err,data){
+    util.s3.deleteObject( entry, function( err, data ) {
         util.hideStatus('Deleting object...');
         if(err!=null){
             if(err.status==403){
-                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
+                alert(util.templates.get('bucketCors').render({bucketName: entry.bucket}));
             }else{
                 alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
             }
@@ -876,53 +724,46 @@ S3BrowserUtil.prototype.deleteObject = function(id, currentLocation, callback) {
     });
 };
 
-S3BrowserUtil.prototype.listVersions = function(id, currentLocation, callback) {
+S3BrowserUtil.prototype.listVersions = function( entry, callback ) {
     var util = this;
     this.showStatus('Listing versions...');
-    var newpath = currentLocation.substring(1, currentLocation.length);
-    var splits = newpath.split("/");
-    var bucketName = splits[0];
-    var params={
-        Bucket: bucketName,
-        Prefix: id,
-    };
-    util.s3.listObjectVersions(params,function(err,data){
+    util.s3.listObjectVersions( entry, function( err, data ) {
         util.showStatus('Listing versions...');
-        if(err!=null){
-            if(err.status==403){
-                alert(util.templates.get('bucketCors').render({bucketName:bucketName}));
-            }else{
-                alert(util.templates.get('errorMessage').render({status:err.status,message:err.message}));
+        if( err != null ) {
+            if ( err.status == 403 ) {
+                alert( util.templates.get('bucketCors').render( { bucketName: entry.bucket } ) );
+            } else {
+                alert( util.templates.get('errorMessage').render( { status: err.status, message: err.message } ) );
             }
             //util.s3Error(err);
-        }else{
+        } else {
             callback( data.versions );
         }
     });
 };
 
-S3BrowserUtil.prototype.restoreVersion = function(id, vId, callback) {
+S3BrowserUtil.prototype.restoreVersion = function( versionEntry, callback ) {
     var util = this;
     this.showStatus('Restoring version...');
-    this.s3.restoreVersion(id, vId, function(result) {
+    this.s3.restoreVersion( versionEntry, function( error, data ) {
         util.hideStatus('Restoring version...');
-        if (result.successful) {
-            callback();
-        }else{
-            util.s3Error(result);
+        if ( error == null ) {
+            callback( data );
+        } else {
+            util.s3Error( error );
         }
     });
 };
 
-S3BrowserUtil.prototype.deleteVersion = function(vId, callback) {
+S3BrowserUtil.prototype.deleteVersion = function( versionEntry, callback ) {
     var util = this;
     this.showStatus('Deleting version...');
-    this.s3.deleteVersion(vId, function(result) {
+    this.s3.deleteVersion( versionEntry, function( error, data ) {
         util.hideStatus('Deleting version...');
-        if (result.successful) {
-            callback();
-        }else{
-            util.s3Error(result);
+        if ( error == null ) {
+            callback( data );
+        } else {
+            util.s3Error( error );
         }
     });
 };
@@ -946,15 +787,16 @@ S3BrowserUtil.prototype.createAttachmentDisposition=function(fileName){
     else return "attachment";
 }
 
-S3BrowserUtil.prototype.getFileName = function(path) {
+S3BrowserUtil.prototype.getFileName = function( key ) {
     var pattern = /\/[^/]*$/;
-    var name = pattern.exec(path);
-    if (name) {
-        if (name[0].length)
-        name = name[0];
+    var name = pattern.exec( key );
+    if ( name ) {
+        if (name[0].length) {
+            name = name[0];
+        }
         return name.substr(1);
     }
-    return path;
+    return key;
 };
 
 S3BrowserUtil.prototype.addKey = function( keys, newKey, newType ) {

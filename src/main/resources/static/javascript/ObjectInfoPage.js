@@ -23,7 +23,7 @@ ObjectInfoPage = function( entry, objectInfo, templateEngine ) {
         }
     }
 
-    var modalWindow = new ModalWindow( templateEngine.get( 'objectInfoPageTitle' ).render( {name: entry.name || entry.id} ), this.$root, templateEngine );
+    var modalWindow = new ModalWindow( templateEngine.get( 'objectInfoPageTitle' ).render( { name: entry.name } ), this.$root, templateEngine );
 
     this.$root.find( '.s3CloseButton' )[0].onclick = function() {
         modalWindow.remove();

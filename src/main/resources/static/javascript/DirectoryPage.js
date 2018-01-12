@@ -12,7 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-DirectoryPage = function( util, startPath, templateEngine, callback ) {
+DirectoryPage = function( entry, util, templateEngine, callback ) {
     this.util = util;
     this.templates = templateEngine;
     this.$root = jQuery( this.templates.get( 'directoryPage' ).render( {}, ['.s3DirectoryDisplay', '.s3DirectoryList'] ) );
@@ -29,16 +29,16 @@ DirectoryPage = function( util, startPath, templateEngine, callback ) {
 
     var page = this;
     if ( $upButton.length > 0 ) $upButton[0].onclick = function() {
-        page.goTo( util.parentDirectory( page.currentPath ) );
+        page.goTo( util.parentDirectory( page.currentEntry ) );
     };
     if ( $createButton.length > 0 ) $createButton[0].onclick = function() {
-        util.createDirectory( page.currentPath, function( name ) {
+        util.createDirectory( page.currentEntry, function( name ) {
             page.addDirectory( name );
         } );
     };
     if ( $selectButton.length > 0 ) $selectButton[0].onclick = function() {
         modalWindow.remove();
-        callback( page.selectedPath );
+        callback( page.selectedEntry );
     };
     if ( $cancelButton.length > 0 ) $cancelButton[0].onclick = function() {
         modalWindow.remove();
@@ -50,7 +50,6 @@ DirectoryPage = function( util, startPath, templateEngine, callback ) {
 };
 DirectoryPage.prototype.goTo = function( path ) {
 	console.trace();
-    path = this.util.endWithSlash( path );
     var page = this;
     this.util.list( path, false, function( contents ) {
         page.$list.empty();
@@ -60,8 +59,9 @@ DirectoryPage.prototype.goTo = function( path ) {
                 page.addDirectory( contents[i].name );
             }
         }
-        page.currentPath = path;
-        page.selectedPath = path;
+        page.currentEntry = entry;
+        page.selectedPath = entry;
+        var path = page.util.getLocationText( entry );
         page.$display.text( path );
         page.$selectedDisplay.text( path );
     } );
@@ -73,11 +73,11 @@ DirectoryPage.prototype.addDirectory = function( name ) {
     $item[0].onmousedown = function() {
         $item.parent().find( '.selected' ).removeClass( 'selected' );
         $item.addClass( 'selected' );
-        page.selectedPath = page.util.endWithSlash( page.currentPath + name );
+        page.selectedPath = page.util.endWithSlash( page.currentEntry + name );
         page.$selectedDisplay.text( page.selectedPath );
     };
     $item[0].ondblclick = function() {
-        page.goTo( page.currentPath + name );
+        page.goTo( page.currentEntry + name );
     };
     var $nextItem = null;
     this.$list.children().each( function() {

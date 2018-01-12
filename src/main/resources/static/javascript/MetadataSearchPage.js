@@ -14,7 +14,7 @@
  */
 MetadataSearchPage = function( browser ) {
     this.browser = browser;
-    this.name = browser.currentLocation;
+    this.name = browser.util.getLocationText( browser.currentEntry );
     this.templateEngine = browser.templates;
     var requiredSelectors = [
         '.s3ClearButton',
@@ -73,5 +73,5 @@ MetadataSearchPage.prototype.getMetadataSearchParameters = function() {
 MetadataSearchPage.prototype.list = function() {
     var page = this;
     page.modalWindow.remove();
-    page.browser.list( page.browser.currentLocation, page.getMetadataSearchParameters() );
+    page.browser.list( page.browser.currentEntry, page.getMetadataSearchParameters() );
 };
