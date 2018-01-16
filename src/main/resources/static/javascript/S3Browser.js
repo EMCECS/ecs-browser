@@ -260,24 +260,27 @@ S3Browser.prototype.showConfig = function( init ) {
 
 S3Browser.prototype.createBucketOrDirectory = function() {
     var browser = this;
+
     var name = browser.util.prompt('newDirectoryNamePrompt', {}, browser.util.validName, 'validNameError');
     if ( ( name == null ) || ( name.length == 0 ) ) {
         return;
     }
+
     var entry = browser.util.getChildEntry( browser.currentEntry, { name: name, type: FileRow.ENTRY_TYPE.DIRECTORY } );
-    browser.util.showStatus('Checking for existing object...');
-    browser.util.getSystemMetadata( entry, function( result ) {
-        browser.util.hideStatus('Checking for existing object...');
-        if ( result ) {
-            alert(browser.util.templates.get('itemExistsError').render({
-                name : browser.util.getLocationText( entry )
-            }));
-            return;
-        }
+
+    var existsCallback = function() {
+        alert( browser.util.templates.get('itemExistsError').render( {
+            name: browser.util.getLocationText( entry )
+        } ) );
+    };
+
+    var notExistsCallback = function() {
+
         var functionUpdateGui = function() {
             var fileRow = browser.addRow( entry );
             browser.$fileTable.append( fileRow.$root );
         }
+
         var functionAddProperties = function( createObjectCallback ) {
             if ( !entry.type ) {
                 new BucketCreationPage( entry, browser.util, browser.templates, createObjectCallback );
@@ -285,8 +288,11 @@ S3Browser.prototype.createBucketOrDirectory = function() {
                 createObjectCallback( {} );
             }
         }
+
         browser.util.createBucketOrDirectory( entry, functionUpdateGui, functionAddProperties );
-    });
+    };
+
+    this.util.ifExists( entry, existsCallback, notExistsCallback );
 };
 
 S3Browser.prototype.list = function( entry, extraQueryParameters ) {

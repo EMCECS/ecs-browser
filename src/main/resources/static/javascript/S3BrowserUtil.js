@@ -637,7 +637,6 @@ S3BrowserUtil.prototype.createObject = function(entry, form, data, mimeType, hea
         } else {
             success = true;
             console.log("DATA: " + data);
-//            var status = { loaded: 1, totalSize = 1 };
         }
         callback( success );
     } );
@@ -669,51 +668,48 @@ S3BrowserUtil.prototype.moveObject = function( newEntry, existingEntry, callback
         return;
     }
 
-    this.showStatus('Checking for existing object...');
-    var overwrite = false;
-    console.trace();
-    var file=util.s3.headAnything( newEntry, function( err, data ) {
-        util.hideStatus('Checking for existing object...');
-        if ( ( err != null ) && ( err.status != 404 ) ) {
-            console.log(err);
-        } else {
-            if ( err.status != 404 ) {
-                var overwrite = confirm(util.templates.get('itemExistsPrompt').render({
-                    name : newEntry.key + ' in bucket ' + newEntry.bucket
-                }));
-                if (!overwrite) {
-                    return;
-                }
-            }
-            util.showStatus('Copying object...');
-            var params= {
-                entry: newEntry,
-                entryToCopy: existingEntry
-            };
-            util.s3.copyObject( params, function( err, data ){
-                util.hideStatus('Copying object...');
-                if ( err != null ) {
-                    alert( util.templates.get('errorMessage').render( err ) );
-                    console.log( err );
-                } else {
-                    util.showStatus('Deleting old object...');
-                    util.s3.deleteObject( existingEntry, function( err, data ){
-                        util.hideStatus('Deleting old object...');
-                        if ( err != null ) {
-                            if ( err.status==403 ) {
-                                alert( util.templates.get('bucketCors').render( { bucketName: existingEntry.bucket } ) );
-                            } else {
-                                alert( util.templates.get('errorMessage').render( err ) );
-                            }
-                            console.log( err );
+    var moveObject = function() {
+        util.showStatus('Copying object...');
+        var params= {
+            entry: newEntry,
+            entryToCopy: existingEntry
+        };
+        util.s3.copyObject( params, function( err, data ){
+            util.hideStatus('Copying object...');
+            if ( err != null ) {
+                alert( util.templates.get('errorMessage').render( err ) );
+                console.log( err );
+            } else {
+                util.showStatus('Deleting old object...');
+                util.s3.deleteObject( existingEntry, function( err, data ){
+                    util.hideStatus('Deleting old object...');
+                    if ( err != null ) {
+                        if ( err.status==403 ) {
+                            alert( util.templates.get('bucketCors').render( { bucketName: existingEntry.bucket } ) );
                         } else {
-                            callback();
+                            alert( util.templates.get('errorMessage').render( err ) );
                         }
-                    });
-                }
-            });
+                        console.log( err );
+                    } else {
+                        callback();
+                    }
+                });
+            }
+        });
+    };
+
+    var existsCallback = function() {
+        var overwrite = confirm( util.templates.get('itemExistsPrompt').render( {
+            name : newEntry.key + ' in bucket ' + newEntry.bucket
+        } ) );
+        if ( overwrite ) {
+            moveObject();
         }
-    });
+    };
+
+    var notExistsCallback = moveObject;
+
+    util.ifExists( newEntry, existsCallback, notExistsCallback );
 };
 
 S3BrowserUtil.prototype.deleteObject = function(entry, callback) {
