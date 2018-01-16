@@ -196,10 +196,12 @@ S3Browser.prototype._init = function() {
 
   // selecting files triggers an upload
   if ( this.$uploadField.length > 0 ) S3BrowserUtil.bind( this.$uploadField[0], 'change', function( event ) {
-    if ( event.target.files ) browser.uploadFiles( event.target.files );
-    else {
-      if ( browser.s3Info.browsercompat ) browser.uploadFile( null, true );
-      else browser.util.error( browser.templates.get( 's3Error.noBrowserCompat' ).render( {info: S3BrowserUtil.dumpObject( browser.s3Info )} ) );
+    if ( event.target.files ) {
+        browser.uploadFiles( event.target.files );
+    } else if ( browser.s3Info.browsercompat ) {
+        browser.uploadFile( null, true );
+    } else {
+        browser.util.error( browser.templates.get( 's3Error.noBrowserCompat' ).render( {info: S3BrowserUtil.dumpObject( browser.s3Info )} ) );
     }
   } );
 
@@ -262,7 +264,7 @@ S3Browser.prototype.createBucketOrDirectory = function() {
     if ( ( name == null ) || ( name.length == 0 ) ) {
         return;
     }
-    var entry = browser.util.makeChildEntry( currentEntry, name, true );
+    var entry = browser.util.getChildEntry( browser.currentEntry, { name: name, type: FileRow.ENTRY_TYPE.DIRECTORY } );
     browser.util.showStatus('Checking for existing object...');
     browser.util.getSystemMetadata( entry, function( result ) {
         browser.util.hideStatus('Checking for existing object...');
@@ -336,10 +338,6 @@ S3Browser.prototype.openSelectedItems = function() {
 };
 
 S3Browser.prototype.downloadSelectedItems = function() {
-  //    if ( !this.s3Info.browsercompat ) {
-  //        this.util.error( this.templates.get( 's3Error.noBrowserCompat' ).render( {info: S3BrowserUtil.dumpObject( this.s3Info )} ) );
-  //        return;
-  //    }
   console.log( this.util.getLocationText( this.currentEntry ) );
   var selectedRows = this.getSelectedRows();
   if ( selectedRows.length == 0 ) this.util.error( this.templates.get( 'nothingSelectedError' ).render() );
@@ -401,19 +399,13 @@ S3Browser.prototype.moveSelectedItems = function() {
 
   var browser = this;
   new DirectoryPage( this.currentEntry, this.util, this.templates, function( newLocationEntry ) {
-    if ( !newLocationEntry || this.entriesMatch( newLocationEntry, browser.currentEntry ) ) {
+    if ( !newLocationEntry || browser.entriesMatch( newLocationEntry, browser.currentEntry ) ) {
       return;
     }
 
     for ( var i = 0; i < fileRows.length; i++ ) {
       ( function( fileRow ) {
-        var newFileEntry = {
-            bucket: newLocationEntry.bucket,
-            key: combineWithSlash( newLocationEntry.key, fileRow.entry.name ),
-            name: fileRow.entry.name,
-            systemMeta: fileRow.entry.systemMeta,
-            type: fileRow.entry.type
-        };
+        var newFileEntry = browser.util.getChildEntry( newLocationEntry, fileRow.entry );
         browser.util.moveObject(newFileEntry, fileRow.entry, function() {
           browser._deleteEntry( fileRow.entry );
         } );
@@ -421,12 +413,14 @@ S3Browser.prototype.moveSelectedItems = function() {
     }
   } );
 };
+
 S3Browser.prototype.uploadFiles = function( files ) { // FileList (HTML5 File API)
   console.trace();
   for ( var i = 0; i < files.length; i++ ) {
     this.uploadFile( files[i] );
   }
 };
+
 S3Browser.prototype.uploadFile = function( file, useForm ) {
   console.trace();
   var browser = this, fileName = null;
@@ -449,16 +443,21 @@ S3Browser.prototype.uploadFile = function( file, useForm ) {
 
     // grab the file row or create one
     var fileRow = browser.findRow( entry );
+    var fileRowAdded = false;
     if ( !fileRow ) {
       fileRow = browser.addRow( entry );
       browser.$fileTable.append( fileRow.$root );
+      fileRowAdded = true;
     }
     fileRow.showStatus();
     fileRow.setStatus( 0 );
 
     var completionCallback = function( returnValue ) {
       browser.$uploadField[0].form.reset();
-      if ( returnValue || overwriting ) {
+      if ( fileRowAdded && ( !returnValue ) ) {
+        browser.removeRow( fileRow );
+      } else {
+        fileRow.setStatus( 100 );
         // refresh local metadata
         browser.util.getSystemMetadata( entry, function( systemMeta ) {
           systemMeta["mtime"] = systemMeta.lastModified;
@@ -466,28 +465,33 @@ S3Browser.prototype.uploadFile = function( file, useForm ) {
           fileRow.updateEntry( entry );
           fileRow.hideStatus();
         } );
-      } else {
-        browser.removeRow( fileRow );
       }
     };
 
     // upload file (in webkit and mozilla browsers, we can call xhr.send(file) directly without processing it (major time saver!)
     if ( overwriting ) {
-      browser.util.overwriteObject( entry, form, file, (file ? file.type : null), completionCallback );
+      browser.util.overwriteObject( entry, form, file, (file ? file.type : null), null, completionCallback );
     } else {
-      browser.util.createObject( entry, form, file, (file ? file.type : null), completionCallback );
+      browser.util.createObject( entry, form, file, (file ? file.type : null), null, completionCallback );
     }
   };
 
-  // check if the file exists
-  if ( true ) {
-    browser._checkFileExists( fileName, function( exists, overwrite ) {
-      if ( !exists || overwrite ) doUpload( overwrite );
-    } );
-  } else {
+  var notExistsCallback = function() {
     doUpload( false );
-  }
+  };
+
+  var existsCallback = function() {
+    var overwrite = confirm(util.templates.get('itemExistsPrompt').render({
+        name : entry.key + ' in bucket ' + entry.bucket
+    }));
+    if ( overwrite ) {
+        doUpload( true );
+    }
+  };
+
+  browser.util.ifExists( entry, existsCallback, notExistsCallback );
 };
+
 S3Browser.prototype.deleteSelectedItems = function() {
   var selectedRows = this.getSelectedRows();
   if ( selectedRows.length == 0 ) this.util.error( this.templates.get( 'nothingSelectedError' ).render() );
@@ -498,6 +502,7 @@ S3Browser.prototype.deleteSelectedItems = function() {
     }
   }
 };
+
 S3Browser.prototype._deleteEntry = function( entry, callback ) {
   var browser = this;
   var deleteF = function( entry ) {
@@ -510,7 +515,7 @@ S3Browser.prototype._deleteEntry = function( entry, callback ) {
   if ( browser.util.isDirectory( entry.type ) ) {
     browser.util.list( entry, false, function( entries ) {
       if ( entries && entries.length > 0 ) { // non-empty directory
-        if ( callback || confirm( browser.templates.get( 'deleteNonEmptyDirectoryPrompt' ).render( { path: entry.path } ) ) ) {
+        if ( callback || confirm( browser.templates.get( 'deleteNonEmptyDirectoryPrompt' ).render( entry ) ) ) {
           var count = entries.length;
           for ( var i = 0; i < entries.length; i++ ) {
             browser._deleteEntry( entries[i], function() {
@@ -526,21 +531,17 @@ S3Browser.prototype._deleteEntry = function( entry, callback ) {
     deleteF( entry );
   }
 };
+
 S3Browser.prototype.renameEntry = function( entry ) {
   var name = this.util.prompt( 'renameItemPrompt', {}, this.util.validName, 'validNameError', entry.name );
   if ( name == null || name.length == 0 ) return;
   var browser = this;
-  var newKey = entry.key.substring(0, entry.key.length - entry.name.length) + name;
-  var newEntry = {
-    bucket: entry.bucket,
-    key: newKey,
-    name: name,
-    type: entry.type
-  };
+  var newEntry = this.util.getChildEntry( this.currentEntry, { name: name, type: FileRow.ENTRY_TYPE.REGULAR } );
   this.util.moveObject( newEntry, entry, function() {
     browser.findRow( entry ).updateEntry( newEntry );
   } );
 };
+
 S3Browser.prototype.filterRows = function() {
   if ( this.$filterField.length > 0 ) {
     var filterExp = new RegExp( this.$filterField.val(), 'i' ); // case-insensitive
@@ -553,6 +554,7 @@ S3Browser.prototype.filterRows = function() {
     } );
   }
 };
+
 S3Browser.prototype.findRow = function( entryToFind ) {
   for ( var i = 0; i < this.fileRows.length; i++ ) {
     var fileRow = this.fileRows[i];
@@ -562,16 +564,19 @@ S3Browser.prototype.findRow = function( entryToFind ) {
   }
   return null;
 };
+
 S3Browser.prototype.entriesMatch = function( entry, entryToFind ) {
     return ( entry.key == entryToFind.key )
         && ( entry.bucket == entryToFind.bucket );
 };
+
 S3Browser.prototype.addRow = function( entry ) {
   var fileRow = new FileRow( entry, this );
   this.fileRows.push( fileRow );
   this.$fileTable.append( fileRow.$root );
   return fileRow;
 };
+
 S3Browser.prototype.removeRow = function( entryToFind ) {
   for ( var i = 0; i < this.fileRows.length; i++ ) {
     if ( this.entriesMatch( this.fileRows[i].entry, entryToFind ) ) {
@@ -581,6 +586,7 @@ S3Browser.prototype.removeRow = function( entryToFind ) {
     }
   }
 };
+
 S3Browser.prototype.getSelectedRows = function() {
   var selectedRows = [];
   for ( var i = 0; i < this.fileRows.length; i++ ) {
@@ -588,6 +594,7 @@ S3Browser.prototype.getSelectedRows = function() {
   }
   return selectedRows;
 };
+
 S3Browser.prototype.singleSelectedRow = function() {
   var selectedRows = this.getSelectedRows();
   if ( selectedRows.length == 1 ) return selectedRows[0];
@@ -595,17 +602,20 @@ S3Browser.prototype.singleSelectedRow = function() {
   else this.util.error( this.templates.get( 'multipleFilesSelectedError' ).render() );
   return null;
 };
+
 S3Browser.prototype.unselectAll = function() {
   for ( var i = 0; i < this.fileRows.length; i++ ) {
     this.fileRows[i].unselect();
   }
 };
+
 S3Browser.prototype.useHierarchicalMode = function() {
   if ( this.util.useHierarchicalMode ) return;
   this.util.useHierarchicalMode = true;
   this.refresh();
   jQuery( '.s3MoveButton' ).show();
 };
+
 S3Browser.prototype.useFlatMode = function() {
   if ( !this.util.useHierarchicalMode ) return;
   this.util.useHierarchicalMode = false;
@@ -613,6 +623,7 @@ S3Browser.prototype.useFlatMode = function() {
   this.refresh();
   jQuery( '.s3MoveButton' ).hide();
 };
+
 /* remember credentials if possible using the HTML5 local storage API */
 S3Browser.prototype.storeCredentials = function( uid, secret, endpoint ) {
   if ( window.localStorage ) {
@@ -621,6 +632,7 @@ S3Browser.prototype.storeCredentials = function( uid, secret, endpoint ) {
     window.localStorage.setItem( 'endpoint', endpoint );
   }
 };
+
 /* remember credentials if possible using the HTML5 local storage API */
 S3Browser.prototype.retrieveCredentials = function( holder ) {
   if ( !holder ) holder = {};
@@ -629,10 +641,11 @@ S3Browser.prototype.retrieveCredentials = function( holder ) {
     var secretC = window.localStorage.getItem( 'secret' );
     var endpoint = window.localStorage.getItem( 'endpoint' );
     if ( uid ) holder.uid = uid;
-    if ( secretC ) holder.secret =secretC;// Crypto.AES.decrypt( secretC, S3Browser.k );
+    if ( secretC ) holder.secret = secretC;
     if ( endpoint ) holder.endpoint = endpoint;
   }
 };
+
 S3Browser.prototype._checkNoDirectories = function( selectedRows ) {
   for ( var i = 0; i < selectedRows.length; i++ ) {
     if ( this.util.isListable( selectedRows[i].entry.type ) ) {
@@ -641,25 +654,4 @@ S3Browser.prototype._checkNoDirectories = function( selectedRows ) {
     }
   }
   return true;
-};
-
-S3Browser.prototype._checkFileExists = function( name, callback ) {
-  var browser = this;
-  browser.util.getSystemMetadata( browser.util.getChildEntry( browser.currentEntry, name ), function( systemMeta ) {
-    var exists = false, overwrite = false;
-    if ( systemMeta ) {
-      exists = true;
-
-      if ( browser.util.isDirectory( systemMeta.type ) ) {
-
-        // can't overwrite directories
-        alert( browser.templates.get( 'directoryExistsError' ).render( {name: name} ) );
-      } else {
-
-        // prompt to see if the users wishes to overwrite
-        overwrite = confirm( browser.templates.get( 'itemExistsPrompt' ).render( {name: name} ) );
-      }
-    }
-    callback( exists, overwrite );
-  } );
 };

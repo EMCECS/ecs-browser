@@ -130,8 +130,8 @@ FileRow.prototype.showStatus = function() {
   this.$status.width( 0 );
 };
 FileRow.prototype.setStatus = function( percent ) {
-  this.$status.width( (percent >= 0) ? this.sizeWidth * percent / 100 : this.sizeWidth );
-  this.$status.text( (percent >= 0) ? percent + "%" : "uploading..." );
+  this.$status.width( (percent > 0) ? this.sizeWidth * percent / 100 : this.sizeWidth );
+  this.$status.text( (percent > 0) ? percent + "%" : "uploading..." );
 };
 FileRow.prototype.hideStatus = function() {
   this.$Size.html( this.Size );

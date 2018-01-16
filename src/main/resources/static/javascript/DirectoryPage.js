@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2011-2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -27,9 +27,12 @@ DirectoryPage = function( entry, util, templateEngine, callback ) {
 
     var modalWindow = new ModalWindow( templateEngine.get( 'directoryPageTitle' ).render(), this.$root, templateEngine, 400 );
 
+    this.currentEntry = entry;
+    this.selectedEntry = entry;
+
     var page = this;
     if ( $upButton.length > 0 ) $upButton[0].onclick = function() {
-        page.goTo( util.parentDirectory( page.currentEntry ) );
+        page.goTo( util.getParentEntry( page.currentEntry ) );
     };
     if ( $createButton.length > 0 ) $createButton[0].onclick = function() {
         util.createDirectory( page.currentEntry, function( name ) {
@@ -45,39 +48,34 @@ DirectoryPage = function( entry, util, templateEngine, callback ) {
         callback( null );
     };
 
-
-    this.goTo( startPath );
+    this.goTo( entry );
 };
-DirectoryPage.prototype.goTo = function( path ) {
-	console.trace();
+DirectoryPage.prototype.goTo = function( entry ) {
+    console.trace();
     var page = this;
-    this.util.list( path, false, function( contents ) {
+    this.util.list( entry, false, function( contents ) {
         page.$list.empty();
         for ( var i = 0; i < contents.length; i++ ) {
-           
-            if ( page.util.isListable(contents[i].type ) ) {
-                page.addDirectory( contents[i].name );
+            if ( page.util.isListable( contents[i].type ) ) {
+                page.addDirectory( contents[i] );
             }
         }
         page.currentEntry = entry;
-        page.selectedPath = entry;
-        var path = page.util.getLocationText( entry );
-        page.$display.text( path );
-        page.$selectedDisplay.text( path );
+        page.$display.text( page.util.getLocationText( entry ) );
+        page.setSelectedEntry( entry );
     } );
 };
 // adds a directory to the list in the UI. uses insert-sort
-DirectoryPage.prototype.addDirectory = function( name ) {
-    var $item = jQuery( this.templates.get( 'directoryItem' ).render( {name: name} ) );
+DirectoryPage.prototype.addDirectory = function( entry ) {
+    var $item = jQuery( this.templates.get( 'directoryItem' ).render( entry ) );
     var page = this;
     $item[0].onmousedown = function() {
         $item.parent().find( '.selected' ).removeClass( 'selected' );
         $item.addClass( 'selected' );
-        page.selectedPath = page.util.endWithSlash( page.currentEntry + name );
-        page.$selectedDisplay.text( page.selectedPath );
+        page.setSelectedEntry( entry );
     };
     $item[0].ondblclick = function() {
-        page.goTo( page.currentEntry + name );
+        page.goTo( entry );
     };
     var $nextItem = null;
     this.$list.children().each( function() {
@@ -88,4 +86,9 @@ DirectoryPage.prototype.addDirectory = function( name ) {
     } );
     if ( $nextItem ) $item.insertBefore( $nextItem );
     else this.$list.append( $item );
+};
+
+DirectoryPage.prototype.setSelectedEntry = function( entry ) {
+    this.selectedEntry = entry;
+    this.$selectedDisplay.text( this.util.getLocationText( entry ) );
 };

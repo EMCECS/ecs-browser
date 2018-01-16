@@ -141,22 +141,22 @@ public class ServiceController {
 
         Object dataToReturn = null;
         if ("presign".equals(request.getHeader("X-Passthrough-Type"))) {
+            while (resource.startsWith( "/" ) ) {
+                resource = resource.substring(1);
+            }
+
+            int delimiterIndex = resource.indexOf( "/" );
             String bucketName = null;
             String key = null;
-            String[] resourceChunks = resource.split("/");
-            for ( String resourceChunk : resourceChunks ) {
-                resourceChunk = ( resourceChunk == null ) ? "" : resourceChunk.trim();
-                if ( !resourceChunk.isEmpty() ) {
-                    if ( bucketName == null ) {
-                        bucketName = resourceChunk;
-                    } else if ( key == null ) {
-                        key = resourceChunk;
-                    }
-                }
-                if ( key != null ) {
-                    break;
+            if ( delimiterIndex < 0 ) {
+                bucketName = resource;
+            } else {
+                bucketName = resource.substring( 0, delimiterIndex );
+                if ( delimiterIndex + 1 < resource.length() ) {
+                    key = resource.substring( delimiterIndex + 1 );
                 }
             }
+
             Date expirationTime = new Date();
             expirationTime.setTime(Long.parseLong(request.getHeader("X-Passthrough-Expires")));
             PresignedUrlRequest presignedUrlRequest = new PresignedUrlRequest(Method.valueOf(getMethodName(request)), bucketName, key, expirationTime);

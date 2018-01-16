@@ -20,6 +20,8 @@ function combineWithSlash( part1, part2 ) {
   var combination;
   if (!isNonEmptyString(part2)) {
     combination = part1;
+  } else if (!isNonEmptyString(part1)) {
+    combination = part2;
   } else if (part2.startsWith('/')) {
     if (part1.endsWith('/')) {
       combination = part1 + part2.substring(1);
@@ -348,16 +350,16 @@ EcsS3.prototype.putBucketVersioning = function( params, callback ) {
 };
 
 EcsS3.prototype.putObject = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl(objectParams);
-    var headers = this.getHeaders('PUT');
-    if (objectParams.headers) {
-      for (var key in objectParams.headers) {
+    var apiUrl = this.getObjectApiUrl( objectParams.entry );
+    var headers = this.getHeaders( 'PUT' );
+    if ( objectParams.headers ) {
+      for ( var key in objectParams.headers ) {
         headers[key] = objectParams.headers[key];
       }
     }
     var data = objectParams.body ? objectParams.body : '';
     var contentType = objectParams.body ? data.type : 'application/octet-stream';
-    if (!isNonEmptyString(contentType)) {
+    if ( !isNonEmptyString( contentType ) ) {
        contentType = 'multipart/form-data';
     }
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers, data: data, processData: false, contentType: contentType,
@@ -371,22 +373,18 @@ EcsS3.prototype.putObject = function( objectParams, callback ) {
 };
 
 EcsS3.prototype.copyObject = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl(objectParams);
-    var headers = this.getHeaders('PUT');
-    var copySource = objectParams.CopySource;
-    if (!copySource.startsWith('/')) {
-      copySource = '/' + copySource;
-    }
-    headers['X-amz-copy-source'] = copySource;
-    if (objectParams.Metadata) {
-      for (var key in objectParams.Metadata) {
-        if (objectParams.Metadata.hasOwnProperty(key)) {
-          headers[_metadataStart + key] = objectParams.Metadata[key];
+    var apiUrl = this.getObjectApiUrl( objectParams.entry );
+    var headers = this.getHeaders( 'PUT' );
+    headers['X-amz-copy-source'] = this.getCopySource( objectParams.entryToCopy );
+    if ( objectParams.metadata ) {
+      for ( var key in objectParams.metadata ) {
+        if ( objectParams.metadata.hasOwnProperty( key ) ) {
+          headers[_metadataStart + key] = objectParams.metadata[key];
         }
       }
     }
-    if (isNonEmptyString(objectParams.MetadataDirective)) {
-        headers['X-amz-metadata-directive'] = objectParams.MetadataDirective;
+    if ( isNonEmptyString( objectParams.metadataDirective ) ) {
+        headers['X-amz-metadata-directive'] = objectParams.metadataDirective;
     }
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -398,7 +396,6 @@ EcsS3.prototype.copyObject = function( objectParams, callback ) {
         },
     });
 };
-
 
 EcsS3.prototype.deleteObject = function( objectParams, callback ) {
     var apiUrl = this.getObjectApiUrl(objectParams);
@@ -430,8 +427,8 @@ EcsS3.prototype.deleteVersion = function( entry, callback ) {
 
 EcsS3.prototype.restoreVersion = function( entry, callback ) {
     var apiUrl = this.getObjectApiUrl( entry );
-    var headers = this.getHeaders('DELETE');
-    headers['X-amz-copy-source'] = combineWithSlash( combineWithSlash( '', entry.bucket ), entry.key ) + '?versionId=' + entry.versionId;
+    var headers = this.getHeaders( 'DELETE' );
+    headers['X-amz-copy-source'] = this.getCopySource( entry );
 
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
@@ -501,5 +498,13 @@ EcsS3.prototype.getObjectOrVersionApiUrl = function( entry ) {
         url = url + '?versionId=' + entry.versionId;
     }
     return url;
+};
+
+EcsS3.prototype.getCopySource = function( entry ) {
+    var copySource = combineWithSlash( combineWithSlash( '', entry.bucket ), entry.key );
+    if ( entry.versionId ) {
+        copySource = copySource + '?versionId=' + entry.versionId;
+    }
+    return copySource;
 };
 

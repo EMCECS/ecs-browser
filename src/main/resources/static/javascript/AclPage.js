@@ -28,7 +28,7 @@ AclPage = function( entry, acl, util, templateEngine ) {
         }
     }
 
-    var modalWindow = new ModalWindow( templateEngine.get( 'aclPageTitle' ).render( { name: entry.name } ), this.$root, templateEngine );
+    var modalWindow = new ModalWindow( templateEngine.get( 'aclPageTitle' ).render( entry ), this.$root, templateEngine );
 
     var page = this;
 

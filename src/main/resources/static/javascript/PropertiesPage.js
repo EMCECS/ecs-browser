@@ -42,7 +42,7 @@ PropertiesPage = function( entry, util, templateEngine ) {
         this.addTag( $systemMetaTable, prop, entry.systemMeta[prop], false );
     }
 
-    this.modalWindow = new ModalWindow( templateEngine.get( 'propertiesPageTitle' ).render( { name: entry.name } ), this.$root, templateEngine );
+    this.modalWindow = new ModalWindow( templateEngine.get( 'propertiesPageTitle' ).render( entry ), this.$root, templateEngine );
 
     var page = this;
     $addUserMetaButton[0].onclick = function() {
