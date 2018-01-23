@@ -90,6 +90,7 @@ permissions and limitations under the License.
 <script type="text/javascript" src="javascript/PropertiesPage.js"></script>
 <script type="text/javascript" src="javascript/SharePage.js"></script>
 <script type="text/javascript" src="javascript/VersioningPage.js"></script>
+<script type="text/javascript" src="javascript/VersionsAll.js"></script>
 <script type="text/javascript" src="javascript/VersionsPage.js"></script>
 <script type="text/javascript">
     function getHashParameterByName( name ) {
@@ -108,7 +109,7 @@ permissions and limitations under the License.
             uid: uid,
             secret: secret,
             endpoint: endpoint,
-            location: "/"
+            location: _s3Delimiter
         }, $( '.main-content' ) );
         console.trace();
         console.log(browser);
@@ -198,7 +199,7 @@ permissions and limitations under the License.
                 <span class="s3Button s3PropertiesButton" title="Properties of selected item">Properties</span>
                 <span class="s3Button s3AclButton" title="ACL of selected item">ACL</span>
                 <!-- <span class="s3Button s3InfoButton" title="Storage information of selected item">Info</span>-->
-                <span class="s3Button s3VersionsButton" title="Versions of selected object">Versions</span>
+                <span class="s3Button s3VersionsButton" title="Versions and versioning satus">Versions</span>
                 <span class="s3Button s3FilterButton s3NamespaceButton" title="Filter results">Filter</span>
                 <span class="s3FilterContainer hidden">
                     <input type="text" class="s3FilterField"/>
@@ -676,6 +677,35 @@ permissions and limitations under the License.
 <script id="template.s3.versionRow" type="text/html">
     <tr class="row">
         <td class="cell s3VersionId">%{version.versionId}</td>
+        <td class="cell s3VersionDate">D{version.lastModified}</td>
+        <td class="s3ButtonCell cell">
+            <div class="s3Button s3DownloadButton" title="Download this version">Download</div>
+        </td>
+        <td class="s3ButtonCell cell">
+            <div class="s3Button s3RestoreButton" title="Restore this version">Restore</div>
+        </td>
+        <td class="s3ButtonCell cell">
+            <div class="s3Button s3DeleteButton" title="Delete this version">Delete</div>
+        </td>
+    </tr>
+</script>
+<script id="template.s3.versionsAll" type="text/html">
+    <div class="s3VersionsAll">
+        <div unselectable="on" class="s3ButtonBar">
+            <span class="s3Button s3CloseButton" title="Close">Close</span>
+        </div>
+        <div class="s3TableWrapper">
+            <form>
+                <table class="table s3VersionsAllTable">
+                </table>
+            </form>
+        </div>
+    </div>
+</script>
+<script id="template.s3.versionsAllRow" type="text/html">
+    <tr class="row">
+        <td class="cell s3VersionKey">%{version.key}</td>
+        <td class="cell s3VersionDeletion">%{version.deletion}</td>
         <td class="cell s3VersionDate">D{version.lastModified}</td>
         <td class="s3ButtonCell cell">
             <div class="s3Button s3DownloadButton" title="Download this version">Download</div>

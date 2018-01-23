@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2018, EMC Corporation. All rights reserved.
+ * Copyright (c) 2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,19 +12,19 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-VersionsPage = function( entry, util, templateEngine ) {
+VersionsAll = function( entry, util, templateEngine ) {
     this.entry = entry;
     this.util = util;
     this.templates = templateEngine;
     var requiredSelectors = [
-        '.s3VersionTable',
+        '.s3VersionsAllTable',
         '.s3CloseButton'
     ];
-    this.$root = jQuery( templateEngine.get( 'versionsPage' ).render( {}, requiredSelectors ) );
-    this.$versionTable = this.$root.find( '.s3VersionTable' ).empty();
+    this.$root = jQuery( templateEngine.get( 'versionsAll' ).render( {}, requiredSelectors ) );
+    this.$versionTable = this.$root.find( '.s3VersionsAllTable' ).empty();
     var $closeButton = this.$root.find( '.s3CloseButton' );
 
-    this.modalWindow = new ModalWindow( templateEngine.get( 'versionsPageTitle' ).render( entry ), this.$root, templateEngine );
+    this.modalWindow = new ModalWindow( templateEngine.get( 'versionsAllTitle' ).render( entry ), this.$root, templateEngine );
 
     this.refresh();
 
@@ -33,35 +33,40 @@ VersionsPage = function( entry, util, templateEngine ) {
         page.modalWindow.remove();
     };
 };
-VersionsPage.prototype.refresh = function() {
+
+VersionsAll.prototype.refresh = function() {
     this.$versionTable.empty();
     var page = this;
     this.util.listVersions( this.entry, function( versions ) {
-        var foundKey = false;
         for ( var i = 0; i < versions.length; ++i ) {
-            if ( page.entry.key == versions[i].key ) {
+            if (versions[i].key != page.entry.key ) {
                 page.addVersion( versions[i] );
-                foundKey = true;
-            } else if ( foundKey ) {
-                break;
             }
         }
     } );
 };
-VersionsPage.prototype.addVersion = function( version ) {
-    var $versionRow = jQuery( this.templates.get( 'versionRow' ).render( {version: version} ) );
+
+VersionsAll.prototype.addVersion = function( version ) {
+    version.deletion = isNonEmptyString( version.etag ) ? 'modified' : 'deleted';
+    var $versionRow = jQuery( this.templates.get( 'versionsAllRow' ).render( { version: version } ) );
     var $downloadButton = $versionRow.find( '.s3DownloadButton' );
     var $restoreButton = $versionRow.find( '.s3RestoreButton' );
     var $deleteButton = $versionRow.find( '.s3DeleteButton' );
+    if ( version.deletion === 'deleted' ) {
+        $downloadButton.hide();
+        $restoreButton.hide();
+    }
     var page = this;
     var versionEntry = {
         bucket: page.entry.bucket,
-        key: page.entry.key,
+        key: version.key,
         versionId: version.versionId
     };
+
     if ( $downloadButton.length > 0 ) $downloadButton[0].onclick = function() {
         page.util.downloadFile( versionEntry );
     };
+
     if ( $restoreButton.length > 0 ) $restoreButton[0].onclick = function() {
         if ( confirm( page.templates.get( 'restoreVersionPrompt' ).render( { version: version } ) ) ) {
             page.util.restoreVersion( versionEntry, function() {
@@ -70,6 +75,7 @@ VersionsPage.prototype.addVersion = function( version ) {
             } );
         }
     };
+
     if ( $deleteButton.length > 0 ) $deleteButton[0].onclick = function() {
         if ( confirm( page.templates.get( 'deleteVersionPrompt' ).render( { version: version } ) ) ) {
             page.util.deleteVersion( versionEntry, function() {
@@ -77,5 +83,6 @@ VersionsPage.prototype.addVersion = function( version ) {
             } );
         }
     };
+
     this.$versionTable.append( $versionRow );
 };

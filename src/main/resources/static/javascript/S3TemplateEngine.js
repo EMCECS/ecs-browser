@@ -70,6 +70,8 @@ S3TemplateEngine.HTML_TEMPLATES = [
     "directoryPage",
     "directoryItem",
     "versioningPage",
+    "versionsAll",
+    "versionsAllRow",
     "versionsPage",
     "versionRow"
 ];
@@ -118,6 +120,9 @@ S3TemplateEngine.MESSAGE_TEMPLATES = {
     directoryPageTitle: 'Select target directory',
     versioningPageTitle: 'Versioning Status for %{name}',
     versionsPageTitle: 'Versions of %{name}',
+    versionsAllTitle: 'All versions in %{name}',
+    multipleObjectVersionsError: 'The s3 browser cannot show versions of more than one specified object.',
+    noRootVersioningError: 'The s3 root cannot be versioned.',
     errorMessage:'Error Occured with status Code %{status} and message %{message}',
 
     's3Error.403': 'You are not authorized to perform this action',

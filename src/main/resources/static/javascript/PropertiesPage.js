@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2011-2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ PropertiesPage = function( entry, util, templateEngine ) {
     var requiredSelectors = [
         '.s3AddUserMetadataButton',
         '.s3UserMetadataTable',
-
         '.s3SystemMetadataTable',
         '.s3SaveButton',
         '.s3CancelButton'
@@ -36,6 +35,14 @@ PropertiesPage = function( entry, util, templateEngine ) {
     for ( prop in entry.userMeta ) {
         if ( !entry.userMeta.hasOwnProperty( prop ) ) continue;
         this.addTag( this.$userMetaTable, prop, entry.userMeta[prop], true );
+    }
+    if ( entry.systemMeta[ 'owner' ] ) {
+        if ( !entry.systemMeta[ 'ownerDisplayName' ] ) {
+            entry.systemMeta[ 'ownerDisplayName' ] = entry.systemMeta[ 'owner' ].displayName;
+        }
+        if ( !entry.systemMeta[ 'ownerId' ] ) {
+            entry.systemMeta[ 'ownerId' ] = entry.systemMeta[ 'owner' ].id;
+        }
     }
     for ( prop in entry.systemMeta ) {
         if ( !entry.systemMeta.hasOwnProperty( prop ) ) continue;
@@ -77,38 +84,13 @@ PropertiesPage.prototype.createTag = function() {
 };
 PropertiesPage.prototype.save = function() {
     var page = this;
-
-    var meta = this._getProperties( this.$userMetaTable );
-    var allTags = Object.keys( meta );
-    var existingTags = Object.keys( page.entry.userMeta || {} );
-
-    var deletedTags = [];
-    for ( var i = 0; i < existingTags.length; i++ ) {
-        var p = existingTags[i];
-        if ( allTags.indexOf( p ) == -1 ) deletedTags.push( p );
-    }
-
-    var metaSaved = false, metaDeleted = false;
-    var callComplete = function() {
-        if ( metaSaved && metaDeleted ) page.modalWindow.remove();
-    };
-    if ( allTags.length > 0 ) {
-        page.util.setUserMetadata( page.entry, meta, function() {
-            metaSaved = true;
-            callComplete();
-        } );
-    } else metaSaved = true;
-    if ( deletedTags.length > 0 ) {
-        page.util.setUserMetadata( page.entry, meta, function() {
-            metaDeleted = true;
-            callComplete();
-        } );
-    } else metaDeleted = true;
-    callComplete(); // in case there's no metadata and no deletes
+    page.util.setUserMetadata( page.entry, page._getUserProperties(), function() {
+        page.modalWindow.remove();
+    } );
 };
-PropertiesPage.prototype._getProperties = function( $table ) {
+PropertiesPage.prototype._getUserProperties = function() {
     var properties = {};
-    $table.find( '.row' ).each( function() {
+    this.$userMetaTable.find( '.row' ).each( function() {
         var $this = jQuery( this );
         var prop = $this.find( '.s3PropertyName' ).text();
         var $val = $this.find( '.s3PropertyValue' );
@@ -122,9 +104,9 @@ PropertiesPage.prototype._validTag = function( tag ) {
         alert( this.templates.get( 'tagEmpty' ).render() );
         return false;
     }
-    var properties = {};
-    jQuery.extend( properties, this._getProperties( this.$userMetaTable ));
-    if ( properties.hasOwnProperty( tag ) ) {
+    var userProperties = {};
+    jQuery.extend( userProperties, this._getUserProperties() );
+    if ( userProperties.hasOwnProperty( tag ) ) {
         alert( this.templates.get( 'tagExists' ).render( {tag: tag} ) );
         return false;
     }

@@ -115,10 +115,10 @@ S3BrowserUtil.prototype.getS3Info = function(callback) {
 };
 
 S3BrowserUtil.prototype.getLocationText = function( currentEntry ) {
-    var locationText = '/';
+    var locationText = _s3Delimiter;
     if ( currentEntry ) {
         if ( currentEntry.bucket ) {
-            locationText = locationText + currentEntry.bucket + '/';
+            locationText = locationText + currentEntry.bucket + _s3Delimiter;
         }
         if ( this.useHierarchicalMode && currentEntry.key ) {
             locationText = locationText + currentEntry.key;
@@ -133,7 +133,7 @@ S3BrowserUtil.prototype.getCurrentEntry = function( locationText ) {
     var name;
     var type;
     if ( locationText ) {
-        var locationChunks = locationText.split('/');
+        var locationChunks = locationText.split(_s3Delimiter);
         if ( locationChunks ) {
             for ( var i = 0; i < locationChunks.length; ++i ) {
                 var locationChunk = locationChunks[i];
@@ -147,7 +147,7 @@ S3BrowserUtil.prototype.getCurrentEntry = function( locationText ) {
                             break;
                         }
                     } else {
-                        name = locationChunk + '/';
+                        name = locationChunk + _s3Delimiter;
                         if ( !key ) {
                             key = name;
                         } else {
@@ -177,7 +177,7 @@ S3BrowserUtil.prototype.getParentEntry = function( entry ) {
         name = bucket;
         type = FileRow.ENTRY_TYPE.BUCKET;
         if ( this.useHierarchicalMode ) {
-            var keyChunks = entry.key.split('/');
+            var keyChunks = entry.key.split(_s3Delimiter);
             if ( keyChunks ) {
                 var lastNonEmptyChunkIndex;
                 for ( lastNonEmptyChunkIndex = keyChunks.length - 1; lastNonEmptyChunkIndex >= 0; --lastNonEmptyChunkIndex ) {
@@ -188,7 +188,7 @@ S3BrowserUtil.prototype.getParentEntry = function( entry ) {
                 for ( var i = 0; i < lastNonEmptyChunkIndex; ++i ) {
                     var keyChunk = keyChunks[i];
                     if ( keyChunk ) {
-                        name = keyChunk + '/';
+                        name = keyChunk + _s3Delimiter;
                         if ( !key ) {
                             key = name;
                         } else {
@@ -224,7 +224,7 @@ S3BrowserUtil.prototype.getChildEntry = function( entry, partialChildEntry ) {
         } else {
             key = (!entry.key) ? name : entry.key + name;
             if ( type == FileRow.ENTRY_TYPE.DIRECTORY ) {
-                key = this.endWithSlash( key );
+                key = this.endWithDelimiter( key );
             }
         }
     }
@@ -239,7 +239,7 @@ S3BrowserUtil.prototype.getChildEntry = function( entry, partialChildEntry ) {
 S3BrowserUtil.prototype.getNameFromKey = function( key ) {
     var name = this.useHierarchicalMode ? '' : key;
     if ( this.useHierarchicalMode ) {
-        var keyChunks = key.split('/');
+        var keyChunks = key.split(_s3Delimiter);
         for ( var i = keyChunks.length - 1; i >= 0; --i ) {
             name = keyChunks[i];
             if ( name ) {
@@ -350,25 +350,15 @@ S3BrowserUtil.prototype.validPath = function(path) {
 
 S3BrowserUtil.prototype.validName = function(name) {
     // cannot be null or empty, cannot contain /
-    var nameSplit=name.split('/');
+    var nameSplit=name.split(_s3Delimiter);
     name=nameSplit[nameSplit.length-1];
     return !(!name || name.trim().length == 0 || /[/]/.test(name));
 };
 
-S3BrowserUtil.prototype.endWithSlash = function(path) {
+S3BrowserUtil.prototype.endWithDelimiter = function(path) {
     path = path.trim();
-    if (path.charAt(path.length - 1) !== '/')
-        path += '/';
-    return path;
-};
-
-S3BrowserUtil.prototype.noSlashes = function(path) {
-    if (!path || path.length == 0)
-        return path;
-    if (path.charAt(0) == '/')
-        path = path.substr(1);
-    if (path.charAt(path.length - 1) == '/')
-        path = path.substr(0, path.length - 1);
+    if (path.charAt(path.length - 1) !== _s3Delimiter)
+        path += _s3Delimiter;
     return path;
 };
 
@@ -382,6 +372,10 @@ S3BrowserUtil.prototype.isDirectory = function(entryType) {
 
 S3BrowserUtil.prototype.isBucket = function(entryType) {
     return entryType == FileRow.ENTRY_TYPE.BUCKET;
+};
+
+S3BrowserUtil.prototype.isRoot = function( entry) {
+    return ( ( !entry ) || ( !entry.type ) );
 };
 
 ListOptions=function(a,b,c,d,e){this.limit=a;this.token=b;this.includeMeta=c;this.userMetaTags=d;this.systemMetaTags=e};
@@ -426,7 +420,7 @@ S3BrowserUtil.prototype.list = function(entry, includeMetadata, callback, extraQ
             extraQueryParameters: extraQueryParameters
         };
         if ( this.useHierarchicalMode ) {
-            parameters.delimiter = '/';
+            parameters.delimiter = _s3Delimiter;
         }
         util.s3.listObjects(parameters, function(err, data) {
             util.hideStatus('Listing directory...');
@@ -437,11 +431,11 @@ S3BrowserUtil.prototype.list = function(entry, includeMetadata, callback, extraQ
                 if (folders) {
                     for (var i = 0; i < folders.length; i++) {
                         var folder = folders[i];
-                        if (folder != '/') {
+                        if (folder != _s3Delimiter) {
                             var entry = {
                                 bucket: data.bucketName,
                                 key: folder,
-                                name : util.endWithSlash( util.getNameFromKey( folder ) ),
+                                name : util.endWithDelimiter( util.getNameFromKey( folder ) ),
                                 type : FileRow.ENTRY_TYPE.DIRECTORY
                             };
                             entries.push(entry);
@@ -498,7 +492,7 @@ S3BrowserUtil.prototype.getAcl = function( entry, callback ) {
     });
 };
 
-S3BrowserUtil.prototype.setAcl = function(entry, acp, callback) {
+S3BrowserUtil.prototype.setAcl = function( entry, acp, callback ) {
     console.trace();
     var util = this;
     this.showStatus('Setting ACL...');
@@ -527,25 +521,23 @@ S3BrowserUtil.prototype.setAcl = function(entry, acp, callback) {
 };
 
 S3BrowserUtil.prototype.getVersioning = function( entry, callback ) {
-    if( location == "/" ) {
-        var util = this;
-        this.showStatus('Retrieving Versioning...');
-        util.s3.getBucketVersioning( entry, function( err, data ) {
-            util.hideStatus('Retrieving Versioning...');
-            if( err != null ){
-                util.s3Error( err );
-            } else {
-                callback( data );
-            }
-        });
-    }
+    var util = this;
+    this.showStatus('Retrieving Versioning...');
+    util.s3.getBucketVersioning( entry, function( err, data ) {
+        util.hideStatus('Retrieving Versioning...');
+        if( err != null ){
+            util.s3Error( err );
+        } else {
+            callback( data );
+        }
+    });
 };
 
 S3BrowserUtil.prototype.setVersioning = function( entry, versioning, callback ) {
     console.trace();
     var util = this;
     this.showStatus('Setting Versioning...');
-    var params = { bucket: entry.bucket, key: entry.key, versioning: versioning };
+    var params = { entry: entry, versioning: versioning };
     this.s3.putBucketVersioning( params, function( err, result ) {
         util.hideStatus('Setting Versioning...');
         if ( err != null ) {
@@ -581,9 +573,9 @@ S3BrowserUtil.prototype.getSystemMetadata = function( entry, callback ) {
 
 S3BrowserUtil.prototype.getUserMetadata = function( entry, callback ) {
     var util = this;
-    util.showStatus('Retrieving system metadata...');
-    util.s3.headAnything( entry, function(err,data) {
-        util.hideStatus('Retrieving system metadata...');
+    util.showStatus('Retrieving user metadata...');
+    util.s3.headAnything( entry, function( err, data ) {
+        util.hideStatus('Retrieving user metadata...');
         if ( err != null ) {
             alert( util.templates.get('errorMessage').render( err ) );
             util.s3Error(err);
@@ -731,10 +723,17 @@ S3BrowserUtil.prototype.deleteObject = function(entry, callback) {
 };
 
 S3BrowserUtil.prototype.listVersions = function( entry, callback ) {
+    var parameters = {
+        entry: entry
+    };
+    if ( this.useHierarchicalMode ) {
+        parameters.delimiter = _s3Delimiter;
+    }
     var util = this;
+
     this.showStatus('Listing versions...');
-    util.s3.listObjectVersions( entry, function( err, data ) {
-        util.showStatus('Listing versions...');
+    util.s3.listVersions( parameters, function( err, data ) {
+        util.hideStatus('Listing versions...');
         if( err != null ) {
             if ( err.status == 403 ) {
                 alert( util.templates.get('bucketCors').render( { bucketName: entry.bucket } ) );

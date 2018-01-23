@@ -12,26 +12,29 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+
+var _s3Delimiter = '/';
+
 function isNonEmptyString(theString) {
   return (theString && theString.trim() && (theString != ""));
 };
 
-function combineWithSlash( part1, part2 ) {
+function combineWithDelimiter( part1, part2 ) {
   var combination;
   if (!isNonEmptyString(part2)) {
     combination = part1;
   } else if (!isNonEmptyString(part1)) {
     combination = part2;
-  } else if (part2.startsWith('/')) {
-    if (part1.endsWith('/')) {
+  } else if (part2.startsWith(_s3Delimiter)) {
+    if (part1.endsWith(_s3Delimiter)) {
       combination = part1 + part2.substring(1);
     } else {
       combination = part1 + part2;
     }
-  } else if (part1.endsWith('/')) {
+  } else if (part1.endsWith(_s3Delimiter)) {
     combination = part1 + part2;
   } else {
-    combination = part1 + '/' + part2;
+    combination = part1 + _s3Delimiter + part2;
   }
   return combination;
 };
@@ -109,16 +112,16 @@ function getErrorMessage( status ) {
 
 function makeMetaData( data ) {
   var metaData = {};
-  if (data && data.headers) {
-    for (var key in data.headers) {
-      if (data.headers.hasOwnProperty(key)) {
-        if (!key.toLowerCase().startsWith(_metadataStart)) {
-          metaData[ keyProcessor(key) ] = data.headers[key];
+  if ( data && data.headers ) {
+    for ( var key in data.headers ) {
+      if ( data.headers.hasOwnProperty( key ) ) {
+        if ( !key.toLowerCase().startsWith( _metadataStart ) ) {
+          metaData[ keyProcessor( key ) ] = data.headers[ key ];
         } else {
-          if (!metaData.Metadata) {
+          if ( !metaData.Metadata ) {
             metaData.Metadata = {};
           }
-          metaData.Metadata[ key.substring(_metadataStart.length) ] = data.headers[key];
+          metaData.Metadata[ key.substring( _metadataStart.length ) ] = data.headers[ key ];
         }
       }
     }
@@ -160,14 +163,14 @@ EcsS3 = function( s3Params ) {
     this.configuration = s3Params;
 };
 
-EcsS3.prototype.headAnything = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl(objectParams);
-    var headers = this.getHeaders('HEAD');
+EcsS3.prototype.headAnything = function( params, callback ) {
+    var apiUrl = this.getObjectApiUrl( params );
+    var headers = this.getHeaders( 'HEAD' );
     var processData = function( data ) {
-        if (!data.headers) {
+        if ( !data.headers ) {
           return data;
         }
-        var metaData = makeMetaData(data);
+        var metaData = makeMetaData( data );
         metaData.type = FileRow.ENTRY_TYPE.REGULAR;
         return metaData;
     };
@@ -181,11 +184,11 @@ EcsS3.prototype.headAnything = function( objectParams, callback ) {
     });
 };
 
-EcsS3.prototype.getPresignedUrl = function( objectParams, callback ) {
-    var apiUrl = this.getObjectOrVersionApiUrl(objectParams.entry);
-    var headers = this.getHeaders(objectParams.method);
+EcsS3.prototype.getPresignedUrl = function( params, callback ) {
+    var apiUrl = this.getObjectOrVersionApiUrl( params.entry );
+    var headers = this.getHeaders( params.method );
     headers['X-Passthrough-Type'] = 'presign';
-    headers['X-Passthrough-Expires'] = objectParams.expires;
+    headers['X-Passthrough-Expires'] = params.expires;
     headers['Content-Type'] = 'text/plain';
     headers['Accept'] = 'text/plain';
 
@@ -220,21 +223,21 @@ EcsS3.prototype.listBuckets = function( callback ) {
 
 };
 
-EcsS3.prototype.listObjects = function( bucketParams, callback ) {
-    var apiUrl = this.getBucketApiUrl( bucketParams.entry );
+EcsS3.prototype.listObjects = function( params, callback ) {
+    var apiUrl = this.getBucketApiUrl( params.entry );
     var separatorChar = '?';
-    if (isNonEmptyString(bucketParams.delimiter)) {
-      apiUrl = apiUrl + separatorChar + 'delimiter=' + bucketParams.delimiter;
+    if ( isNonEmptyString( params.delimiter ) ) {
+      apiUrl = apiUrl + separatorChar + 'delimiter=' + params.delimiter;
       separatorChar = '&';
-    };
-    if (isNonEmptyString(bucketParams.entry.key)) {
-      apiUrl = apiUrl + separatorChar + 'prefix=' + bucketParams.entry.key;
+    }
+    if ( isNonEmptyString( params.entry.key ) ) {
+      apiUrl = apiUrl + separatorChar + 'prefix=' + params.entry.key;
       separatorChar = '&';
-    };
-    if (isNonEmptyString(bucketParams.extraQueryParameters)) {
-      apiUrl = apiUrl + separatorChar + bucketParams.extraQueryParameters;
+    }
+    if ( isNonEmptyString( params.extraQueryParameters ) ) {
+      apiUrl = apiUrl + separatorChar + params.extraQueryParameters;
       separatorChar = '&';
-    };
+    }
     var headers = this.getHeaders('GET');
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -247,10 +250,16 @@ EcsS3.prototype.listObjects = function( bucketParams, callback ) {
     });
 };
 
-EcsS3.prototype.listObjectVersions = function( entry, callback ) {
-    var apiUrl = this.getObjectApiUrl( entry ) + '?versions';
+EcsS3.prototype.listVersions = function( parameters, callback ) {
+    var apiUrl = this.getBucketApiUrl( parameters.entry ) + '?versions';
+    if ( parameters.entry.key ) {
+        apiUrl = apiUrl + '&prefix=' + parameters.entry.key;
+    }
+    if ( isNonEmptyString( parameters.delimiter ) ) {
+        apiUrl = apiUrl + '&delimiter=' + parameters.delimiter;
+    }
     var headers = this.getHeaders('GET');
-    
+
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
             handleData( data, callback, getEcsBody );
@@ -261,36 +270,8 @@ EcsS3.prototype.listObjectVersions = function( entry, callback ) {
     });
 };
 
-EcsS3.prototype.getBucketAcl = function( bucketParams, callback ) {
-    var apiUrl = this.getBucketApiUrl(bucketParams) + '?acl';
-    var headers = this.getHeaders('GET');
-    
-    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
-        success: function(data, textStatus, jqHXR) {
-            handleData( data, callback, getEcsBody );
-        },
-        error: function(jqHXR, textStatus, errorThrown) {
-            handleError( callback,  jqHXR, errorThrown, textStatus );
-        },
-    });
-};
-
-EcsS3.prototype.getObjectAcl = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl(objectParams) + '?acl';
-    var headers = this.getHeaders('GET');
-    
-    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
-        success: function(data, textStatus, jqHXR) {
-            handleData( data, callback, getEcsBody );
-        },
-        error: function(jqHXR, textStatus, errorThrown) {
-            handleError( callback,  jqHXR, errorThrown, textStatus );
-        },
-    });
-};
-
-EcsS3.prototype.getAcl = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl(objectParams) + '?acl';
+EcsS3.prototype.getAcl = function( entry, callback ) {
+    var apiUrl = this.getObjectApiUrl( entry ) + '?acl';
     var headers = this.getHeaders('GET');
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -304,10 +285,10 @@ EcsS3.prototype.getAcl = function( objectParams, callback ) {
 };
 
 EcsS3.prototype.putAcl = function( params, callback ) {
-    var apiUrl = this.getObjectApiUrl(params) + '?acl';
+    var apiUrl = this.getObjectApiUrl( params.entry ) + '?acl';
     var headers = this.getHeaders('PUT');
     headers['ContentType'] = 'application/json';
-    var data = JSON.stringify(params.AccessControlPolicy);
+    var data = JSON.stringify( params.accessControlPolicy );
 
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers, data: data, contentType: "application/json",
         success: function(data, textStatus, jqHXR) {
@@ -319,8 +300,8 @@ EcsS3.prototype.putAcl = function( params, callback ) {
     });
 };
 
-EcsS3.prototype.getBucketVersioning = function( bucketParams, callback ) {
-    var apiUrl = this.getBucketApiUrl(bucketParams) + '?versioning';
+EcsS3.prototype.getBucketVersioning = function( entry, callback ) {
+    var apiUrl = this.getBucketApiUrl( entry ) + '?versioning';
     var headers = this.getHeaders('GET');
 
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -334,10 +315,10 @@ EcsS3.prototype.getBucketVersioning = function( bucketParams, callback ) {
 };
 
 EcsS3.prototype.putBucketVersioning = function( params, callback ) {
-    var apiUrl = this.getObjectApiUrl(params) + '?versioning';
+    var apiUrl = this.getObjectApiUrl( params.entry ) + '?versioning';
     var headers = this.getHeaders('PUT');
     headers['ContentType'] = 'application/json';
-    var data = JSON.stringify(params.versioning);
+    var data = JSON.stringify( params.versioning );
 
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers, data: data, contentType: "application/json",
         success: function(data, textStatus, jqHXR) {
@@ -349,16 +330,16 @@ EcsS3.prototype.putBucketVersioning = function( params, callback ) {
     });
 };
 
-EcsS3.prototype.putObject = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl( objectParams.entry );
+EcsS3.prototype.putObject = function( params, callback ) {
+    var apiUrl = this.getObjectApiUrl( params.entry );
     var headers = this.getHeaders( 'PUT' );
-    if ( objectParams.headers ) {
-      for ( var key in objectParams.headers ) {
-        headers[key] = objectParams.headers[key];
+    if ( params.headers ) {
+      for ( var key in params.headers ) {
+        headers[key] = params.headers[key];
       }
     }
-    var data = objectParams.body ? objectParams.body : '';
-    var contentType = objectParams.body ? data.type : 'application/octet-stream';
+    var data = params.body ? params.body : '';
+    var contentType = params.body ? data.type : 'application/octet-stream';
     if ( !isNonEmptyString( contentType ) ) {
        contentType = 'multipart/form-data';
     }
@@ -372,19 +353,19 @@ EcsS3.prototype.putObject = function( objectParams, callback ) {
     });
 };
 
-EcsS3.prototype.copyObject = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl( objectParams.entry );
+EcsS3.prototype.copyObject = function( params, callback ) {
+    var apiUrl = this.getObjectApiUrl( params.entry );
     var headers = this.getHeaders( 'PUT' );
-    headers['X-amz-copy-source'] = this.getCopySource( objectParams.entryToCopy );
-    if ( objectParams.metadata ) {
-      for ( var key in objectParams.metadata ) {
-        if ( objectParams.metadata.hasOwnProperty( key ) ) {
-          headers[_metadataStart + key] = objectParams.metadata[key];
+    headers['X-amz-copy-source'] = this.getCopySource( params.entryToCopy );
+    if ( params.metadata ) {
+      for ( var key in params.metadata ) {
+        if ( params.metadata.hasOwnProperty( key ) ) {
+          headers[_metadataStart + key] = params.metadata[key];
         }
       }
     }
-    if ( isNonEmptyString( objectParams.metadataDirective ) ) {
-        headers['X-amz-metadata-directive'] = objectParams.metadataDirective;
+    if ( isNonEmptyString( params.metadataDirective ) ) {
+        headers['X-amz-metadata-directive'] = params.metadataDirective;
     }
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -397,8 +378,8 @@ EcsS3.prototype.copyObject = function( objectParams, callback ) {
     });
 };
 
-EcsS3.prototype.deleteObject = function( objectParams, callback ) {
-    var apiUrl = this.getObjectApiUrl(objectParams);
+EcsS3.prototype.deleteObject = function( entry, callback ) {
+    var apiUrl = this.getObjectApiUrl( entry );
     var headers = this.getHeaders('DELETE');
     
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
@@ -485,15 +466,15 @@ EcsS3.prototype.getSystemApiUrl = function() {
 };
 
 EcsS3.prototype.getBucketApiUrl = function( entry ) {
-    return combineWithSlash( this.getSystemApiUrl(), entry.bucket );
+    return combineWithDelimiter( this.getSystemApiUrl(), entry.bucket );
 };
 
 EcsS3.prototype.getObjectApiUrl = function( entry ) {
-    return combineWithSlash( this.getBucketApiUrl( entry ), entry.key );
+    return combineWithDelimiter( this.getBucketApiUrl( entry ), entry.key );
 };
 
 EcsS3.prototype.getObjectOrVersionApiUrl = function( entry ) {
-    var url = combineWithSlash( combineWithSlash( this.getSystemApiUrl(), entry.bucket ), entry.key );
+    var url = combineWithDelimiter( combineWithDelimiter( this.getSystemApiUrl(), entry.bucket ), entry.key );
     if ( entry.versionId ) {
         url = url + '?versionId=' + entry.versionId;
     }
@@ -501,7 +482,7 @@ EcsS3.prototype.getObjectOrVersionApiUrl = function( entry ) {
 };
 
 EcsS3.prototype.getCopySource = function( entry ) {
-    var copySource = combineWithSlash( combineWithSlash( '', entry.bucket ), entry.key );
+    var copySource = combineWithDelimiter( combineWithDelimiter( '', entry.bucket ), entry.key );
     if ( entry.versionId ) {
         copySource = copySource + '?versionId=' + entry.versionId;
     }

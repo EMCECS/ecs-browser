@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2011-2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ S3Browser = function( options, $parent ) {
     secret: null,
     endpoint: null,
     deletePrompt: true,
-    location: '/'
+    location: _s3Delimiter
   };
   if ( options ) {
     jQuery.extend( this.settings, options );
@@ -146,10 +146,27 @@ S3Browser.prototype._init = function() {
     fileRow = browser.singleSelectedRow();
     if ( fileRow ) browser.showObjectInfo( fileRow.entry );
   };
-  if ( this.$versionsButton.length > 0 ) this.$versionsButton[0].onclick = function() {
-    fileRow = browser.singleSelectedRow();
-    if ( fileRow ) browser.showVersions( fileRow.entry );
-  };
+    if ( this.$versionsButton.length > 0 ) {
+        this.$versionsButton[0].onclick = function() {
+            var selectedRows = browser.getSelectedRows();
+            if ( selectedRows.length == 1 ) { // handle the selected object
+                var entry = selectedRows[0].entry;
+                if ( browser.util.isBucket( entry.type ) ) {
+                    browser.showVersioning( entry );
+                } else {
+                    browser.showVersions( entry );
+                }
+            } else if ( selectedRows.length == 0 ) { // handle the parent object
+                if ( !browser.util.isRoot( browser.currentEntry ) ) {
+                    browser.showVersions( browser.currentEntry );
+                } else {
+                    browser.util.error( browser.templates.get( 'noRootVersioningError' ).render() );
+                }
+            } else { // more than one selected row
+                browser.util.error( browser.templates.get( 'multipleObjectVersionsError' ).render() );
+            }
+        }
+    };
   if ( this.$filterButton.length > 0 ) this.$filterButton[0].onclick = function() {
     browser.enableFilter();
   };
@@ -376,12 +393,16 @@ S3Browser.prototype.showObjectInfo = function( entry ) {
   } );
 };
 
+S3Browser.prototype.showVersioning = function( entry ) {
+    var browser = this;
+    this.util.getVersioning( entry, function( versioning ) {
+        new VersioningPage( entry, versioning, browser.util, browser.templates );
+    } );
+};
+
 S3Browser.prototype.showVersions = function( entry ) {
-    if (this.util.isBucket( entry.type ) ) {
-        var browser = this;
-        this.util.getVersioning( entry, function( versioning ) {
-            new VersioningPage( entry, versioning, browser.util, browser.templates );
-        } );
+    if ( this.util.isListable( entry.type ) ) {
+        new VersionsAll( entry, this.util, this.templates );
     } else {
         new VersionsPage( entry, this.util, this.templates );
     }
@@ -439,7 +460,7 @@ S3Browser.prototype.uploadFile = function( file, useForm ) {
 
   var entry = {
     bucket: browser.currentEntry.bucket,
-    key: combineWithSlash( browser.currentEntry.key, fileName ),
+    key: combineWithDelimiter( browser.currentEntry.key, fileName ),
     name : fileName,
     size: (file ? file.Size : 'n/a'),
     type: FileRow.ENTRY_TYPE.REGULAR
@@ -619,15 +640,14 @@ S3Browser.prototype.useHierarchicalMode = function() {
   if ( this.util.useHierarchicalMode ) return;
   this.util.useHierarchicalMode = true;
   this.refresh();
-  jQuery( '.s3MoveButton' ).show();
 };
 
 S3Browser.prototype.useFlatMode = function() {
   if ( !this.util.useHierarchicalMode ) return;
   this.util.useHierarchicalMode = false;
   this.currentEntry.key = null;
+  this.currentEntry.name = this.currentEntry.bucket;
   this.refresh();
-  jQuery( '.s3MoveButton' ).hide();
 };
 
 /* remember credentials if possible using the HTML5 local storage API */
