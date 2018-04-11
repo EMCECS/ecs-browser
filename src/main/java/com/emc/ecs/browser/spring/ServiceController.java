@@ -323,6 +323,7 @@ public class ServiceController {
         }
 
         S3SignerV2 s3Signer = new S3SignerV2(s3Config);
+        System.out.println("Signing string: " + s3Signer.getStringToSign(method, resource, parameters, headers));
         s3Signer.sign(method, resource, parameters, headers);
     }
 
