@@ -299,7 +299,7 @@ S3Browser.prototype.createBucketOrDirectory = function() {
         }
 
         var functionAddProperties = function( createObjectCallback ) {
-            if ( !entry.type ) {
+            if ( FileRow.ENTRY_TYPE.BUCKET == entry.type ) {
                 new BucketCreationPage( entry, browser.util, browser.templates, createObjectCallback );
             } else {
                 createObjectCallback( {} );

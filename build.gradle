@@ -1,6 +1,6 @@
 description = "ECS browser website"
 group = 'com.emc.ecs'
-version = '0.9.0'
+version = '0.9.1'
 
 ext.licenseName = ''
 ext.licenseUrl = ''
@@ -30,7 +30,7 @@ defaultTasks 'build'
 
 jar {
     baseName = 'ecs-browser'
-    version =  '0.9.0'
+    version =  '0.9.1'
     into('META-INF/dependency-license') {
         from 'build/reports/dependency-license'
     }

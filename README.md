@@ -29,7 +29,7 @@ On a linux or Mac, you can also start the application after building using the f
 The application is then available at [http://localhost:8080](http://localhost:8080). The credentials page will prompt you for the information needed to connect to your ECS.
 * `UID` - this is your S3 access key.
 * `Secret` - this is your S3 secret key.
-* `Endpoint` - ths is the full data endpoint including protocol and port, e.g., `https://object.ecstestdrive.com:443`, or `http://1.2.3.4:9020`.
+* `Endpoint` - this is the full data endpoint including protocol and port, e.g., `https://object.ecstestdrive.com:443`, or `http://1.2.3.4:9020`.
 
 LICENSING
 --------------
