@@ -514,7 +514,6 @@ permissions and limitations under the License.
         </div>
         <div class="s3TableWrapper">
             <div class="s3TableTitle">Group ACLs</div>
-            <span class="s3Button s3AddGroupAclButton" title="Give a group access">Add</span>
             <table class="table">
                 <tr class="row">
                     <th class="cell s3AclName s3AclNameHeader">Group Name</th>
@@ -526,6 +525,38 @@ permissions and limitations under the License.
             </table>
             <form>
                 <table class="table s3AclTable s3GroupAclTable">
+                    <tr class="row">
+                        <input type="hidden" class="s3AclUri" value="http://acs.amazonaws.com/groups/global/AuthenticatedUsers" />
+                        <td class="cell s3AclName">Authenticated Users</td>
+                        <td class="cell s3AclFC">
+                            <input type="radio" name="Authenticated" value="FULL_CONTROL" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclWRITE">
+                            <input type="radio" name="Authenticated" value="WRITE" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclREAD">
+                            <input type="radio" name="Authenticated" value="READ" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclNONE">
+                            <input type="radio" name="Authenticated" value="NONE" class="s3AclValue"/>
+                        </td>
+                    </tr>
+                    <tr class="row">
+                        <input type="hidden" class="s3AclUri" value="http://acs.amazonaws.com/groups/global/AllUsers" />
+                        <td class="cell s3AclName">All Users</td>
+                        <td class="cell s3AclFC">
+                            <input type="radio" name="All" value="FULL_CONTROL" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclWRITE">
+                            <input type="radio" name="All" value="WRITE" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclREAD">
+                            <input type="radio" name="All" value="READ" class="s3AclValue"/>
+                        </td>
+                        <td class="cell s3AclNONE">
+                            <input type="radio" name="All" value="NONE" class="s3AclValue"/>
+                        </td>
+                    </tr>
                 </table>
             </form>
         </div>

@@ -15,16 +15,25 @@
 AclPage = function( entry, acl, util, templateEngine ) {
     this.util = util;
     this.templates = templateEngine;
-    this.$root = jQuery( templateEngine.get( 'aclPage' ).render( {}, ['.s3UserAclTable', '.s3GroupAclTable', '.s3AddUserAclButton', '.s3AddGroupAclButton', '.s3SaveButton', '.s3CancelButton'] ) );
+    this.$root = jQuery( templateEngine.get( 'aclPage' ).render( {}, ['.s3UserAclTable', '.s3GroupAclTable', '.s3AddUserAclButton', '.s3SaveButton', '.s3CancelButton'] ) );
     this.$userAclTable = this.$root.find( '.s3UserAclTable' ).empty();
-    this.$groupAclTable = this.$root.find( '.s3GroupAclTable' ).empty();
+    this.$groupAclTable = this.$root.find( '.s3GroupAclTable' );
+    this.$groupAclTable.find( '.row' ).each( function() {
+        var $this = jQuery( this );
+        $this.find( 'input[value="NONE"]' ).prop( 'checked', true );
+    } );
 
     for ( i = 0; i < acl.grants.length ; i++ ) {
         var grant = acl.grants[i];
-        if ( grant.grantee.uri ) {
-            this.addAclEntry( this.$groupAclTable, grant.grantee.uri, grant.permission );
-        } else {
+        if ( grant.grantee.id ) {
             this.addAclEntry( this.$userAclTable, grant.grantee.id, grant.permission );
+        } else {
+            this.$groupAclTable.find( '.row' ).each( function() {
+                var $this = jQuery( this );
+                if ( grant.grantee.uri == $this.find( '.s3AclUri' ).val() ) {
+                    $this.find( 'input[value="' + grant.permission + '"]' ).prop( 'checked', true );
+                }
+            } );
         }
     }
 
@@ -36,12 +45,6 @@ AclPage = function( entry, acl, util, templateEngine ) {
         var name = page.util.prompt( 'userAclNamePrompt', {}, page.util.validName, 'validNameError' );
         if ( name == null || name.length == 0 ) return;
         page.addAclEntry( page.$userAclTable, name );
-    };
-
-    this.$root.find( '.s3AddGroupAclButton' )[0].onclick = function() {
-        var uri = page.util.prompt( 'groupAclUriPrompt', {}, page.util.validName, 'validNameError' );
-        if ( uri == null || uri.length == 0 ) return;
-        page.addAclEntry( page.$groupAclTable, uri );
     };
 
     this.$root.find( '.s3SaveButton' )[0].onclick = function() {
@@ -57,9 +60,9 @@ AclPage = function( entry, acl, util, templateEngine ) {
         } );
         page.$groupAclTable.find( '.row' ).each( function() {
             var $this = jQuery( this );
-            var name = $this.find( '.s3AclName' ).text();
+            var uri = $this.find( '.s3AclUri' ).val();
             var permission = $this.find( '.s3AclValue:checked' ).val();
-            newAcl.grants.push( new AclEntry( null, name, permission ) );
+            newAcl.grants.push( new AclEntry( null, uri, permission ) );
         } );
         page.util.setAcl( entry, newAcl, function() {
             modalWindow.remove();
