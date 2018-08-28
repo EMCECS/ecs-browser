@@ -41,7 +41,7 @@ AclPage = function( entry, acl, util, templateEngine ) {
     this.$root.find( '.s3AddGroupAclButton' )[0].onclick = function() {
         var uri = page.util.prompt( 'groupAclUriPrompt', {}, page.util.validName, 'validNameError' );
         if ( uri == null || uri.length == 0 ) return;
-        page.addAclEntry( page.$groupAclTable, name );
+        page.addAclEntry( page.$groupAclTable, uri );
     };
 
     this.$root.find( '.s3SaveButton' )[0].onclick = function() {
