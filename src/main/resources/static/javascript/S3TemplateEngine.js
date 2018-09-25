@@ -108,6 +108,8 @@ S3TemplateEngine.MESSAGE_TEMPLATES = {
     configDataCorruptPrompt: 'Your configuration data has been corrupted and will be reset.',
     deleteUidPrompt: 'Are you sure you want to delete the following UID?\n%{token.uid}',
     storageDisabledPrompt: 'Browser data storage seems to be disabled\n(are you in private browsing mode?)\nYour credentials cannot be saved,\nbut will be available until the browser window is closed.',
+    downloadFolderPrompt: 'What is the folder where your downloaded content should be stored?',
+    validDownloadFolderError: '%{downloadFolder} does not exist, and cannot be used as a download folder.',
     bucketCors:'CORS not configured for bucket  %{bucketName}',
     configPageTitle: 'Configuration',
     uidPageTitle: 'Add UID',

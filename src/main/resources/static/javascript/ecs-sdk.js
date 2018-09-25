@@ -40,7 +40,8 @@ function combineWithDelimiter( part1, part2 ) {
 };
 
 function handleData( data, callback, dataProcessor ) {
-  if ( data.status && ( ( data.status >= 200 ) && ( data.status < 300 ) ) ) {
+  if ( ( data.status && ( ( data.status >= 200 ) && ( data.status < 300 ) ) ) 
+    || ( data.statusCode && data.statusCode == 'OK' ) ) {
     if (dataProcessor) {
       data = dataProcessor( data );
     }
@@ -417,6 +418,37 @@ EcsS3.prototype.restoreVersion = function( entry, callback ) {
         },
         error: function(jqHXR, textStatus, errorThrown) {
             handleError( callback,  jqHXR, errorThrown, textStatus );
+        },
+    });
+};
+
+EcsS3.prototype.downloadFolder = function( params, callback ) {
+    var apiUrl = this.getBucketApiUrl( params.entry );
+    var separatorChar = '?';
+    if ( isNonEmptyString( params.entry.key ) ) {
+        apiUrl = apiUrl + separatorChar + 'prefix=' + params.entry.key;
+        separatorChar = '&';
+    }
+    if ( isNonEmptyString( params.delimiter ) ) {
+        apiUrl = apiUrl + separatorChar + 'delimiter=' + params.delimiter;
+        separatorChar = '&';
+    }
+    if ( isNonEmptyString( params.extraQueryParameters ) ) {
+        apiUrl = apiUrl + separatorChar + params.extraQueryParameters;
+        separatorChar = '&';
+    }
+    var headers = this.getHeaders('GET');
+    headers['X-Passthrough-Type'] = 'download';
+    if ( isNonEmptyString( params.downloadFolder ) ) {
+        headers['X-Passthrough-Download-Folder'] = params.downloadFolder;
+    }
+
+    $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
+        success: function(data, textStatus, jqHXR) {
+            handleData( data, callback );
+        },
+        error: function(jqHXR, textStatus, errorThrown) {
+            handleError( callback, jqHXR, errorThrown, textStatus );
         },
     });
 };

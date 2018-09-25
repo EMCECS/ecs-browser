@@ -355,6 +355,10 @@ S3BrowserUtil.prototype.validName = function(name) {
     return !(!name || name.trim().length == 0 || /[/]/.test(name));
 };
 
+S3BrowserUtil.prototype.validDownloadFolder = function(downloadFolder) {
+    return true;
+};
+
 S3BrowserUtil.prototype.endWithDelimiter = function(path) {
     path = path.trim();
     if (path.charAt(path.length - 1) !== _s3Delimiter)
@@ -828,6 +832,30 @@ S3BrowserUtil.prototype.downloadFile = function( entry ) {
     }
     this.getShareableUrl( entry, this.futureDate(1, 'hours'), function( data ) {
         iframe.prop( 'src', data );
+    });
+};
+
+S3BrowserUtil.prototype.downloadFolder = function( entry, downloadFolder ) {
+    console.trace();
+    var util = this;
+    var parameters = {
+        entry: entry,
+        downloadFolder: downloadFolder
+    };
+    if ( this.useHierarchicalMode ) {
+        parameters.delimiter = _s3Delimiter;
+    }
+    var folderToDownload = util.getLocationText( entry );
+    var successMessage = 'Successfully downloaded ' + folderToDownload;
+    var failureMessage = 'Failure while downloading ' + folderToDownload;
+    this.showStatus('Downloading folder...');
+    this.s3.downloadFolder( parameters, function( error, data ) {
+        util.hideStatus('Downloading folder...');
+        if ( error == null ) {
+            alert( successMessage );
+        } else {
+            alert( failureMessage );
+        }
     });
 };
 

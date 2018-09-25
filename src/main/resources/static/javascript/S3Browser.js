@@ -334,18 +334,22 @@ S3Browser.prototype.list = function( entry, extraQueryParameters ) {
     browser.filterRows();
   }, extraQueryParameters );
 };
+
 S3Browser.prototype.resetCurrentEntry = function( locationText ) {
     this.currentEntry = this.util.getCurrentEntry( locationText );
     this.refresh();
 };
+
 S3Browser.prototype.refresh = function() {
   this.list( this.currentEntry );
 };
+
 S3Browser.prototype.openFile = function( entry ) {
   this.util.getShareableUrl( entry, this.util.futureDate( 1, 'hours' ), function( data ) {
     window.open( data );
   } );
 };
+
 S3Browser.prototype.openSelectedItems = function() {
   console.trace();
   var selectedRows = this.getSelectedRows();
@@ -364,9 +368,19 @@ S3Browser.prototype.downloadSelectedItems = function() {
   console.log( this.util.getLocationText( this.currentEntry ) );
   var selectedRows = this.getSelectedRows();
   if ( selectedRows.length == 0 ) this.util.error( this.templates.get( 'nothingSelectedError' ).render() );
-  if ( !this._checkNoDirectories( selectedRows ) ) return;
   for ( i = 0; i < selectedRows.length; i++ ) {
-    this.util.downloadFile( selectedRows[i].entry );
+    if ( selectedRows[i].entry.type == FileRow.ENTRY_TYPE.REGULAR ) {
+      this.util.downloadFile( selectedRows[i].entry );
+    } else {
+      var browser = this;
+
+      var downloadFolder = browser.util.prompt('downloadFolderPrompt', {}, browser.util.validDownloadFolder, 'validDownloadFolderError', '/usr/src/app');
+      if ( ( downloadFolder == null ) || ( downloadFolder.length == 0 ) ) {
+        return;
+      }
+
+      this.util.downloadFolder( selectedRows[i].entry, downloadFolder );
+    }
   }
 };
 
@@ -376,12 +390,14 @@ S3Browser.prototype.showProperties = function( entry ) {
     new PropertiesPage( entry, browser.util, browser.templates );
   } );
 };
+
 S3Browser.prototype.showAcl = function( entry ) {
   var browser = this;
   this.util.getAcl( entry, function( acl ) {
     new AclPage( entry, acl, browser.util, browser.templates );
   } );
 };
+
 S3Browser.prototype.showObjectInfo = function( entry ) {
   if ( this.util.isListable( entry.type ) ) {
     this.util.error( this.templates.get( 'directoryNotAllowedError' ).render() );

@@ -15,8 +15,16 @@
 package com.emc.ecs.browser.spring;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -32,6 +40,7 @@ import javax.xml.bind.JAXBContext;
 import org.eclipse.jetty.util.StringUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -52,7 +61,9 @@ import com.emc.object.s3.bean.ListDataNode;
 import com.emc.object.s3.bean.ListObjectsResult;
 import com.emc.object.s3.bean.ListVersionsResult;
 import com.emc.object.s3.bean.QueryObjectsResult;
+import com.emc.object.s3.bean.S3Object;
 import com.emc.object.s3.bean.VersioningConfiguration;
+import com.emc.object.s3.jersey.S3JerseyClient;
 import com.emc.object.s3.request.PresignedUrlRequest;
 import com.emc.object.s3.bean.SlimCopyObjectResult;
 import com.emc.object.util.RestUtil;
@@ -164,9 +175,49 @@ public class ServiceController {
             presignedUrlRequest.setNamespace(s3Config.getNamespace());
             S3SignerV2 s3Signer = new S3SignerV2(s3Config);
             dataToReturn = s3Signer.generatePresignedUrl(presignedUrlRequest).toString();
+        } else if ("download".equals(request.getHeader("X-Passthrough-Type"))) {
+            String downloadFolder = request.getHeader("X-Passthrough-Download-Folder");
+            if (StringUtil.isBlank(downloadFolder)) {
+                downloadFolder = "/usr/src/app/";
+            }
+
+            sign(method.toString(), resource, parameters, headers, s3Config);
+
+            HttpHeaders newHeaders = new HttpHeaders();
+            for (Entry<String, List<Object>> header : headers.entrySet()) {
+                List<String> headerValue = new ArrayList<String>(header.getValue().size());
+                for (Object value : header.getValue()) {
+                    headerValue.add((String) value);
+                }
+                newHeaders.put(header.getKey(), headerValue);
+            }
+
+            String queryString = RestUtil.generateRawQueryString(parameters);
+            if (StringUtil.isNotBlank(queryString)) {
+                resource = resource + "?" + queryString;
+            }
+            String endpoint = request.getHeader("X-Passthrough-Endpoint");
+            while (endpoint.endsWith("/")) {
+                endpoint = endpoint.substring(0, endpoint.length() - 1);
+            }
+            resource = endpoint + resource;
+    
+            RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
+            RestTemplate client = new RestTemplate();
+            try {
+                dataToReturn = client.exchange(requestEntity, ListObjectsResult.class);
+                if ( ((ResponseEntity<ListObjectsResult>) dataToReturn).getStatusCode().is2xxSuccessful() ) {
+                    ListObjectsResult objectsToDownload = ((ResponseEntity<ListObjectsResult>) dataToReturn).getBody();
+                    downloadObjects( downloadFolder, objectsToDownload.getBucketName(), objectsToDownload.getObjects(), s3Config );
+                }
+            } catch (HttpClientErrorException e) {
+                dataToReturn = new ErrorData(e); // handle and display on the other end
+            } catch (Exception e) {
+                dataToReturn = new ErrorData(e); // handle and display on the other end
+            }
         } else {
             sign(method.toString(), resource, parameters, headers, s3Config);
-    
+
             HttpHeaders newHeaders = new HttpHeaders();
             for (Entry<String, List<Object>> header : headers.entrySet()) {
                 List<String> headerValue = new ArrayList<String>(header.getValue().size());
@@ -226,6 +277,39 @@ public class ServiceController {
     } 
 
     /**
+     * @param downloadFolder
+     * @param objects
+     * @param s3Config
+     * @throws Exception 
+     */
+    private void downloadObjects(String downloadFolder, String bucketName, List<S3Object> objects, S3Config s3Config) throws Exception {
+        File downloadBucketParent = new File( downloadFolder );
+        File downloadBucket = new File( downloadBucketParent, bucketName );
+        if ( !downloadBucket.exists() ) {
+            if ( !downloadBucket.mkdirs() ) {
+                throw new Exception( "Download location cannot be created: " + downloadBucket.getAbsolutePath() );
+            }
+        } else if ( downloadBucket.isDirectory() ) {
+            throw new Exception( "Download location is not a folder: " + downloadBucket.getAbsolutePath() );
+        }
+
+        S3JerseyClient client = new S3JerseyClient( s3Config );
+        for ( S3Object object : objects ) {
+            String key = object.getKey();
+            File file = new File( downloadBucket, key );
+            if ( !file.getParentFile().exists() ) {
+                file.getParentFile().mkdirs();
+            }
+            final Path destination = Paths.get(file.getAbsolutePath());
+            try (
+                final InputStream inputStream = client.getObject(bucketName, key).getObject();
+            ) {
+                Files.copy(inputStream, destination);
+            }
+        }
+    }
+
+    /**
      * @param request
      * @return
      * @throws Exception
@@ -236,7 +320,7 @@ public class ServiceController {
         String passthroughAccessKey = request.getHeader("X-Passthrough-Key");
         String passthroughSecretKey = request.getHeader("X-Passthrough-Secret");
         while (passthroughEndpoint.endsWith("/")) {
-            passthroughEndpoint = passthroughEndpoint.substring(0,  passthroughEndpoint.length() - 1);
+            passthroughEndpoint = passthroughEndpoint.substring(0, passthroughEndpoint.length() - 1);
         }
         S3Config s3Config = new S3Config(new URI(passthroughEndpoint));
         s3Config.setIdentity(passthroughAccessKey);
@@ -366,6 +450,16 @@ public class ServiceController {
             statusText = e.getStatusText();
             message = e.getMessage();
             responseBody = e.getResponseBodyAsString();
+        }
+
+        /**
+         * @param e
+         */
+        public ErrorData(Exception e) {
+            status = 500;
+            statusText = "Server Error";
+            message = e.getMessage();
+            responseBody = "";
         }
 
         public int getStatus() {
