@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, EMC Corporation. All rights reserved.
+ * Copyright (c) 2017-2018, EMC Corporation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -64,6 +64,7 @@ MetadataSearchPage.prototype.getMetadataSearchParameters = function() {
             separator = '&';
         }
     } );
+    metadataSearchParameters = metadataSearchParameters + separator + 'attributes=ALL_SMD';
     if ( metadataSearchParameters.indexOf( 'query=' ) < 0 ) {
         metadataSearchParameters = '';
     }

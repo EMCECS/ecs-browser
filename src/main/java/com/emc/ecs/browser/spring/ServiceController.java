@@ -205,15 +205,33 @@ public class ServiceController {
             RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
             RestTemplate client = new RestTemplate();
             try {
-                dataToReturn = client.exchange(requestEntity, ListObjectsResult.class);
+                dataToReturn = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
                 if ( ((ResponseEntity<ListObjectsResult>) dataToReturn).getStatusCode().is2xxSuccessful() ) {
                     ListObjectsResult objectsToDownload = ((ResponseEntity<ListObjectsResult>) dataToReturn).getBody();
                     downloadObjects( downloadFolder, objectsToDownload.getBucketName(), objectsToDownload.getObjects(), s3Config );
+                    String separator = resource.indexOf("?") < 0 ? "?" : "&";
+                    while ( objectsToDownload.isTruncated() ) {
+                        String marker = objectsToDownload.getNextMarker();
+                        if ( ( marker == null ) || marker.isEmpty() ) {
+                            marker = objectsToDownload.getObjects().get( objectsToDownload.getObjects().size() - 1 ).getKey();
+                        }
+                        String newUrl = resource + separator + "marker=" + marker;
+                        System.out.println("Another page after " + marker + " using " + newUrl );
+                        requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(newUrl));
+                        dataToReturn = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
+                        if ( !((ResponseEntity<ListObjectsResult>) dataToReturn).getStatusCode().is2xxSuccessful() ) {
+                            break;
+                        }
+                        objectsToDownload = ((ResponseEntity<ListObjectsResult>) dataToReturn).getBody();
+                        downloadObjects( downloadFolder, objectsToDownload.getBucketName(), objectsToDownload.getObjects(), s3Config );
+                    }
                 }
             } catch (HttpClientErrorException e) {
                 dataToReturn = new ErrorData(e); // handle and display on the other end
+                e.printStackTrace(System.out);
             } catch (Exception e) {
                 dataToReturn = new ErrorData(e); // handle and display on the other end
+                e.printStackTrace(System.out);
             }
         } else {
             sign(method.toString(), resource, parameters, headers, s3Config);
@@ -289,7 +307,7 @@ public class ServiceController {
             if ( !downloadBucket.mkdirs() ) {
                 throw new Exception( "Download location cannot be created: " + downloadBucket.getAbsolutePath() );
             }
-        } else if ( downloadBucket.isDirectory() ) {
+        } else if ( !downloadBucket.isDirectory() ) {
             throw new Exception( "Download location is not a folder: " + downloadBucket.getAbsolutePath() );
         }
 

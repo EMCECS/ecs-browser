@@ -18,6 +18,6 @@ FROM openjdk:8
 EXPOSE 8080
 
 WORKDIR /usr/src/app
-COPY build/libs/ecs-browser-0.9.1.jar ./
+COPY build/libs/ecs-browser-1.0.0rc1.jar ./
 
-CMD [ "java", "-jar", "ecs-browser-0.9.1.jar" ]
+CMD [ "java", "-jar", "ecs-browser-1.0.0rc1.jar" ]
