@@ -41,7 +41,7 @@ function combineWithDelimiter( part1, part2 ) {
 
 function handleData( data, callback, dataProcessor ) {
   if ( ( data.status && ( ( data.status >= 200 ) && ( data.status < 300 ) ) ) 
-    || ( data.statusCode && data.statusCode == 'OK' ) ) {
+    || ( data.statusCode && data.statusCode == 'OK') ) {
     if (dataProcessor) {
       data = dataProcessor( data );
     }
