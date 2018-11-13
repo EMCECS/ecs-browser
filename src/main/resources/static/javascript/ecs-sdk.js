@@ -226,6 +226,7 @@ EcsS3.prototype.listBuckets = function( callback ) {
 
 EcsS3.prototype.listObjects = function( params, callback ) {
     var apiUrl = this.getBucketApiUrl( params.entry );
+    var headers = this.getHeaders('GET');
     var separatorChar = '?';
     if ( isNonEmptyString( params.delimiter ) ) {
       apiUrl = apiUrl + separatorChar + 'delimiter=' + params.delimiter;
@@ -238,9 +239,10 @@ EcsS3.prototype.listObjects = function( params, callback ) {
     if ( isNonEmptyString( params.extraQueryParameters ) ) {
       apiUrl = apiUrl + separatorChar + params.extraQueryParameters;
       separatorChar = '&';
+    } else {
+      headers['X-Passthrough-Type'] = 'listAll';
     }
-    var headers = this.getHeaders('GET');
-    
+
     $.ajax({ url: apiUrl,  method: 'POST', headers: headers,
         success: function(data, textStatus, jqHXR) {
             handleData( data, callback, getEcsBody );

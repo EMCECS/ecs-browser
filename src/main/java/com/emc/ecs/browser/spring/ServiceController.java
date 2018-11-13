@@ -213,7 +213,15 @@ public class ServiceController {
                     while ( objectsToDownload.isTruncated() ) {
                         String marker = objectsToDownload.getNextMarker();
                         if ( ( marker == null ) || marker.isEmpty() ) {
-                            marker = objectsToDownload.getObjects().get( objectsToDownload.getObjects().size() - 1 ).getKey();
+                            String lastKey =  "";
+                            if ( ( objectsToDownload.getObjects() != null ) && ( objectsToDownload.getObjects().size() > 0 ) ) {
+                                lastKey = objectsToDownload.getObjects().get( objectsToDownload.getObjects().size() - 1 ).getKey();
+                            }
+                            String lastPrefix = "";
+                            if ( ( objectsToDownload.getCommonPrefixes() != null ) && ( objectsToDownload.getCommonPrefixes().size() > 0 ) ) {
+                                lastPrefix = objectsToDownload.getCommonPrefixes().get( objectsToDownload.getCommonPrefixes().size() - 1 );
+                            }
+                            marker = ( lastPrefix.compareTo(lastKey) > 0 ) ? lastPrefix : lastKey;
                         }
                         String newUrl = resource + separator + "marker=" + marker;
                         System.out.println("Another page after " + marker + " using " + newUrl );
@@ -224,6 +232,71 @@ public class ServiceController {
                         }
                         objectsToDownload = ((ResponseEntity<ListObjectsResult>) dataToReturn).getBody();
                         downloadObjects( downloadFolder, objectsToDownload.getBucketName(), objectsToDownload.getObjects(), s3Config );
+                    }
+                }
+            } catch (HttpClientErrorException e) {
+                dataToReturn = new ErrorData(e); // handle and display on the other end
+                e.printStackTrace(System.out);
+            } catch (Exception e) {
+                dataToReturn = new ErrorData(e); // handle and display on the other end
+                e.printStackTrace(System.out);
+            }
+        } else if ("listAll".equals(request.getHeader("X-Passthrough-Type"))) {
+            sign(method.toString(), resource, parameters, headers, s3Config);
+
+            HttpHeaders newHeaders = new HttpHeaders();
+            for (Entry<String, List<Object>> header : headers.entrySet()) {
+                List<String> headerValue = new ArrayList<String>(header.getValue().size());
+                for (Object value : header.getValue()) {
+                    headerValue.add((String) value);
+                }
+                newHeaders.put(header.getKey(), headerValue);
+            }
+
+            String queryString = RestUtil.generateRawQueryString(parameters);
+            if (StringUtil.isNotBlank(queryString)) {
+                resource = resource + "?" + queryString;
+            }
+            String endpoint = request.getHeader("X-Passthrough-Endpoint");
+            while (endpoint.endsWith("/")) {
+                endpoint = endpoint.substring(0, endpoint.length() - 1);
+            }
+            resource = endpoint + resource;
+    
+            RequestEntity<byte[]> requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(resource));
+            RestTemplate client = new RestTemplate();
+            try {
+                ResponseEntity<ListObjectsResult> baseResponse = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
+                dataToReturn = baseResponse;
+                if ( baseResponse.getStatusCode().is2xxSuccessful() ) {
+                    ListObjectsResult listResult = baseResponse.getBody();
+                    String separator = resource.indexOf("?") < 0 ? "?" : "&";
+                    while ( listResult.isTruncated() ) {
+                        String marker = listResult.getNextMarker();
+                        if ( ( marker == null ) || marker.isEmpty() ) {
+                            String lastKey =  "";
+                            if ( ( listResult.getObjects() != null ) && ( listResult.getObjects().size() > 0 ) ) {
+                                lastKey = listResult.getObjects().get( listResult.getObjects().size() - 1 ).getKey();
+                            }
+                            String lastPrefix = "";
+                            if ( ( listResult.getCommonPrefixes() != null ) && ( listResult.getCommonPrefixes().size() > 0 ) ) {
+                                lastPrefix = listResult.getCommonPrefixes().get( listResult.getCommonPrefixes().size() - 1 );
+                            }
+                            marker = ( lastPrefix.compareTo(lastKey) > 0 ) ? lastPrefix : lastKey;
+                        }
+                        String newUrl = resource + separator + "marker=" + marker;
+                        System.out.println("Another page after " + marker + " using " + newUrl );
+                        requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(newUrl));
+                        ResponseEntity<ListObjectsResult> newListResponse = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
+                        if ( !newListResponse.getStatusCode().is2xxSuccessful() ) {
+                            dataToReturn = newListResponse;
+                            break;
+                        }
+                        ListObjectsResult newListResult = newListResponse.getBody();
+                        listResult.setTruncated(newListResult.isTruncated());
+                        listResult.setNextMarker(newListResult.getNextMarker());
+                        listResult.getObjects().addAll(newListResult.getObjects());
+                        listResult.getCommonPrefixes().addAll(newListResult.getCommonPrefixes());
                     }
                 }
             } catch (HttpClientErrorException e) {
