@@ -19,19 +19,27 @@ function isNonEmptyString(theString) {
   return (theString && theString.trim() && (theString != ""));
 };
 
+function startsWith( theString, thePrefix ) {
+  return theString && ( theString.substring(0, thePrefix.length) == thePrefix );
+};
+
+function endsWith( theString, theSuffix ) {
+  return theString && ( theString.substring(theString.length - theSuffix.length) == theSuffix );
+};
+
 function combineWithDelimiter( part1, part2 ) {
   var combination;
   if (!isNonEmptyString(part2)) {
     combination = part1;
   } else if (!isNonEmptyString(part1)) {
     combination = part2;
-  } else if (part2.startsWith(_s3Delimiter)) {
-    if (part1.endsWith(_s3Delimiter)) {
+  } else if ( startsWith( part2, _s3Delimiter ) ) {
+    if ( endsWith( part1, _s3Delimiter ) ) {
       combination = part1 + part2.substring(1);
     } else {
       combination = part1 + part2;
     }
-  } else if (part1.endsWith(_s3Delimiter)) {
+  } else if ( endsWith( part1, _s3Delimiter ) ) {
     combination = part1 + part2;
   } else {
     combination = part1 + _s3Delimiter + part2;
@@ -116,7 +124,7 @@ function makeMetaData( data ) {
   if ( data && data.headers ) {
     for ( var key in data.headers ) {
       if ( data.headers.hasOwnProperty( key ) ) {
-        if ( !key.toLowerCase().startsWith( _metadataStart ) ) {
+        if ( !startsWith( key.toLowerCase(), _metadataStart ) ) {
           metaData[ keyProcessor( key ) ] = data.headers[ key ];
         } else {
           if ( !metaData.Metadata ) {
