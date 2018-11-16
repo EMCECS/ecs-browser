@@ -158,7 +158,7 @@ ConfigPage.prototype.showUidPage = function() {
         var s3 = new EcsS3({endpoint: $endpoint.val(), accessKeyId: $uid.val(),secretAccessKey:  $secret.val(), s3ForcePathStyle: true});
         s3.getServiceInformation( function( result ) {
             var messageKey;
-            if ( result.successful ) {
+            if ( result && result.successful ) {
                 messageKey = 'uidSuccessPrompt';
             } else {
                 messageKey = 'uidFailurePrompt';
