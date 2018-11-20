@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2017, EMC Corporation. All rights reserved.
+ * Copyright 2011-2018 Dell Inc. or its subsidiaries. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
