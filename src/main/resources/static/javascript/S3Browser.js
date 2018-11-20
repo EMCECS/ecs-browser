@@ -61,7 +61,7 @@ S3Browser = function( options, $parent ) {
 
 // release version
 /** @define {string} */
-var S3_BROWSER_VERSION = '0.9.1';
+var S3_BROWSER_VERSION = '1.0.0';
 S3Browser.version = S3_BROWSER_VERSION;
 
 /** @define {boolean} */
