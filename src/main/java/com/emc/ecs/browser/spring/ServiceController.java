@@ -223,7 +223,7 @@ public class ServiceController {
                             }
                             marker = ( lastPrefix.compareTo(lastKey) > 0 ) ? lastPrefix : lastKey;
                         }
-                        String newUrl = resource + separator + "marker=" + marker;
+                        String newUrl = resource + separator + "marker=" + RestUtil.urlEncode(marker);
                         System.out.println("Another page after " + marker + " using " + newUrl );
                         requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(newUrl));
                         dataToReturn = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
@@ -284,7 +284,7 @@ public class ServiceController {
                             }
                             marker = ( lastPrefix.compareTo(lastKey) > 0 ) ? lastPrefix : lastKey;
                         }
-                        String newUrl = resource + separator + "marker=" + marker;
+                        String newUrl = resource + separator + "marker=" + RestUtil.urlEncode(marker);
                         System.out.println("Another page after " + marker + " using " + newUrl );
                         requestEntity = new RequestEntity<byte[]>(data, newHeaders, method, new URI(newUrl));
                         ResponseEntity<ListObjectsResult> newListResponse = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
