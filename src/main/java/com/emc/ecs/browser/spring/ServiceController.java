@@ -16,13 +16,8 @@ package com.emc.ecs.browser.spring;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +36,6 @@ import javax.xml.bind.JAXBContext;
 import org.eclipse.jetty.util.StringUtil;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -84,22 +78,46 @@ public class ServiceController {
 
     private static final String PROXY_PATH = SERVLET_PATH + PROXY_SUBPATH;
 
+    private static final String SEPARATOR = "/";
+
+    private static final String DOUBLE_SEPARATOR = SEPARATOR + SEPARATOR;
+
+    private static final String PASSTHROUGH_HEADER_START = "X-Passthrough-";
+
+    private static final String ENDPOINT_HEADER = PASSTHROUGH_HEADER_START + "Endpoint";
+
+    private static final String METHOD_HEADER = PASSTHROUGH_HEADER_START + "Method";
+
+    private static final String NAMESPACE_HEADER = PASSTHROUGH_HEADER_START + "Namespace";
+
+    private static final String KEY_HEADER = PASSTHROUGH_HEADER_START + "Key";
+
+    private static final String SECRET_HEADER = PASSTHROUGH_HEADER_START + "Secret";
+
+    private static final String TYPE_HEADER = PASSTHROUGH_HEADER_START + "Type";
+
+    private static final String EXPIRES_HEADER = PASSTHROUGH_HEADER_START + "Expires";
+
+    private static final String DOWNLOAD_FOLDER_HEADER = PASSTHROUGH_HEADER_START + "Download-Folder";
+
+    private static final String MARKER_PARAMETER = "marker";
+
     @RequestMapping(value = PROXY_SUBPATH + "/**", method = RequestMethod.POST, produces="*/*", consumes="*/*")
     public ResponseEntity<?> postProxy(HttpServletRequest request) throws Exception {
         S3Config s3Config = getS3Config(request);
-        HttpMethod method = getMethod(request);
+        HttpMethod method = HttpMethod.valueOf(request.getHeader(METHOD_HEADER));
 
-        String endpoint = request.getHeader("X-Passthrough-Endpoint");
-        while (endpoint.endsWith("/")) {
+        String endpoint = request.getHeader(ENDPOINT_HEADER);
+        while (endpoint.endsWith(SEPARATOR)) {
             endpoint = endpoint.substring(0, endpoint.length() - 1);
         }
 
         String resource = request.getRequestURI();
         resource = resource.substring(resource.indexOf(PROXY_PATH) + PROXY_PATH.length());
-        if (!resource.startsWith("/")) {
-            resource = "/" + resource;
+        if (!resource.startsWith(SEPARATOR)) {
+            resource = SEPARATOR + resource;
         } else  {
-            while (resource.startsWith("//")) {
+            while (resource.startsWith(DOUBLE_SEPARATOR)) {
                 resource = resource.substring(1);
             }
         }
@@ -113,7 +131,7 @@ public class ServiceController {
             String headerName = headerNames.nextElement();
             if ("accept".equalsIgnoreCase(headerName)) {
                 RestUtil.putSingle(headers, "Accept", "application/xml");
-            } else if (!headerName.startsWith("X-Passthrough-")) {
+            } else if (!headerName.startsWith(PASSTHROUGH_HEADER_START)) {
                 List<Object> headerValue = new ArrayList<Object>();
                 Enumeration<String> headerValues = request.getHeaders(headerName);
                 while (headerValues.hasMoreElements()) {
@@ -157,12 +175,12 @@ public class ServiceController {
         RestUtil.putSingle(headers, "Content-Length", Integer.toString(dataLength));
 
         Object dataToReturn = null;
-        if ("presign".equals(request.getHeader("X-Passthrough-Type"))) {
-            while (resource.startsWith( "/" ) ) {
+        if ("presign".equals(request.getHeader(TYPE_HEADER))) {
+            while (resource.startsWith( SEPARATOR ) ) {
                 resource = resource.substring(1);
             }
 
-            int delimiterIndex = resource.indexOf( "/" );
+            int delimiterIndex = resource.indexOf( SEPARATOR );
             String bucketName = null;
             String key = null;
             if ( delimiterIndex < 0 ) {
@@ -175,14 +193,14 @@ public class ServiceController {
             }
 
             Date expirationTime = new Date();
-            expirationTime.setTime(Long.parseLong(request.getHeader("X-Passthrough-Expires")));
-            PresignedUrlRequest presignedUrlRequest = new PresignedUrlRequest(Method.valueOf(getMethodName(request)), bucketName, key, expirationTime);
+            expirationTime.setTime(Long.parseLong(request.getHeader(EXPIRES_HEADER)));
+            PresignedUrlRequest presignedUrlRequest = new PresignedUrlRequest(Method.valueOf(request.getHeader(METHOD_HEADER)), bucketName, key, expirationTime);
             presignedUrlRequest.setVersionId(parameters.get("versionId"));
             presignedUrlRequest.setNamespace(s3Config.getNamespace());
             S3SignerV2 s3Signer = new S3SignerV2(s3Config);
             dataToReturn = s3Signer.generatePresignedUrl(presignedUrlRequest).toString();
-        } else if ("download".equals(request.getHeader("X-Passthrough-Type"))) {
-            String downloadFolder = request.getHeader("X-Passthrough-Download-Folder");
+        } else if ("download".equals(request.getHeader(TYPE_HEADER))) {
+            String downloadFolder = request.getHeader(DOWNLOAD_FOLDER_HEADER);
             if (StringUtil.isBlank(downloadFolder)) {
                 downloadFolder = "/usr/src/app/";
             }
@@ -194,7 +212,7 @@ public class ServiceController {
                 ListObjectsResult objectsToDownload = ((ResponseEntity<ListObjectsResult>) dataToReturn).getBody();
                 downloadObjects( downloadFolder, objectsToDownload.getBucketName(), objectsToDownload.getObjects(), s3Config );
                 while ( objectsToDownload.isTruncated() ) {
-                    parameters.put( "marker", getNextMarker( objectsToDownload ) );
+                    parameters.put( MARKER_PARAMETER, getNextMarker( objectsToDownload ) );
                     requestEntity = getRequestEntity( data, resource, parameters, headers, method, endpoint, s3Config );
                     dataToReturn = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
                     objectsToDownload = ((ResponseEntity<ListObjectsResult>) dataToReturn).getBody();
@@ -209,7 +227,7 @@ public class ServiceController {
                 dataToReturn = new ErrorData(e); // handle and display on the other end
                 e.printStackTrace(System.out);
             }
-        } else if ("listAll".equals(request.getHeader("X-Passthrough-Type"))) {
+        } else if ("listAll".equals(request.getHeader(TYPE_HEADER))) {
             RequestEntity<byte[]> requestEntity = getRequestEntity( data, resource, parameters, headers, method, endpoint, s3Config );
             RestTemplate client = new RestTemplate();
             try {
@@ -217,7 +235,7 @@ public class ServiceController {
                 dataToReturn = baseResponse;
                 ListObjectsResult listResult = baseResponse.getBody();
                 while ( listResult.isTruncated() ) {
-                    parameters.put( "marker", getNextMarker( listResult ) );
+                    parameters.put( MARKER_PARAMETER, getNextMarker( listResult ) );
                     requestEntity = getRequestEntity( data, resource, parameters, headers, method, endpoint, s3Config );
                     ResponseEntity<ListObjectsResult> newListResponse = new WrappedResponseEntity( client.exchange(requestEntity, ListObjectsResult.class) );
                     ListObjectsResult newListResult = newListResponse.getBody();
@@ -255,7 +273,7 @@ public class ServiceController {
                 } else if (parameters.containsKey("versions")) {
                     responseClass = ListVersionsResult.class;
                 } else {
-                    int firstSlash = resource.indexOf('/', 2);
+                    int firstSlash = resource.indexOf(SEPARATOR, 2);
                     if (firstSlash < 0) { // no object name exists
                         responseClass = ListObjectsResult.class;
                     } else if (copySource) {
@@ -377,11 +395,11 @@ public class ServiceController {
      * @throws Exception
      */
     private static final S3Config getS3Config(HttpServletRequest request) throws Exception {
-        String passthroughNamespace = request.getHeader("X-Passthrough-Namespace");
-        String passthroughEndpoint = request.getHeader("X-Passthrough-Endpoint");
-        String passthroughAccessKey = request.getHeader("X-Passthrough-Key");
-        String passthroughSecretKey = request.getHeader("X-Passthrough-Secret");
-        while (passthroughEndpoint.endsWith("/")) {
+        String passthroughNamespace = request.getHeader(NAMESPACE_HEADER);
+        String passthroughEndpoint = request.getHeader(ENDPOINT_HEADER);
+        String passthroughAccessKey = request.getHeader(KEY_HEADER);
+        String passthroughSecretKey = request.getHeader(SECRET_HEADER);
+        while (passthroughEndpoint.endsWith(SEPARATOR)) {
             passthroughEndpoint = passthroughEndpoint.substring(0, passthroughEndpoint.length() - 1);
         }
         S3Config s3Config = new S3Config(new URI(passthroughEndpoint));
@@ -471,22 +489,6 @@ public class ServiceController {
         S3SignerV2 s3Signer = new S3SignerV2(s3Config);
         System.out.println("Signing string: " + s3Signer.getStringToSign(method, resource, parameters, headers));
         s3Signer.sign(method, resource, parameters, headers);
-    }
-
-    /**
-     * @param request
-     * @return
-     */
-    private static final HttpMethod getMethod(HttpServletRequest request) {
-        return HttpMethod.valueOf(getMethodName(request));
-    }
-
-    /**
-     * @param request
-     * @return
-     */
-    private static final String getMethodName(HttpServletRequest request) {
-        return request.getHeader("X-Passthrough-Method");
     }
 
     /**
